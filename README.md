@@ -17,30 +17,30 @@ Orvix enforces strict **database-per-service isolation**. Cross-service communic
 
 ```mermaid
 flowchart TD
-    Client([B2B Tenant Client / Internal Apps]) -->|1. POST /v1/chat/completions| GW[Gateway Service :8080]
+    Client["B2B Tenant Client / Internal Apps"] -->|"1. POST /v1/chat/completions"| GW["Gateway Service (Port 8080)"]
 
-    subgraph "Edge Ingress & Policy Layer"
-        GW -->|Auth Cache & Token Bucket| Redis[(Redis 7.x)]
-        GW -->|2. Sync Inspect (Fail-Closed)| Guardrail[Guardrail Service :8081]
-        GW -->|3. HNSW Cosine Search (Fail-Open)| Cache[Semantic Cache Service :8082]
+    subgraph Ingress ["Edge Ingress & Policy Layer"]
+        GW -->|"Auth Cache & Token Bucket"| Redis[("Redis 7.x")]
+        GW -->|"2. Sync Inspect (Fail-Closed)"| Guardrail["Guardrail Service (Port 8081)"]
+        GW -->|"3. HNSW Cosine Search (Fail-Open)"| Cache["Semantic Cache Service (Port 8082)"]
     end
 
-    subgraph "Upstream LLM Provider Layer"
-        GW -->|4. Primary Dispatch| Gemini[Gemini Primary]
-        GW -.->|Circuit Breaker Failover| OpenAI[OpenAI Fallback]
+    subgraph Upstream ["Upstream LLM Provider Layer"]
+        GW -->|"4. Primary Dispatch"| Gemini["Gemini Primary"]
+        GW -.->|"Circuit Breaker Failover"| OpenAI["OpenAI Fallback"]
     end
 
-    subgraph "Asynchronous FinOps & Settlement Layer"
-        GW -->|5. Emit UsageRecordedEvent| Kafka{{Apache Kafka 3.7}}
-        Kafka -->|6. Idempotent Consumer Group| Billing[FinOps Billing Service :8083]
-        Billing -->|7. Append Double-Entry Ledger| Postgres[(billing_db)]
-        Billing -->|8. QuotaExhaustedEvent| Kafka
-        Kafka -->|9. Evict / Set quota:blocked| GW
+    subgraph FinOps ["Asynchronous FinOps & Settlement Layer"]
+        GW -->|"5. Emit UsageRecordedEvent"| Kafka{{"Apache Kafka 3.7"}}
+        Kafka -->|"6. Idempotent Consumer Group"| Billing["FinOps Billing Service (Port 8083)"]
+        Billing -->|"7. Append Double-Entry Ledger"| Postgres[("PostgreSQL billing_db")]
+        Billing -->|"8. QuotaExhaustedEvent"| Kafka
+        Kafka -->|"9. Evict or Set quota:blocked"| GW
     end
 
-    subgraph "Databases (PostgreSQL 16 + pgvector)"
-        Guardrail --> GDB[(guardrail_db)]
-        Cache --> CDB[(cache_db)]
+    subgraph Storage ["Databases (PostgreSQL 16 + pgvector)"]
+        Guardrail --> GDB[("PostgreSQL guardrail_db")]
+        Cache --> CDB[("PostgreSQL cache_db")]
     end
 ```
 
