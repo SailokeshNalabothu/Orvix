@@ -29,6 +29,7 @@ public class SemanticCacheEntry {
     @Column(name = "prompt_text", columnDefinition = "TEXT", nullable = false)
     private String promptText;
 
+    @org.hibernate.annotations.ColumnTransformer(write = "?::vector")
     @Column(name = "embedding", columnDefinition = "vector(768)", nullable = false)
     private String embedding;
 

@@ -28,6 +28,7 @@ public class SecurityAuditLog {
     @Column(name = "action", length = 16, nullable = false)
     private GuardrailAction action;
 
+    @org.hibernate.annotations.ColumnTransformer(write = "?::text[]")
     @Convert(converter = StringListConverter.class)
     @Column(name = "violation_types", columnDefinition = "text[]", nullable = false)
     private List<String> violationTypes;

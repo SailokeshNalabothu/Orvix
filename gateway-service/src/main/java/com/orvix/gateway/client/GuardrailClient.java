@@ -25,8 +25,8 @@ public class GuardrailClient {
             @Value("${orvix.services.guardrail-url:http://localhost:8081}") String guardrailBaseUrl
     ) {
         this.restTemplate = builder
-                .setConnectTimeout(Duration.ofMillis(150))
-                .setReadTimeout(Duration.ofMillis(150))
+                .setConnectTimeout(Duration.ofMillis(2000))
+                .setReadTimeout(Duration.ofMillis(3000))
                 .build();
         this.inspectUrl = guardrailBaseUrl + "/internal/v1/inspect";
     }

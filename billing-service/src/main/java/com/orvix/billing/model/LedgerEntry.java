@@ -17,7 +17,7 @@ public class LedgerEntry {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(name = "transaction_id", length = 36, nullable = false)
+    @Column(name = "transaction_id", length = 64, nullable = false)
     private String transactionId;
 
     @Column(name = "tenant_id", length = 36, nullable = false)

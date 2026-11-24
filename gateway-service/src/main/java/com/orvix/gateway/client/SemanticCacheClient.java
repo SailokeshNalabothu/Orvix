@@ -27,8 +27,8 @@ public class SemanticCacheClient {
             @Value("${orvix.services.cache-url:http://localhost:8082}") String cacheBaseUrl
     ) {
         this.restTemplate = builder
-                .setConnectTimeout(Duration.ofMillis(100))
-                .setReadTimeout(Duration.ofMillis(100))
+                .setConnectTimeout(Duration.ofMillis(2000))
+                .setReadTimeout(Duration.ofMillis(3000))
                 .build();
         this.lookupUrl = cacheBaseUrl + "/internal/v1/lookup";
         this.storeUrl = cacheBaseUrl + "/internal/v1/store";

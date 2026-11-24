@@ -7,7 +7,7 @@ services:
     container_name: orvix-postgres
     restart: unless-stopped
     ports:
-      - "5432:5432"
+      - "5433:5432"
     environment:
       POSTGRES_USER: orvix
       POSTGRES_PASSWORD: orvix_secret

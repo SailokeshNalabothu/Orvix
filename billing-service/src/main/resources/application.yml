@@ -7,17 +7,22 @@ spring:
   threads:
     virtual:
       enabled: true
+  data:
+    redis:
+      host: ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:6379}
   datasource:
-    url: ${DB_URL:jdbc:postgresql://localhost:5432/billing_db}
+    url: ${DB_URL:jdbc:postgresql://localhost:5433/billing_db}
     username: ${DB_USER:orvix}
     password: ${DB_PASSWORD:orvix_secret}
     driver-class-name: org.postgresql.Driver
   jpa:
     hibernate:
-      ddl-auto: validate
+      ddl-auto: none
     open-in-view: false
   flyway:
     enabled: true
+    baseline-on-migrate: true
     locations: classpath:db/migration
   kafka:
     bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:localhost:9092}

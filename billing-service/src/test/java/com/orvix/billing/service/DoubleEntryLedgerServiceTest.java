@@ -41,12 +41,15 @@ class DoubleEntryLedgerServiceTest {
     @Mock
     private KafkaTemplate<String, Object> kafkaTemplate;
 
+    @Mock
+    private org.springframework.data.redis.core.StringRedisTemplate redisTemplate;
+
     private DoubleEntryLedgerService ledgerService;
 
     @BeforeEach
     void setUp() {
         ledgerService = new DoubleEntryLedgerService(
-                walletRepository, ledgerEntryRepository, processedEventRepository, costCalculator, kafkaTemplate
+                walletRepository, ledgerEntryRepository, processedEventRepository, costCalculator, kafkaTemplate, redisTemplate
         );
     }
 

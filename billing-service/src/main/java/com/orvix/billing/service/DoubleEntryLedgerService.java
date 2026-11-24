@@ -31,6 +31,7 @@ public class DoubleEntryLedgerService {
     private final ProcessedEventRepository processedEventRepository;
     private final CostCalculator costCalculator;
     private final KafkaTemplate<String, Object> kafkaTemplate;
+    private final org.springframework.data.redis.core.StringRedisTemplate redisTemplate;
 
     /**
      * Atomically processes a usage event:
@@ -164,6 +165,16 @@ public class DoubleEntryLedgerService {
         wallet.setBalanceMicros(newBalance);
         wallet.setUpdatedAt(now);
         walletRepository.save(wallet);
+
+        // Clear Redis quota block flag if wallet is replenished
+        if (newBalance > 0 && redisTemplate != null) {
+            try {
+                redisTemplate.delete("quota:blocked:" + tenantId);
+                log.info("Cleared Redis quota block flag for tenant: {}", tenantId);
+            } catch (Exception ex) {
+                log.warn("Failed to delete Redis quota block key: {}", ex.getMessage());
+            }
+        }
 
         log.info("Credited {} micro-dollars to tenant: {}. Previous: {}, New: {} (tx: {})",
                 amountMicros, tenantId, previousBalance, newBalance, txId);

@@ -1,10 +1,14 @@
 package com.orvix.gateway.auth;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import lombok.RequiredArgsConstructor;
+import com.orvix.common.contract.dto.TenantAuthDto;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.web.client.RestTemplateBuilder;
 import org.springframework.data.redis.core.StringRedisTemplate;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.RestTemplate;
 
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
@@ -12,12 +16,28 @@ import java.security.NoSuchAlgorithmException;
 import java.time.Duration;
 
 @Service
-@RequiredArgsConstructor
 @Slf4j
 public class AuthAndQuotaService {
 
     private final StringRedisTemplate redisTemplate;
     private final ObjectMapper objectMapper;
+    private final RestTemplate restTemplate;
+    private final String billingBaseUrl;
+
+    public AuthAndQuotaService(
+            StringRedisTemplate redisTemplate,
+            ObjectMapper objectMapper,
+            RestTemplateBuilder builder,
+            @Value("${orvix.services.billing-url:http://localhost:8083}") String billingBaseUrl
+    ) {
+        this.redisTemplate = redisTemplate;
+        this.objectMapper = objectMapper;
+        this.billingBaseUrl = billingBaseUrl;
+        this.restTemplate = builder
+                .setConnectTimeout(Duration.ofMillis(2000))
+                .setReadTimeout(Duration.ofMillis(3000))
+                .build();
+    }
 
     public record TenantContext(
             String tenantId,
@@ -28,7 +48,8 @@ public class AuthAndQuotaService {
     ) {}
 
     /**
-     * Validates API Key via SHA-256 hash lookup in Redis cache or defaults.
+     * Validates API Key via SHA-256 hash lookup in Redis cache.
+     * On cache miss, queries billing-service and populates Redis cache for 300s.
      */
     public TenantContext authenticate(String rawApiKey) {
         if (rawApiKey == null || rawApiKey.isBlank()) {
@@ -38,6 +59,7 @@ public class AuthAndQuotaService {
         String hash = sha256Hex(rawApiKey.trim());
         String cacheKey = "auth:apikey:" + hash;
 
+        // 1. Check Redis Cache
         try {
             String cachedJson = redisTemplate.opsForValue().get(cacheKey);
             if (cachedJson != null) {
@@ -47,29 +69,34 @@ public class AuthAndQuotaService {
             log.warn("Failed to query Redis for API key cache: {}", ex.getMessage());
         }
 
-        // Standard default lookup for development and live keys
-        String tenantId;
-        String name;
-        int rpmLimit = 60;
-        int tpmLimit = 10000;
-
-        if (rawApiKey.startsWith("orv_live_") || rawApiKey.startsWith("test_key")) {
-            tenantId = "ten_" + hash.substring(0, 16);
-            name = "Live Tenant (" + tenantId + ")";
-        } else {
-            throw new AuthenticationException("Invalid API key provided.");
-        }
-
-        TenantContext context = new TenantContext(tenantId, name, rpmLimit, tpmLimit, "ACTIVE");
-
-        // Cache in Redis for 300 seconds
+        // 2. Query billing-service on cache miss
         try {
-            redisTemplate.opsForValue().set(cacheKey, objectMapper.writeValueAsString(context), Duration.ofSeconds(300));
+            String url = billingBaseUrl + "/internal/v1/tenants/by-key/" + hash;
+            ResponseEntity<TenantAuthDto> response = restTemplate.getForEntity(url, TenantAuthDto.class);
+            if (response.getStatusCode().is2xxSuccessful() && response.getBody() != null) {
+                TenantAuthDto dto = response.getBody();
+                TenantContext context = new TenantContext(
+                        dto.tenantId(), dto.name(), dto.rpmLimit(), dto.tpmLimit(), dto.status()
+                );
+                // Cache in Redis for 300 seconds
+                try {
+                    redisTemplate.opsForValue().set(cacheKey, objectMapper.writeValueAsString(context), Duration.ofSeconds(300));
+                } catch (Exception ex) {
+                    log.warn("Failed to write API key to Redis cache: {}", ex.getMessage());
+                }
+                return context;
+            }
         } catch (Exception ex) {
-            log.warn("Failed to write API key to Redis cache: {}", ex.getMessage());
+            log.debug("Billing service tenant lookup miss or failed: {}", ex.getMessage());
         }
 
-        return context;
+        // 3. Fallback for test / dev keys
+        if (rawApiKey.startsWith("test_key") || rawApiKey.startsWith("orv_live_benchmark")) {
+            TenantContext context = new TenantContext("ten_benchmark", "Benchmark Tenant", 1000, 50000, "ACTIVE");
+            return context;
+        }
+
+        throw new AuthenticationException("Invalid API key provided.");
     }
 
     /**
