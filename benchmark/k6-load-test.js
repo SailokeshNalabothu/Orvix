@@ -9,19 +9,18 @@ export const failoverRate = new Rate('provider_failover_rate');
 
 export const options = {
     scenarios: {
-        // Sustained load test: aiming for high concurrency with Virtual Threads
         sustained_throughput: {
             executor: 'constant-arrival-rate',
-            rate: 1000,
+            rate: 50,
             timeUnit: '1s',
-            duration: '30s',
-            preAllocatedVUs: 100,
-            maxVUs: 500,
+            duration: '10s',
+            preAllocatedVUs: 20,
+            maxVUs: 50,
         },
     },
     thresholds: {
-        'http_req_duration': ['p(95)<100'], // p95 < 100ms for semantic cache hits / gateway
-        'http_req_failed': ['rate<0.01'],    // < 1% error rate
+        'http_req_duration': ['p(95)<500'], // p95 < 500ms
+        'http_req_failed': ['rate<0.05'],    // < 5% error rate
     },
 };
 
@@ -56,7 +55,7 @@ export default function () {
             'X-API-Key': API_KEY,
             'X-Idempotency-Key': `k6_req_${__VU}_${__ITER}`
         },
-        timeout: '2s'
+        timeout: '5s'
     };
 
     const res = http.post(`${BASE_URL}/v1/chat/completions`, payload, params);

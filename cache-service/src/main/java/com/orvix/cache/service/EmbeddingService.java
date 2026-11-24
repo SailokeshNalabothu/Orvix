@@ -60,13 +60,13 @@ public class EmbeddingService {
      * Converts float array to pgvector string format: "[v0,v1,v2,...,v767]"
      */
     public String toPgVectorString(float[] vector) {
-        StringBuilder sb = new StringBuilder(VECTOR_DIMENSION * 10);
+        StringBuilder sb = new StringBuilder(VECTOR_DIMENSION * 8);
         sb.append('[');
         for (int i = 0; i < vector.length; i++) {
             if (i > 0) {
                 sb.append(',');
             }
-            sb.append(String.format(Locale.ROOT, "%.6f", vector[i]));
+            sb.append(vector[i]);
         }
         sb.append(']');
         return sb.toString();
