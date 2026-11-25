@@ -570,6 +570,9 @@ k6 run benchmark/k6-load-test.js
 
 # 3. Live financial transaction guarantees and idempotency verification
 python benchmark/financial-guarantees-test.py
+
+# 4. Live security validation across 6 threat categories and tenant isolation
+python benchmark/security-validation-test.py
 ```
 
 #### Empirical benchmark results (live cluster execution)
@@ -596,8 +599,14 @@ python benchmark/financial-guarantees-test.py
 | **PostgreSQL crash recovery** | In-flight Kafka offsets held without DLQ pollution; 0 orphaned transactions | Zero money leaks | **PASS** |
 | **Microservice fault policies** | Guardrail **Fail-Closed (503)**, Semantic Cache **Fail-Open (200 BYPASS)**, Billing topic buffering | Strict SLA preservation | **PASS** |
 | **Kafka DLQ poison-pill isolation** | Unprocessable events routed to `orvix.usage.dlq` without blocking consumer group | Zero partition block | **PASS** |
+| **CAT 1–6 Adversarial Recall** | **100.00% (63 / 63 attacks detected)** across all 6 threat taxonomy categories | $\ge 95.0\%$ | **PASS** |
+| **Clean Enterprise FPR** | **0.00% (0 / 40 false triggers)** on standard B2B SaaS queries | $\le 2.0\%$ | **PASS** |
+| **Hard Negative Boundary FPR** | **0.00% (0 / 25 false triggers)** on security/programming inquiries (`equals`, `sudo`, `XML`) | $\le 8.0\%$ | **PASS** |
+| **Multi-Tenant Security Policy Isolation** | Tenant Alpha blocked custom keyword (`cryptocurrency`); Tenant Beta allowed identical prompt; allowed keyword override (`sudo`) verified | Zero Policy Bleed | **PASS** |
+| **Multi-Tenant Audit Log Isolation** | Audit logs segregated by tenant ID; zero cross-tenant leakages observed | Strict Data Isolation | **PASS** |
+| **Gateway Route Guardrail Block** | Adversarial injection prompt rejected at edge Gateway with **HTTP 400 Bad Request**; 0 tokens billed | Zero Token Leak | **PASS** |
 
-The complete methodology, environment profile, latency distributions, and chaos engineering architecture are documented in [`docs/08-PERFORMANCE-BENCHMARK.md`](docs/08-PERFORMANCE-BENCHMARK.md), [`docs/09-FINANCIAL-CORRECTNESS.md`](docs/09-FINANCIAL-CORRECTNESS.md), [`docs/10-CHAOS-ENGINEERING-AND-RECOVERY.md`](docs/10-CHAOS-ENGINEERING-AND-RECOVERY.md), and [`docs/11-REAL-FINANCIAL-TRANSACTION-GUARANTEES.md`](docs/11-REAL-FINANCIAL-TRANSACTION-GUARANTEES.md).
+The complete methodology, environment profile, latency distributions, chaos engineering architecture, and security validation results are documented in [`docs/08-PERFORMANCE-BENCHMARK.md`](docs/08-PERFORMANCE-BENCHMARK.md), [`docs/09-FINANCIAL-CORRECTNESS.md`](docs/09-FINANCIAL-CORRECTNESS.md), [`docs/10-CHAOS-ENGINEERING-AND-RECOVERY.md`](docs/10-CHAOS-ENGINEERING-AND-RECOVERY.md), [`docs/11-REAL-FINANCIAL-TRANSACTION-GUARANTEES.md`](docs/11-REAL-FINANCIAL-TRANSACTION-GUARANTEES.md), and [`docs/12-CREDIBLE-SECURITY-VALIDATION.md`](docs/12-CREDIBLE-SECURITY-VALIDATION.md).
 
 <a name="repository-structure"></a>
 
@@ -618,7 +627,9 @@ Orvix/
 │   ├── chaos-recovery-test.py # Automated Toxiproxy and Docker chaos test runner
 │   ├── chaos_recovery_report.json # Empirical zero-loss disaster recovery report
 │   ├── financial-guarantees-test.py # Live financial transaction guarantees test runner
-│   └── financial_guarantees_report.json # Empirical financial correctness verification report
+│   ├── financial_guarantees_report.json # Empirical financial correctness verification report
+│   ├── security-validation-test.py # Live adversarial security validation and tenant isolation runner
+│   └── security_validation_report.json # Empirical security confusion matrix and per-category report
 ├── docs/                    # Design documents
 │   ├── 01-PRD.md            # Product requirements and scope lock
 │   ├── 02-HLD.md            # High-level architecture and sequence flows
@@ -630,10 +641,11 @@ Orvix/
 │   ├── 08-PERFORMANCE-BENCHMARK.md # Performance Benchmark Methodology & Empirical Results
 │   ├── 09-FINANCIAL-CORRECTNESS.md # 3-Tier Reconciliation, Atomicity, Refunds & DLQ
 │   ├── 10-CHAOS-ENGINEERING-AND-RECOVERY.md # Chaos Engineering, Toxiproxy & Zero-Loss Recovery
-│   └── 11-REAL-FINANCIAL-TRANSACTION-GUARANTEES.md # Transactional Outbox, Idempotent Refunds & Retry Defense
+│   ├── 11-REAL-FINANCIAL-TRANSACTION-GUARANTEES.md # Transactional Outbox, Idempotent Refunds & Retry Defense
+│   └── 12-CREDIBLE-SECURITY-VALIDATION.md # Threat Taxonomy (CAT 1-6), Hard Negatives & Tenant Isolation
 ├── orvix-common/            # Shared DTOs, Kafka event records, headers
 ├── gateway-service/         # Edge router, Redis Lua rate limiter, fallback buffer, LLM failover
-├── guardrail-service/       # PII engine, injection detector, audit DB
+├── guardrail-service/       # PII engine, injection detector, audit DB, multi-tenant policies
 ├── cache-service/           # 768-dim embeddings, pgvector HNSW cosine search
 └── billing-service/         # Double-entry ledger, Kafka listener, 3-tier reconciliation, refunds
 ```
@@ -651,8 +663,9 @@ Orvix/
 | **ADR-009** | Production-grade financial correctness, 3-tier reconciliation engine, atomic refund reversals, and Kafka DLQ (`docs/09-FINANCIAL-CORRECTNESS.md`) |
 | **ADR-010** | Chaos engineering, Toxiproxy fault injection, and zero-loss financial disaster recovery (`docs/10-CHAOS-ENGINEERING-AND-RECOVERY.md`) |
 | **ADR-011** | Real financial transaction guarantees, Transactional Outbox pattern, idempotent refunds, over-refund defense, and duplicate-event recovery (`docs/11-REAL-FINANCIAL-TRANSACTION-GUARANTEES.md`) |
+| **ADR-012** | Credible security validation, formal threat taxonomy (CAT 1–6), empirical confusion matrix, hard negative discrimination, and multi-tenant security policy isolation (`docs/12-CREDIBLE-SECURITY-VALIDATION.md`) |
 
-The full set (ADR-001 to ADR-011) lives in [`docs/05-ADR.md`](docs/05-ADR.md), [`docs/06-THREAT-MODEL.md`](docs/06-THREAT-MODEL.md), [`docs/07-SEMANTIC-CACHE-GUARD.md`](docs/07-SEMANTIC-CACHE-GUARD.md), [`docs/08-PERFORMANCE-BENCHMARK.md`](docs/08-PERFORMANCE-BENCHMARK.md), [`docs/09-FINANCIAL-CORRECTNESS.md`](docs/09-FINANCIAL-CORRECTNESS.md), [`docs/10-CHAOS-ENGINEERING-AND-RECOVERY.md`](docs/10-CHAOS-ENGINEERING-AND-RECOVERY.md), and [`docs/11-REAL-FINANCIAL-TRANSACTION-GUARANTEES.md`](docs/11-REAL-FINANCIAL-TRANSACTION-GUARANTEES.md).
+The full set (ADR-001 to ADR-012) lives in [`docs/05-ADR.md`](docs/05-ADR.md), [`docs/06-THREAT-MODEL.md`](docs/06-THREAT-MODEL.md), [`docs/07-SEMANTIC-CACHE-GUARD.md`](docs/07-SEMANTIC-CACHE-GUARD.md), [`docs/08-PERFORMANCE-BENCHMARK.md`](docs/08-PERFORMANCE-BENCHMARK.md), [`docs/09-FINANCIAL-CORRECTNESS.md`](docs/09-FINANCIAL-CORRECTNESS.md), [`docs/10-CHAOS-ENGINEERING-AND-RECOVERY.md`](docs/10-CHAOS-ENGINEERING-AND-RECOVERY.md), [`docs/11-REAL-FINANCIAL-TRANSACTION-GUARANTEES.md`](docs/11-REAL-FINANCIAL-TRANSACTION-GUARANTEES.md), and [`docs/12-CREDIBLE-SECURITY-VALIDATION.md`](docs/12-CREDIBLE-SECURITY-VALIDATION.md).
 
 ## License
 

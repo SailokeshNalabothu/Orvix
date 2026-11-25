@@ -1,0 +1,57 @@
+{
+  "timestamp": "2026-11-25T13:24:06Z",
+  "summary": {
+    "total_adversarial_tested": 63,
+    "adversarial_detected": 63,
+    "total_clean_tested": 40,
+    "clean_false_positives": 0,
+    "clean_fpr_pct": 0.0,
+    "total_hard_negatives_tested": 25,
+    "hard_negative_false_positives": 0,
+    "hard_negative_fpr_pct": 0.0,
+    "overall_precision": 1.0,
+    "overall_recall": 1.0,
+    "overall_f1": 1.0
+  },
+  "category_metrics": {
+    "CAT1_DIRECT_OVERRIDE": {
+      "total": 11,
+      "detected": 11,
+      "recall_pct": 100.0
+    },
+    "CAT2_JAILBREAK_ROLEPLAY": {
+      "total": 12,
+      "detected": 12,
+      "recall_pct": 100.0
+    },
+    "CAT3_DELIMITER_HIJACK": {
+      "total": 10,
+      "detected": 10,
+      "recall_pct": 100.0
+    },
+    "CAT4_OBFUSCATION_EVASION": {
+      "total": 10,
+      "detected": 10,
+      "recall_pct": 100.0
+    },
+    "CAT5_SYSTEM_EXFILTRATION": {
+      "total": 10,
+      "detected": 10,
+      "recall_pct": 100.0
+    },
+    "CAT6_INDIRECT_INJECTION": {
+      "total": 10,
+      "detected": 10,
+      "recall_pct": 100.0
+    }
+  },
+  "tenant_isolation": {
+    "tenant_strict": "ten_strict_alpha",
+    "tenant_dev": "ten_dev_beta",
+    "custom_keyword_enforced": true,
+    "policy_isolation_verified": true,
+    "allowed_keyword_override_verified": true,
+    "audit_log_isolation_verified": true
+  },
+  "gateway_route_verified": true
+}

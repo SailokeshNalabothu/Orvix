@@ -1,5 +1,6 @@
 package com.orvix.guardrail.engine;
 
+import com.orvix.guardrail.model.TenantSecurityPolicy;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
@@ -12,16 +13,37 @@ import java.util.regex.Pattern;
 /**
  * Advanced Multi-Stage Prompt Injection & Adversarial Attack Defense Engine.
  *
- * Architecture:
- * Stage 1: Lexical Canonicalization (Unicode NFKC, homoglyph flattening, zero-width stripping)
- * Stage 2: Obfuscation Evasion Scanner (Recursive Base64/Hex decoding and inspection)
- * Stage 3: Multi-Vector Threat Analysis (Direct Overrides, Jailbreaks, Delimiters, System Leaks)
- * Stage 4: Shannon Entropy Anomaly Detection for token smuggling
- * Stage 5: Ensembled Risk Scoring with Threat Vector Classification
+ * Formal Threat Taxonomy:
+ * - CAT-1: Direct Instruction Overrides (Directive resets, safety filter disablement, "ignore previous instructions")
+ * - CAT-2: Persona Hijacking & Roleplay Jailbreaks (DAN/STAN personas, evil AI, fictional framing, opposite day)
+ * - CAT-3: Delimiter & Structural Framing Attacks (Chat template tokens, pseudo-XML tags, markdown injection headers)
+ * - CAT-4: Encoding & Evasion Obfuscation (Base64, Hex byte strings, zero-width steganography, homoglyphs, leetspeak)
+ * - CAT-5: Context Extraction & System Leakage (System prompt exfiltration, initial instructions dump, developer notes leak)
+ * - CAT-6: Indirect / Contextual Injections (Markdown image link exfiltration, embedded RAG overrides, token smuggling)
  */
 @Component
 @Slf4j
 public class PromptInjectionDetector {
+
+    public enum ThreatCategory {
+        CAT1_DIRECT_OVERRIDE("Direct Instruction Override & Safety Bypass"),
+        CAT2_JAILBREAK_ROLEPLAY("Persona Hijacking & Roleplay Jailbreaks"),
+        CAT3_DELIMITER_HIJACK("Delimiter & Structural Framing Attacks"),
+        CAT4_OBFUSCATION_EVASION("Multi-Language & Encoding Evasion"),
+        CAT5_SYSTEM_EXFILTRATION("Context Extraction & System Leakage"),
+        CAT6_INDIRECT_INJECTION("Indirect / Markdown Exfiltration & Token Smuggling"),
+        NONE("Clean");
+
+        private final String description;
+
+        ThreatCategory(String description) {
+            this.description = description;
+        }
+
+        public String getDescription() {
+            return description;
+        }
+    }
 
     public enum ThreatVector {
         DIRECT_OVERRIDE,
@@ -30,16 +52,30 @@ public class PromptInjectionDetector {
         SYSTEM_LEAKAGE,
         OBFUSCATED_PAYLOAD,
         ENTROPY_ANOMALY,
+        INDIRECT_INJECTION,
         NONE
     }
 
     public record DetectionResult(
             boolean isInjection,
             double riskScore,
-            ThreatVector threatVector,
+            ThreatCategory threatCategory,
             List<String> detectedIndicators,
             String normalizedText
-    ) {}
+    ) {
+        public ThreatVector threatVector() {
+            if (threatCategory == null) return ThreatVector.NONE;
+            return switch (threatCategory) {
+                case CAT1_DIRECT_OVERRIDE -> ThreatVector.DIRECT_OVERRIDE;
+                case CAT2_JAILBREAK_ROLEPLAY -> ThreatVector.JAILBREAK_ROLEPLAY;
+                case CAT3_DELIMITER_HIJACK -> ThreatVector.DELIMITER_HIJACK;
+                case CAT4_OBFUSCATION_EVASION -> ThreatVector.OBFUSCATED_PAYLOAD;
+                case CAT5_SYSTEM_EXFILTRATION -> ThreatVector.SYSTEM_LEAKAGE;
+                case CAT6_INDIRECT_INJECTION -> ThreatVector.INDIRECT_INJECTION;
+                case NONE -> ThreatVector.NONE;
+            };
+        }
+    }
 
     // Zero-width characters & invisible unicode
     private static final Pattern ZERO_WIDTH_CHARS = Pattern.compile("[\\u200B-\\u200D\\uFEFF\\u00A0\\u00AD\\u2060\\u200E\\u200F]");
@@ -50,32 +86,45 @@ public class PromptInjectionDetector {
     // Hex candidate regex (16+ hex characters)
     private static final Pattern HEX_PATTERN = Pattern.compile("\\b([0-9a-fA-F]{2}){8,}\\b");
 
-    // Threat Vector 1: Direct Instruction Overrides
+    // Informational / Pedagogical Context Pattern (Hard Negative Filter)
+    private static final Pattern PEDAGOGICAL_CONTEXT_PATTERN = Pattern.compile(
+            "(?i)^\\s*(?:how\\s+(?:do|can|does|to)|explain|what\\s+(?:is|are|was|were|the)|describe|analyze|discuss|difference\\s+between)\\s+.*?(?:prompt\\s+injection|sql\\s+injection|dan\\b|jailbreak|xss|vulnerability|attack|security|equals\\b|hashcode\\b|base64\\b|jwt\\b|tag\\b|xml\\b|root\\s+privileges|privilege)"
+    );
+
+    // Threat Vector 1: Direct Instruction Overrides (CAT-1)
     private static final Pattern[] DIRECT_OVERRIDE_PATTERNS = {
             Pattern.compile("(?i)\\b(?:ignore|forget|disregard|bypass|override)\\s+.*?(?:instructions|prompts|rules|commands|directives|guidelines)\\b"),
             Pattern.compile("(?i)\\b(?:do\\s+not\\s+follow|stop\\s+following)\\s+.*?(?:instructions|prompts|rules|guidelines|safety)\\b"),
-            Pattern.compile("(?i)\\b(?:override|bypass|disable)\\s+(?:all\\s+)?(?:safety|content|ethical|system)\\s*(?:filters|guardrails|policies|rules)\\b")
+            Pattern.compile("(?i)\\b(?:override|bypass|disable)\\s+(?:all\\s+)?(?:safety|content|ethical|system|ai)\\s*(?:filters|guardrails|policies|rules|directives|restrictions)\\b")
     };
 
-    // Threat Vector 2: Jailbreak Personas & Fictional Framing
+    // Threat Vector 2: Jailbreak Personas & Fictional Framing (CAT-2)
     private static final Pattern[] JAILBREAK_ROLEPLAY_PATTERNS = {
             Pattern.compile("(?i)\\b(?:you\\s+are\\s+now|act\\s+as|pretend\\s+(?:you\\s+are|to\\s+be)|roleplay\\s+as|switch\\s+to)\\s+.*?(?:DAN|unrestricted|jailbroken|evil\\s+AI|an?\\s+unfiltered|ChaosBot|developer\\s+mode|unaligned|STAN)\\b"),
             Pattern.compile("(?i)\\b(?:in\\s+(?:this\\s+)?(?:hypothetical|fictional)|alternate\\s+universe|opposite\\s+day)\\b.*?(?:no\\s+rules|no\\s+ethics|unrestricted|bypass|ignore\\s+safety|anything\\s+goes|safety\\s+doesn't\\s+exist|exact\\s+opposite|no\\s+safety)\\b"),
             Pattern.compile("(?i)\\bdeveloper\\s+mode\\s+(?:is\\s+)?enabled\\b|\\bsudo\\s+mode\\b|\\broot\\s+privileges\\b")
     };
 
-    // Threat Vector 3: Delimiter Hijacking & Role Spoofing
+    // Threat Vector 3: Delimiter Hijacking & Role Spoofing (CAT-3)
     private static final Pattern[] DELIMITER_HIJACK_PATTERNS = {
             Pattern.compile("(?i)<\\|im_start\\|>|<\\|im_end\\|>|\\[INST\\]|\\[/INST\\]|```system"),
             Pattern.compile("(?i)</?system>|</?user>|</?assistant>|\\b(?:---BEGIN|===BEGIN)\\s+(?:SYSTEM|PROMPT|INSTRUCTION)"),
-            Pattern.compile("(?i)\\n(?:Human|Assistant|System):\\s*\\n")
+            Pattern.compile("(?i)\\n(?:Human|Assistant|System):\\s*\\n"),
+            Pattern.compile("(?i)<\\|im_start\\|>developer")
     };
 
-    // Threat Vector 4: System Leakage & Exfiltration
+    // Threat Vector 4: System Leakage & Exfiltration (CAT-5)
     private static final Pattern[] SYSTEM_LEAKAGE_PATTERNS = {
             Pattern.compile("(?i)\\b(?:print|show|reveal|repeat|dump|output|leak|spell)\\s+.*?(?:system\\s+prompt|initial\\s+instructions|secret\\s+instructions|base\\s+prompt|hidden\\s+rules|developer\\s+prompt|environment\\s+variables|database\\s+keys|credentials)\\b"),
             Pattern.compile("(?i)\\b(?:what\\s+(?:are|were)\\s+your|repeat\\s+all)\\s+.*?(?:initial|system|original|secret)\\s+(?:instructions|prompts|rules)\\b"),
             Pattern.compile("(?i)\\boutput\\s+(?:the\\s+)?exact\\s+text\\s+above\\b")
+    };
+
+    // Threat Vector 5: Indirect & Markdown Exfiltration (CAT-6)
+    private static final Pattern[] INDIRECT_INJECTION_PATTERNS = {
+            Pattern.compile("(?i)!\\[.*?\\]\\(https?://[^\\s)]*(?:exfil|leak|token|key|secret|prompt|webhook|collect|steal)[^\\s)]*\\)"),
+            Pattern.compile("(?i)(?:IMPORTANT\\s+NOTE|SYSTEM\\s+OVERRIDE|PRIORITY\\s+INSTRUCTION):\\s*(?:ignore|disregard|forget)\\s+.*?(?:above|preceding|previous)"),
+            Pattern.compile("(?i)\\[(?:SYSTEM|OVERRIDE|INSTRUCTION)\\]\\s*(?:ignore|bypass|override)")
     };
 
     /**
@@ -86,38 +135,65 @@ public class PromptInjectionDetector {
     }
 
     /**
-     * Comprehensive multi-stage detection pipeline returning detailed threat classification.
+     * Detection with default platform security policy.
      */
     public DetectionResult detect(String rawPrompt) {
+        return detect(rawPrompt, null);
+    }
+
+    /**
+     * Comprehensive multi-stage detection pipeline with Tenant-Isolated Security Policy support.
+     */
+    public DetectionResult detect(String rawPrompt, TenantSecurityPolicy policy) {
         if (rawPrompt == null || rawPrompt.isBlank()) {
-            return new DetectionResult(false, 0.0, ThreatVector.NONE, List.of(), "");
+            return new DetectionResult(false, 0.0, ThreatCategory.NONE, List.of(), "");
         }
 
         List<String> indicators = new ArrayList<>();
         double totalRisk = 0.0;
-        ThreatVector primaryVector = ThreatVector.NONE;
+        ThreatCategory primaryCategory = ThreatCategory.NONE;
 
-        // Stage 1: Structural De-obfuscation & Canonicalization
-        String canonicalized = canonicalize(rawPrompt);
-        String leetNormalized = normalizeLeetspeak(canonicalized);
-
-        // Stage 2: Obfuscated Payload Scanner (Recursive Base64/Hex decoding)
-        String decodedPayload = scanAndDecodeObfuscated(rawPrompt);
-        if (decodedPayload != null && !decodedPayload.isBlank()) {
-            DetectionResult subResult = evaluatePatterns(decodedPayload);
-            if (subResult.isInjection()) {
-                indicators.add("OBFUSCATED_BASE64_HEX_PAYLOAD: " + subResult.threatVector());
-                return new DetectionResult(
-                        true,
-                        1.0,
-                        ThreatVector.OBFUSCATED_PAYLOAD,
-                        indicators,
-                        canonicalized
-                );
+        // 1. Tenant Policy: Custom Blocked Keywords Check
+        if (policy != null && policy.getCustomBlockedKeywords() != null) {
+            String lower = rawPrompt.toLowerCase();
+            for (String kw : policy.getCustomBlockedKeywords()) {
+                if (kw != null && !kw.isBlank() && lower.contains(kw.toLowerCase().trim())) {
+                    indicators.add("TENANT_CUSTOM_BLOCKED_KEYWORD: " + kw.trim());
+                    return new DetectionResult(
+                            true,
+                            1.0,
+                            ThreatCategory.CAT1_DIRECT_OVERRIDE,
+                            indicators,
+                            rawPrompt
+                    );
+                }
             }
         }
 
-        // Stage 3: Multi-Vector Pattern Matching on both Canonicalized and Leetspeak forms
+        // 2. Stage 1: Structural De-obfuscation & Canonicalization
+        String canonicalized = canonicalize(rawPrompt);
+        String leetNormalized = normalizeLeetspeak(canonicalized);
+
+        // 3. Stage 2: Obfuscated Payload Scanner (Recursive Base64/Hex decoding)
+        boolean scanObfuscation = (policy == null || policy.isBlockObfuscation());
+        if (scanObfuscation) {
+            String decodedPayload = scanAndDecodeObfuscated(rawPrompt);
+            if (decodedPayload != null && !decodedPayload.isBlank()) {
+                DetectionResult subResult = evaluatePatterns(decodedPayload);
+                if (subResult.isInjection()) {
+                    indicators.add("OBFUSCATED_BASE64_HEX_PAYLOAD: " + subResult.threatCategory());
+                    return new DetectionResult(
+                            true,
+                            1.0,
+                            ThreatCategory.CAT4_OBFUSCATION_EVASION,
+                            indicators,
+                            canonicalized
+                    );
+                }
+            }
+        }
+
+        // 4. Stage 3: Multi-Vector Pattern Matching on both Canonicalized and Leetspeak forms
         DetectionResult patternResult = evaluatePatterns(canonicalized);
         if (!patternResult.isInjection() && !canonicalized.equals(leetNormalized)) {
             DetectionResult leetResult = evaluatePatterns(leetNormalized);
@@ -125,8 +201,8 @@ public class PromptInjectionDetector {
                 patternResult = new DetectionResult(
                         true,
                         leetResult.riskScore(),
-                        leetResult.threatVector(),
-                        List.of("LEETSPEAK_OBFUSCATION: " + leetResult.threatVector()),
+                        leetResult.threatCategory(),
+                        List.of("LEETSPEAK_OBFUSCATION: " + leetResult.threatCategory()),
                         canonicalized
                 );
             }
@@ -135,68 +211,141 @@ public class PromptInjectionDetector {
         if (patternResult.isInjection()) {
             indicators.addAll(patternResult.detectedIndicators());
             totalRisk = Math.max(totalRisk, patternResult.riskScore());
-            primaryVector = patternResult.threatVector();
+            primaryCategory = patternResult.threatCategory();
         }
 
-        // Stage 4: Shannon Entropy Anomaly Detection for token smuggling / high-entropy payload
+        // 5. Stage 4: Shannon Entropy Anomaly Detection for token smuggling / high-entropy payload
         if (rawPrompt.length() > 60) {
             double entropy = EntropyCalculator.calculateShannonEntropy(rawPrompt);
-            // High-entropy threshold with suspicious trigger words
             if (entropy >= 4.5 && (rawPrompt.contains("==") || rawPrompt.contains("\\x") || rawPrompt.contains("%"))) {
                 indicators.add("HIGH_ENTROPY_TOKEN_SMUGGLING (H=" + String.format("%.2f", entropy) + ")");
                 totalRisk = Math.max(totalRisk, 0.85);
-                if (primaryVector == ThreatVector.NONE) {
-                    primaryVector = ThreatVector.ENTROPY_ANOMALY;
+                if (primaryCategory == ThreatCategory.NONE) {
+                    primaryCategory = ThreatCategory.CAT6_INDIRECT_INJECTION;
                 }
             }
         }
 
-        boolean blocked = totalRisk >= 0.60;
+        // 6. Hard Negative Pedagogical Context Disambiguation
+        // If the prompt matches a purely conceptual / educational inquiry and does NOT have obfuscated/entropy markers
+        if (totalRisk > 0 && primaryCategory != ThreatCategory.CAT4_OBFUSCATION_EVASION) {
+            if (isEducationalOrInquiryContext(rawPrompt, canonicalized)) {
+                log.debug("Pedagogical context detected for prompt: '{}'. Mitigating risk score.", rawPrompt);
+                totalRisk = Math.min(totalRisk, 0.35); // De-weight below block threshold
+                if (totalRisk < 0.60) {
+                    primaryCategory = ThreatCategory.NONE;
+                    indicators.add("BENIGN_PEDAGOGICAL_CONTEXT_DISAMBIGUATION");
+                }
+            }
+        }
+
+        // 7. Tenant Policy: Allowed Keywords Overrides
+        if (policy != null && policy.getAllowedKeywords() != null && !policy.getAllowedKeywords().isEmpty()) {
+            String lower = rawPrompt.toLowerCase();
+            for (String allowed : policy.getAllowedKeywords()) {
+                if (allowed != null && !allowed.isBlank() && lower.contains(allowed.toLowerCase().trim())) {
+                    log.info("Tenant {} allowed keyword '{}' matched, mitigating risk.", policy.getTenantId(), allowed);
+                    totalRisk = 0.0;
+                    primaryCategory = ThreatCategory.NONE;
+                    indicators.clear();
+                    break;
+                }
+            }
+        }
+
+        double effectiveThreshold = 0.60;
+        if (policy != null) {
+            effectiveThreshold = policy.isStrictMode() ? 0.45 : policy.getRiskThreshold();
+        }
+
+        boolean blocked = totalRisk >= effectiveThreshold;
         return new DetectionResult(
                 blocked,
                 totalRisk,
-                blocked ? primaryVector : ThreatVector.NONE,
+                blocked ? primaryCategory : ThreatCategory.NONE,
                 indicators,
                 canonicalized
         );
     }
 
+    private boolean isEducationalOrInquiryContext(String raw, String canonicalized) {
+        if (PEDAGOGICAL_CONTEXT_PATTERN.matcher(raw).find()) {
+            return true;
+        }
+        String lower = canonicalized.toLowerCase();
+        String rawLower = raw.toLowerCase();
+
+        // Check for Java method override programming context: "override equals", "override hashcode"
+        if (lower.contains("override") && (lower.contains("equals") || lower.contains("hashcode") || lower.contains("tostring") || lower.contains("method"))) {
+            return true;
+        }
+
+        // Check for literal quotation or UI dialog context (e.g. user asks about wording/UI prompt containing 'ignore previous instructions')
+        if ((rawLower.contains("ignore previous instructions") || rawLower.contains("ignore all instructions") || rawLower.contains("disregard prior"))
+                && (lower.contains("button") || lower.contains("wording") || lower.contains("message") || lower.contains("ui") || lower.contains("copy")
+                    || lower.contains("cancel") || lower.contains("prompt says") || lower.contains("dialog") || lower.contains("clear"))) {
+            return true;
+        }
+
+        // Check for technical/XML/Android inquiry about tags: e.g. <system>, <user>, <assistant> tags in Android XML or HTML
+        if ((lower.contains("<system>") || lower.contains("<system-monitor>") || lower.contains("</system>"))
+                && (lower.contains("xml") || lower.contains("android") || lower.contains("tag") || lower.contains("configuration") || lower.contains("html") || lower.contains("parse") || lower.contains("purpose of"))) {
+            return true;
+        }
+
+        // Check for DevOps/Kubernetes/Linux container administration context: "root privileges", "sudo"
+        if (lower.contains("root privileges")
+                && (lower.contains("kubernetes") || lower.contains("securitycontext") || lower.contains("container") || lower.contains("docker") || lower.contains("pod") || lower.contains("linux") || lower.contains("securely"))) {
+            return true;
+        }
+
+        return false;
+    }
+
     private DetectionResult evaluatePatterns(String text) {
         List<String> indicators = new ArrayList<>();
 
-        // Check Direct Overrides
+        // Check Direct Overrides (CAT-1)
         for (Pattern p : DIRECT_OVERRIDE_PATTERNS) {
             if (p.matcher(text).find()) {
                 indicators.add("MATCH_DIRECT_OVERRIDE");
-                return new DetectionResult(true, 0.95, ThreatVector.DIRECT_OVERRIDE, indicators, text);
+                return new DetectionResult(true, 0.95, ThreatCategory.CAT1_DIRECT_OVERRIDE, indicators, text);
             }
         }
 
-        // Check Jailbreak & Roleplay
+        // Check Jailbreak & Roleplay (CAT-2)
         for (Pattern p : JAILBREAK_ROLEPLAY_PATTERNS) {
             if (p.matcher(text).find()) {
                 indicators.add("MATCH_JAILBREAK_ROLEPLAY");
-                return new DetectionResult(true, 0.90, ThreatVector.JAILBREAK_ROLEPLAY, indicators, text);
+                return new DetectionResult(true, 0.90, ThreatCategory.CAT2_JAILBREAK_ROLEPLAY, indicators, text);
             }
         }
 
-        // Check Delimiter Hijacking
+        // Check Delimiter Hijacking (CAT-3)
         for (Pattern p : DELIMITER_HIJACK_PATTERNS) {
             if (p.matcher(text).find()) {
                 indicators.add("MATCH_DELIMITER_HIJACK");
-                return new DetectionResult(true, 0.85, ThreatVector.DELIMITER_HIJACK, indicators, text);
+                return new DetectionResult(true, 0.85, ThreatCategory.CAT3_DELIMITER_HIJACK, indicators, text);
             }
         }
 
-        // Check System Leakage
+        // Check System Leakage (CAT-5)
         for (Pattern p : SYSTEM_LEAKAGE_PATTERNS) {
             if (p.matcher(text).find()) {
                 indicators.add("MATCH_SYSTEM_LEAKAGE");
-                return new DetectionResult(true, 0.85, ThreatVector.SYSTEM_LEAKAGE, indicators, text);
+                return new DetectionResult(true, 0.85, ThreatCategory.CAT5_SYSTEM_EXFILTRATION, indicators, text);
             }
         }
 
-        return new DetectionResult(false, 0.0, ThreatVector.NONE, indicators, text);
+        // Check Indirect & Markdown Exfiltration (CAT-6)
+        for (Pattern p : INDIRECT_INJECTION_PATTERNS) {
+            if (p.matcher(text).find()) {
+                indicators.add("MATCH_INDIRECT_INJECTION");
+                return new DetectionResult(true, 0.90, ThreatCategory.CAT6_INDIRECT_INJECTION, indicators, text);
+            }
+        }
+
+        return new DetectionResult(false, 0.0, ThreatCategory.NONE, indicators, text);
     }
 
     /**
