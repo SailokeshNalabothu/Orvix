@@ -1,0 +1,59 @@
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: gateway-pdb
+  namespace: orvix-system
+  labels:
+    app.kubernetes.io/name: gateway-service
+    app.kubernetes.io/component: gateway
+    app.kubernetes.io/part-of: orvix-ai-control-plane
+spec:
+  minAvailable: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: gateway-service
+---
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: guardrail-pdb
+  namespace: orvix-system
+  labels:
+    app.kubernetes.io/name: guardrail-service
+    app.kubernetes.io/component: guardrail
+    app.kubernetes.io/part-of: orvix-ai-control-plane
+spec:
+  minAvailable: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: guardrail-service
+---
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: cache-pdb
+  namespace: orvix-system
+  labels:
+    app.kubernetes.io/name: cache-service
+    app.kubernetes.io/component: cache
+    app.kubernetes.io/part-of: orvix-ai-control-plane
+spec:
+  minAvailable: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: cache-service
+---
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: billing-pdb
+  namespace: orvix-system
+  labels:
+    app.kubernetes.io/name: billing-service
+    app.kubernetes.io/component: billing
+    app.kubernetes.io/part-of: orvix-ai-control-plane
+spec:
+  minAvailable: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: billing-service

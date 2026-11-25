@@ -1,0 +1,20 @@
+apiVersion: v2
+name: orvix
+description: Production Helm chart for Orvix Distributed AI Control Plane, Security Guardrail Firewall & FinOps Billing Engine
+type: application
+version: 1.0.0
+appVersion: "1.0.0"
+keywords:
+  - ai-gateway
+  - finops
+  - guardrail
+  - semantic-cache
+  - double-entry-ledger
+  - prometheus
+icon: https://raw.githubusercontent.com/SailokeshNalabothu/Orvix/main/assets/banner.svg
+home: https://github.com/SailokeshNalabothu/Orvix
+sources:
+  - https://github.com/SailokeshNalabothu/Orvix
+maintainers:
+  - name: Orvix Engineering Team
+    email: engineering@orvix.internal

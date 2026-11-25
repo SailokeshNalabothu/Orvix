@@ -1,0 +1,7 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: orvix-system
+  labels:
+    app.kubernetes.io/part-of: orvix-ai-control-plane
+    environment: production

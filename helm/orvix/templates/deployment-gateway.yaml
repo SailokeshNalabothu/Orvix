@@ -1,0 +1,83 @@
+{{- if .Values.gateway.enabled }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: gateway-service
+  labels:
+    app.kubernetes.io/component: gateway
+    {{- include "orvix.labels" . | nindent 4 }}
+spec:
+  {{- if not .Values.gateway.autoscaling.enabled }}
+  replicas: {{ .Values.gateway.replicaCount }}
+  {{- end }}
+  strategy:
+    type: {{ .Values.gateway.strategy.type }}
+    rollingUpdate:
+      maxSurge: {{ .Values.gateway.strategy.rollingUpdate.maxSurge }}
+      maxUnavailable: {{ .Values.gateway.strategy.rollingUpdate.maxUnavailable }}
+  selector:
+    matchLabels:
+      app.kubernetes.io/component: gateway
+      {{- include "orvix.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/path: "/actuator/prometheus"
+        prometheus.io/port: "8080"
+      labels:
+        app.kubernetes.io/component: gateway
+        {{- include "orvix.selectorLabels" . | nindent 8 }}
+    spec:
+      securityContext:
+        runAsNonRoot: {{ .Values.gateway.securityContext.runAsNonRoot }}
+        runAsUser: {{ .Values.gateway.securityContext.runAsUser }}
+        runAsGroup: {{ .Values.gateway.securityContext.runAsGroup }}
+      containers:
+        - name: gateway-service
+          image: "{{ .Values.global.imageRegistry }}/{{ .Values.gateway.image.repository }}:{{ .Values.gateway.image.tag }}"
+          imagePullPolicy: {{ .Values.gateway.image.pullPolicy }}
+          ports:
+            - name: http
+              containerPort: {{ .Values.gateway.service.port }}
+              protocol: TCP
+          envFrom:
+            - configMapRef:
+                name: orvix-config
+            - secretRef:
+                name: orvix-secrets
+          env:
+            - name: JAVA_OPTS
+              value: "{{ .Values.gateway.env.JAVA_OPTS }}"
+            - name: GUARDRAIL_SERVICE_URL
+              value: "{{ .Values.gateway.env.GUARDRAIL_SERVICE_URL }}"
+            - name: CACHE_SERVICE_URL
+              value: "{{ .Values.gateway.env.CACHE_SERVICE_URL }}"
+            - name: BILLING_SERVICE_URL
+              value: "{{ .Values.gateway.env.BILLING_SERVICE_URL }}"
+          resources:
+            {{- toYaml .Values.gateway.resources | nindent 12 }}
+          startupProbe:
+            httpGet:
+              path: {{ .Values.gateway.probes.startup.httpGet.path }}
+              port: {{ .Values.gateway.probes.startup.httpGet.port }}
+            initialDelaySeconds: {{ .Values.gateway.probes.startup.initialDelaySeconds }}
+            periodSeconds: {{ .Values.gateway.probes.startup.periodSeconds }}
+            timeoutSeconds: {{ .Values.gateway.probes.startup.timeoutSeconds }}
+            failureThreshold: {{ .Values.gateway.probes.startup.failureThreshold }}
+          livenessProbe:
+            httpGet:
+              path: {{ .Values.gateway.probes.liveness.httpGet.path }}
+              port: {{ .Values.gateway.probes.liveness.httpGet.port }}
+            periodSeconds: {{ .Values.gateway.probes.liveness.periodSeconds }}
+            timeoutSeconds: {{ .Values.gateway.probes.liveness.timeoutSeconds }}
+            failureThreshold: {{ .Values.gateway.probes.liveness.failureThreshold }}
+          readinessProbe:
+            httpGet:
+              path: {{ .Values.gateway.probes.readiness.httpGet.path }}
+              port: {{ .Values.gateway.probes.readiness.httpGet.port }}
+            periodSeconds: {{ .Values.gateway.probes.readiness.periodSeconds }}
+            timeoutSeconds: {{ .Values.gateway.probes.readiness.timeoutSeconds }}
+            failureThreshold: {{ .Values.gateway.probes.readiness.failureThreshold }}
+            successThreshold: {{ .Values.gateway.probes.readiness.successThreshold }}
+{{- end }}

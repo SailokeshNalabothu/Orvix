@@ -1,0 +1,343 @@
+# Global Configuration
+global:
+  environment: production
+  imageRegistry: "ghcr.io/sailokeshnalabothu/orvix"
+  imagePullPolicy: IfNotPresent
+  namespace: orvix-system
+
+# Shared Infrastructure Connection Endpoints
+infrastructure:
+  postgres:
+    enabled: true
+    host: "postgres-svc"
+    port: 5432
+    username: "orvix"
+    password: "orvix_secure_password"
+    databases:
+      billing: "billing_db"
+      guardrail: "guardrail_db"
+      cache: "cache_db"
+  redis:
+    enabled: true
+    host: "redis-svc"
+    port: 6379
+    password: ""
+  kafka:
+    enabled: true
+    bootstrapServers: "kafka-svc:9092"
+  prometheus:
+    enabled: true
+    port: 9090
+
+# ==============================================================================
+# 1. GATEWAY SERVICE (Port 8080)
+# ==============================================================================
+gateway:
+  enabled: true
+  name: gateway-service
+  replicaCount: 2
+  image:
+    repository: gateway-service
+    tag: "1.0.0"
+    pullPolicy: IfNotPresent
+  service:
+    type: ClusterIP
+    port: 8080
+    targetPort: 8080
+  resources:
+    requests:
+      cpu: 250m
+      memory: 512Mi
+    limits:
+      cpu: 1000m
+      memory: 1Gi
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 25%
+      maxUnavailable: 0
+  podDisruptionBudget:
+    enabled: true
+    minAvailable: 1
+  autoscaling:
+    enabled: true
+    minReplicas: 2
+    maxReplicas: 10
+    targetCPUUtilizationPercentage: 75
+    targetMemoryUtilizationPercentage: 80
+  probes:
+    startup:
+      httpGet:
+        path: /actuator/health
+        port: 8080
+      initialDelaySeconds: 10
+      periodSeconds: 5
+      timeoutSeconds: 3
+      failureThreshold: 24
+    liveness:
+      httpGet:
+        path: /actuator/health/liveness
+        port: 8080
+      periodSeconds: 10
+      timeoutSeconds: 3
+      failureThreshold: 3
+    readiness:
+      httpGet:
+        path: /actuator/health/readiness
+        port: 8080
+      periodSeconds: 5
+      timeoutSeconds: 3
+      failureThreshold: 2
+      successThreshold: 1
+  securityContext:
+    runAsNonRoot: true
+    runAsUser: 10001
+    runAsGroup: 10001
+    allowPrivilegeEscalation: false
+    readOnlyRootFilesystem: false
+  env:
+    JAVA_OPTS: "-XX:+UseG1GC -XX:MaxRAMPercentage=75.0 -XX:InitialRAMPercentage=50.0 -XX:+ExitOnOutOfMemoryError"
+    GUARDRAIL_SERVICE_URL: "http://guardrail-service:8081"
+    CACHE_SERVICE_URL: "http://cache-service:8082"
+    BILLING_SERVICE_URL: "http://billing-service:8083"
+
+# ==============================================================================
+# 2. GUARDRAIL SERVICE (Port 8081)
+# ==============================================================================
+guardrail:
+  enabled: true
+  name: guardrail-service
+  replicaCount: 2
+  image:
+    repository: guardrail-service
+    tag: "1.0.0"
+    pullPolicy: IfNotPresent
+  service:
+    type: ClusterIP
+    port: 8081
+    targetPort: 8081
+  resources:
+    requests:
+      cpu: 200m
+      memory: 512Mi
+    limits:
+      cpu: 800m
+      memory: 1Gi
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 25%
+      maxUnavailable: 0
+  podDisruptionBudget:
+    enabled: true
+    minAvailable: 1
+  autoscaling:
+    enabled: true
+    minReplicas: 2
+    maxReplicas: 8
+    targetCPUUtilizationPercentage: 70
+    targetMemoryUtilizationPercentage: 80
+  probes:
+    startup:
+      httpGet:
+        path: /actuator/health
+        port: 8081
+      initialDelaySeconds: 10
+      periodSeconds: 5
+      timeoutSeconds: 3
+      failureThreshold: 24
+    liveness:
+      httpGet:
+        path: /actuator/health/liveness
+        port: 8081
+      periodSeconds: 10
+      timeoutSeconds: 3
+      failureThreshold: 3
+    readiness:
+      httpGet:
+        path: /actuator/health/readiness
+        port: 8081
+      periodSeconds: 5
+      timeoutSeconds: 3
+      failureThreshold: 2
+      successThreshold: 1
+  securityContext:
+    runAsNonRoot: true
+    runAsUser: 10001
+    runAsGroup: 10001
+    allowPrivilegeEscalation: false
+    readOnlyRootFilesystem: false
+  env:
+    JAVA_OPTS: "-XX:+UseG1GC -XX:MaxRAMPercentage=75.0 -XX:InitialRAMPercentage=50.0 -XX:+ExitOnOutOfMemoryError"
+
+# ==============================================================================
+# 3. SEMANTIC CACHE SERVICE (Port 8082)
+# ==============================================================================
+cache:
+  enabled: true
+  name: cache-service
+  replicaCount: 2
+  image:
+    repository: cache-service
+    tag: "1.0.0"
+    pullPolicy: IfNotPresent
+  service:
+    type: ClusterIP
+    port: 8082
+    targetPort: 8082
+  resources:
+    requests:
+      cpu: 250m
+      memory: 512Mi
+    limits:
+      cpu: 1000m
+      memory: 1Gi
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 25%
+      maxUnavailable: 0
+  podDisruptionBudget:
+    enabled: true
+    minAvailable: 1
+  autoscaling:
+    enabled: true
+    minReplicas: 2
+    maxReplicas: 8
+    targetCPUUtilizationPercentage: 70
+    targetMemoryUtilizationPercentage: 80
+  probes:
+    startup:
+      httpGet:
+        path: /actuator/health
+        port: 8082
+      initialDelaySeconds: 10
+      periodSeconds: 5
+      timeoutSeconds: 3
+      failureThreshold: 24
+    liveness:
+      httpGet:
+        path: /actuator/health/liveness
+        port: 8082
+      periodSeconds: 10
+      timeoutSeconds: 3
+      failureThreshold: 3
+    readiness:
+      httpGet:
+        path: /actuator/health/readiness
+        port: 8082
+      periodSeconds: 5
+      timeoutSeconds: 3
+      failureThreshold: 2
+      successThreshold: 1
+  securityContext:
+    runAsNonRoot: true
+    runAsUser: 10001
+    runAsGroup: 10001
+    allowPrivilegeEscalation: false
+    readOnlyRootFilesystem: false
+  env:
+    JAVA_OPTS: "-XX:+UseG1GC -XX:MaxRAMPercentage=75.0 -XX:InitialRAMPercentage=50.0 -XX:+ExitOnOutOfMemoryError"
+
+# ==============================================================================
+# 4. FINOPS BILLING SERVICE (Port 8083)
+# ==============================================================================
+billing:
+  enabled: true
+  name: billing-service
+  replicaCount: 2
+  image:
+    repository: billing-service
+    tag: "1.0.0"
+    pullPolicy: IfNotPresent
+  service:
+    type: ClusterIP
+    port: 8083
+    targetPort: 8083
+  resources:
+    requests:
+      cpu: 200m
+      memory: 512Mi
+    limits:
+      cpu: 800m
+      memory: 1Gi
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 25%
+      maxUnavailable: 0
+  podDisruptionBudget:
+    enabled: true
+    minAvailable: 1
+  autoscaling:
+    enabled: true
+    minReplicas: 2
+    maxReplicas: 6
+    targetCPUUtilizationPercentage: 75
+    targetMemoryUtilizationPercentage: 80
+  probes:
+    startup:
+      httpGet:
+        path: /actuator/health
+        port: 8083
+      initialDelaySeconds: 10
+      periodSeconds: 5
+      timeoutSeconds: 3
+      failureThreshold: 24
+    liveness:
+      httpGet:
+        path: /actuator/health/liveness
+        port: 8083
+      periodSeconds: 10
+      timeoutSeconds: 3
+      failureThreshold: 3
+    readiness:
+      httpGet:
+        path: /actuator/health/readiness
+        port: 8083
+      periodSeconds: 5
+      timeoutSeconds: 3
+      failureThreshold: 2
+      successThreshold: 1
+  securityContext:
+    runAsNonRoot: true
+    runAsUser: 10001
+    runAsGroup: 10001
+    allowPrivilegeEscalation: false
+    readOnlyRootFilesystem: false
+  env:
+    JAVA_OPTS: "-XX:+UseG1GC -XX:MaxRAMPercentage=75.0 -XX:InitialRAMPercentage=50.0 -XX:+ExitOnOutOfMemoryError"
+
+# ==============================================================================
+# INGRESS & API GATEWAY ROUTING
+# ==============================================================================
+ingress:
+  enabled: true
+  className: nginx
+  annotations:
+    nginx.ingress.kubernetes.io/ssl-redirect: "false"
+    nginx.ingress.kubernetes.io/proxy-body-size: "16m"
+    nginx.ingress.kubernetes.io/proxy-read-timeout: "60"
+    nginx.ingress.kubernetes.io/proxy-send-timeout: "60"
+  hosts:
+    - host: orvix.local
+      paths:
+        - path: /
+          pathType: Prefix
+          service: gateway-service
+          port: 8080
+
+# ==============================================================================
+# PROMETHEUS MONITORING & SERVICEMONITORS
+# ==============================================================================
+monitoring:
+  enabled: true
+  serviceMonitor:
+    enabled: true
+    interval: 15s
+    scrapeTimeout: 10s
+    labels:
+      release: prometheus
+  podAnnotations:
+    prometheus.io/scrape: "true"
+    prometheus.io/path: "/actuator/prometheus"

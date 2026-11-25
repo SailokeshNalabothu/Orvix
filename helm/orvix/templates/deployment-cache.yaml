@@ -1,0 +1,137 @@
+{{- if .Values.cache.enabled }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: cache-service
+  labels:
+    app.kubernetes.io/component: cache
+    {{- include "orvix.labels" . | nindent 4 }}
+spec:
+  {{- if not .Values.cache.autoscaling.enabled }}
+  replicas: {{ .Values.cache.replicaCount }}
+  {{- end }}
+  strategy:
+    type: {{ .Values.cache.strategy.type }}
+    rollingUpdate:
+      maxSurge: {{ .Values.cache.strategy.rollingUpdate.maxSurge }}
+      maxUnavailable: {{ .Values.cache.strategy.rollingUpdate.maxUnavailable }}
+  selector:
+    matchLabels:
+      app.kubernetes.io/component: cache
+      {{- include "orvix.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/path: "/actuator/prometheus"
+        prometheus.io/port: "8082"
+      labels:
+        app.kubernetes.io/component: cache
+        {{- include "orvix.selectorLabels" . | nindent 8 }}
+    spec:
+      securityContext:
+        runAsNonRoot: {{ .Values.cache.securityContext.runAsNonRoot }}
+        runAsUser: {{ .Values.cache.securityContext.runAsUser }}
+        runAsGroup: {{ .Values.cache.securityContext.runAsGroup }}
+      containers:
+        - name: cache-service
+          image: "{{ .Values.global.imageRegistry }}/{{ .Values.cache.image.repository }}:{{ .Values.cache.image.tag }}"
+          imagePullPolicy: {{ .Values.cache.image.pullPolicy }}
+          ports:
+            - name: http
+              containerPort: {{ .Values.cache.service.port }}
+              protocol: TCP
+          envFrom:
+            - configMapRef:
+                name: orvix-config
+            - secretRef:
+                name: orvix-secrets
+          env:
+            - name: JAVA_OPTS
+              value: "{{ .Values.cache.env.JAVA_OPTS }}"
+            - name: SPRING_DATASOURCE_URL
+              value: "jdbc:postgresql://{{ .Values.infrastructure.postgres.host }}:{{ .Values.infrastructure.postgres.port }}/{{ .Values.infrastructure.postgres.databases.cache }}"
+          resources:
+            {{- toYaml .Values.cache.resources | nindent 12 }}
+          startupProbe:
+            httpGet:
+              path: {{ .Values.cache.probes.startup.httpGet.path }}
+              port: {{ .Values.cache.probes.startup.httpGet.port }}
+            initialDelaySeconds: {{ .Values.cache.probes.startup.initialDelaySeconds }}
+            periodSeconds: {{ .Values.cache.probes.startup.periodSeconds }}
+            timeoutSeconds: {{ .Values.cache.probes.startup.timeoutSeconds }}
+            failureThreshold: {{ .Values.cache.probes.startup.failureThreshold }}
+          livenessProbe:
+            httpGet:
+              path: {{ .Values.cache.probes.liveness.httpGet.path }}
+              port: {{ .Values.cache.probes.liveness.httpGet.port }}
+            periodSeconds: {{ .Values.cache.probes.liveness.periodSeconds }}
+            timeoutSeconds: {{ .Values.cache.probes.liveness.timeoutSeconds }}
+            failureThreshold: {{ .Values.cache.probes.liveness.failureThreshold }}
+          readinessProbe:
+            httpGet:
+              path: {{ .Values.cache.probes.readiness.httpGet.path }}
+              port: {{ .Values.cache.probes.readiness.httpGet.port }}
+            periodSeconds: {{ .Values.cache.probes.readiness.periodSeconds }}
+            timeoutSeconds: {{ .Values.cache.probes.readiness.timeoutSeconds }}
+            failureThreshold: {{ .Values.cache.probes.readiness.failureThreshold }}
+            successThreshold: {{ .Values.cache.probes.readiness.successThreshold }}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: cache-service
+  labels:
+    app.kubernetes.io/component: cache
+    {{- include "orvix.labels" . | nindent 4 }}
+spec:
+  type: {{ .Values.cache.service.type }}
+  ports:
+    - name: http
+      port: {{ .Values.cache.service.port }}
+      targetPort: {{ .Values.cache.service.targetPort }}
+      protocol: TCP
+  selector:
+    app.kubernetes.io/component: cache
+    {{- include "orvix.selectorLabels" . | nindent 4 }}
+---
+{{- if .Values.cache.autoscaling.enabled }}
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: cache-hpa
+  labels:
+    app.kubernetes.io/component: cache
+    {{- include "orvix.labels" . | nindent 4 }}
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: cache-service
+  minReplicas: {{ .Values.cache.autoscaling.minReplicas }}
+  maxReplicas: {{ .Values.cache.autoscaling.maxReplicas }}
+  metrics:
+    - type: Resource
+      resource:
+        name: cpu
+        target:
+          type: Utilization
+          averageUtilization: {{ .Values.cache.autoscaling.targetCPUUtilizationPercentage }}
+---
+{{- end }}
+{{- if .Values.cache.podDisruptionBudget.enabled }}
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: cache-pdb
+  labels:
+    app.kubernetes.io/component: cache
+    {{- include "orvix.labels" . | nindent 4 }}
+spec:
+  minAvailable: {{ .Values.cache.podDisruptionBudget.minAvailable }}
+  selector:
+    matchLabels:
+      app.kubernetes.io/component: cache
+      {{- include "orvix.selectorLabels" . | nindent 6 }}
+{{- end }}
+{{- end }}

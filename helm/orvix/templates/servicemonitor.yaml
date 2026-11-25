@@ -1,0 +1,18 @@
+{{- if .Values.monitoring.serviceMonitor.enabled }}
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: orvix-services-monitor
+  labels:
+    {{- include "orvix.labels" . | nindent 4 }}
+    {{- toYaml .Values.monitoring.serviceMonitor.labels | nindent 4 }}
+spec:
+  selector:
+    matchLabels:
+      app.kubernetes.io/part-of: orvix-ai-control-plane
+  endpoints:
+    - port: http
+      path: /actuator/prometheus
+      interval: {{ .Values.monitoring.serviceMonitor.interval }}
+      scrapeTimeout: {{ .Values.monitoring.serviceMonitor.scrapeTimeout }}
+{{- end }}

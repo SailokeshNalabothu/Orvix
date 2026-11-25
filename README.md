@@ -277,6 +277,33 @@ java -jar gateway-service/target/gateway-service-1.0.0-SNAPSHOT.jar
 
 </details>
 
+<details>
+<summary><b>Option C: Production Kubernetes & Helm Deployment (ADR-013)</b></summary>
+
+<br/>
+
+Deploy the services independently with zero-downtime rolling deployments (`maxUnavailable: 0`), 3-tier Spring Boot Actuator probes (`startup`, `liveness`, `readiness`), explicit compute resource requests/limits, Horizontal Pod Autoscaling (HPA v2), Pod Disruption Budgets (PDB), and Prometheus observability.
+
+```bash
+# Workflow 1: Helm Chart Deployment (Recommended)
+helm upgrade --install orvix ./helm/orvix --namespace orvix-system --create-namespace
+
+# Workflow 2: Standalone Kubernetes Manifests (GitOps / ArgoCD / Flux)
+kubectl apply -f k8s/00-namespace.yaml
+kubectl apply -f k8s/01-configmaps-secrets.yaml
+kubectl apply -f k8s/02-infrastructure.yaml
+kubectl apply -f k8s/03-deployments-services.yaml
+kubectl apply -f k8s/04-autoscaling-hpa.yaml
+kubectl apply -f k8s/05-pod-disruption-budgets.yaml
+kubectl apply -f k8s/06-ingress.yaml
+kubectl apply -f k8s/07-prometheus-monitoring.yaml
+
+# Verify specification conformity
+python benchmark/verify-k8s-manifests.py
+```
+
+</details>
+
 Verify that every actuator reports `{"status":"UP"}`:
 
 ```bash
@@ -629,7 +656,26 @@ Orvix/
 │   ├── financial-guarantees-test.py # Live financial transaction guarantees test runner
 │   ├── financial_guarantees_report.json # Empirical financial correctness verification report
 │   ├── security-validation-test.py # Live adversarial security validation and tenant isolation runner
-│   └── security_validation_report.json # Empirical security confusion matrix and per-category report
+│   ├── security_validation_report.json # Empirical security confusion matrix and per-category report
+│   └── verify-k8s-manifests.py # Specification verification harness for k8s manifests and Helm chart
+├── docker/                  # Production multi-stage Dockerfiles & configurations
+│   ├── Dockerfile.gateway   # Non-root unprivileged container for Gateway Service
+│   ├── Dockerfile.guardrail # Non-root unprivileged container for Guardrail Service
+│   ├── Dockerfile.cache     # Non-root unprivileged container for Semantic Cache Service
+│   └── Dockerfile.billing   # Non-root unprivileged container for FinOps Billing Service
+├── helm/orvix/              # Production Helm 3 chart for cloud-native deployment
+│   ├── Chart.yaml           # Chart metadata and versioning
+│   ├── values.yaml          # Environment defaults, resource limits, HPA & probes
+│   └── templates/           # Deployments, Services, HPAs, PDBs, Ingress & Prometheus monitors
+├── k8s/                     # Standalone raw Kubernetes manifests (GitOps / ArgoCD / Flux)
+│   ├── 00-namespace.yaml    # Dedicated orvix-system namespace
+│   ├── 01-configmaps-secrets.yaml # Shared configuration and credentials
+│   ├── 02-infrastructure.yaml # Self-contained PostgreSQL 16, Redis 7, Kafka KRaft
+│   ├── 03-deployments-services.yaml # Independent microservices with 3-tier probes & limits
+│   ├── 04-autoscaling-hpa.yaml # HPA v2 autoscalers with scale-up/down policies
+│   ├── 05-pod-disruption-budgets.yaml # High-availability PodDisruptionBudgets
+│   ├── 06-ingress.yaml      # NGINX edge Ingress routing
+│   └── 07-prometheus-monitoring.yaml # Prometheus scraper deployment & ServiceMonitors
 ├── docs/                    # Design documents
 │   ├── 01-PRD.md            # Product requirements and scope lock
 │   ├── 02-HLD.md            # High-level architecture and sequence flows
@@ -642,7 +688,8 @@ Orvix/
 │   ├── 09-FINANCIAL-CORRECTNESS.md # 3-Tier Reconciliation, Atomicity, Refunds & DLQ
 │   ├── 10-CHAOS-ENGINEERING-AND-RECOVERY.md # Chaos Engineering, Toxiproxy & Zero-Loss Recovery
 │   ├── 11-REAL-FINANCIAL-TRANSACTION-GUARANTEES.md # Transactional Outbox, Idempotent Refunds & Retry Defense
-│   └── 12-CREDIBLE-SECURITY-VALIDATION.md # Threat Taxonomy (CAT 1-6), Hard Negatives & Tenant Isolation
+│   ├── 12-CREDIBLE-SECURITY-VALIDATION.md # Threat Taxonomy (CAT 1-6), Hard Negatives & Tenant Isolation
+│   └── 13-KUBERNETES-AND-HELM-DEPLOYMENT.md # Independent Deployments, HPA v2, Probes, PDB & Prometheus
 ├── orvix-common/            # Shared DTOs, Kafka event records, headers
 ├── gateway-service/         # Edge router, Redis Lua rate limiter, fallback buffer, LLM failover
 ├── guardrail-service/       # PII engine, injection detector, audit DB, multi-tenant policies
@@ -664,8 +711,9 @@ Orvix/
 | **ADR-010** | Chaos engineering, Toxiproxy fault injection, and zero-loss financial disaster recovery (`docs/10-CHAOS-ENGINEERING-AND-RECOVERY.md`) |
 | **ADR-011** | Real financial transaction guarantees, Transactional Outbox pattern, idempotent refunds, over-refund defense, and duplicate-event recovery (`docs/11-REAL-FINANCIAL-TRANSACTION-GUARANTEES.md`) |
 | **ADR-012** | Credible security validation, formal threat taxonomy (CAT 1–6), empirical confusion matrix, hard negative discrimination, and multi-tenant security policy isolation (`docs/12-CREDIBLE-SECURITY-VALIDATION.md`) |
+| **ADR-013** | Production Kubernetes deployment, independent microservices, 3-tier health probes, resource limits, HPA v2 autoscaling, zero-downtime rolling updates, and Prometheus observability (`docs/13-KUBERNETES-AND-HELM-DEPLOYMENT.md`) |
 
-The full set (ADR-001 to ADR-012) lives in [`docs/05-ADR.md`](docs/05-ADR.md), [`docs/06-THREAT-MODEL.md`](docs/06-THREAT-MODEL.md), [`docs/07-SEMANTIC-CACHE-GUARD.md`](docs/07-SEMANTIC-CACHE-GUARD.md), [`docs/08-PERFORMANCE-BENCHMARK.md`](docs/08-PERFORMANCE-BENCHMARK.md), [`docs/09-FINANCIAL-CORRECTNESS.md`](docs/09-FINANCIAL-CORRECTNESS.md), [`docs/10-CHAOS-ENGINEERING-AND-RECOVERY.md`](docs/10-CHAOS-ENGINEERING-AND-RECOVERY.md), [`docs/11-REAL-FINANCIAL-TRANSACTION-GUARANTEES.md`](docs/11-REAL-FINANCIAL-TRANSACTION-GUARANTEES.md), and [`docs/12-CREDIBLE-SECURITY-VALIDATION.md`](docs/12-CREDIBLE-SECURITY-VALIDATION.md).
+The full set (ADR-001 to ADR-013) lives in [`docs/05-ADR.md`](docs/05-ADR.md), [`docs/06-THREAT-MODEL.md`](docs/06-THREAT-MODEL.md), [`docs/07-SEMANTIC-CACHE-GUARD.md`](docs/07-SEMANTIC-CACHE-GUARD.md), [`docs/08-PERFORMANCE-BENCHMARK.md`](docs/08-PERFORMANCE-BENCHMARK.md), [`docs/09-FINANCIAL-CORRECTNESS.md`](docs/09-FINANCIAL-CORRECTNESS.md), [`docs/10-CHAOS-ENGINEERING-AND-RECOVERY.md`](docs/10-CHAOS-ENGINEERING-AND-RECOVERY.md), [`docs/11-REAL-FINANCIAL-TRANSACTION-GUARANTEES.md`](docs/11-REAL-FINANCIAL-TRANSACTION-GUARANTEES.md), [`docs/12-CREDIBLE-SECURITY-VALIDATION.md`](docs/12-CREDIBLE-SECURITY-VALIDATION.md), and [`docs/13-KUBERNETES-AND-HELM-DEPLOYMENT.md`](docs/13-KUBERNETES-AND-HELM-DEPLOYMENT.md).
 
 ## License
 

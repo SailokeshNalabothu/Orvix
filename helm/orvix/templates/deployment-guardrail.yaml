@@ -1,0 +1,137 @@
+{{- if .Values.guardrail.enabled }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: guardrail-service
+  labels:
+    app.kubernetes.io/component: guardrail
+    {{- include "orvix.labels" . | nindent 4 }}
+spec:
+  {{- if not .Values.guardrail.autoscaling.enabled }}
+  replicas: {{ .Values.guardrail.replicaCount }}
+  {{- end }}
+  strategy:
+    type: {{ .Values.guardrail.strategy.type }}
+    rollingUpdate:
+      maxSurge: {{ .Values.guardrail.strategy.rollingUpdate.maxSurge }}
+      maxUnavailable: {{ .Values.guardrail.strategy.rollingUpdate.maxUnavailable }}
+  selector:
+    matchLabels:
+      app.kubernetes.io/component: guardrail
+      {{- include "orvix.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/path: "/actuator/prometheus"
+        prometheus.io/port: "8081"
+      labels:
+        app.kubernetes.io/component: guardrail
+        {{- include "orvix.selectorLabels" . | nindent 8 }}
+    spec:
+      securityContext:
+        runAsNonRoot: {{ .Values.guardrail.securityContext.runAsNonRoot }}
+        runAsUser: {{ .Values.guardrail.securityContext.runAsUser }}
+        runAsGroup: {{ .Values.guardrail.securityContext.runAsGroup }}
+      containers:
+        - name: guardrail-service
+          image: "{{ .Values.global.imageRegistry }}/{{ .Values.guardrail.image.repository }}:{{ .Values.guardrail.image.tag }}"
+          imagePullPolicy: {{ .Values.guardrail.image.pullPolicy }}
+          ports:
+            - name: http
+              containerPort: {{ .Values.guardrail.service.port }}
+              protocol: TCP
+          envFrom:
+            - configMapRef:
+                name: orvix-config
+            - secretRef:
+                name: orvix-secrets
+          env:
+            - name: JAVA_OPTS
+              value: "{{ .Values.guardrail.env.JAVA_OPTS }}"
+            - name: SPRING_DATASOURCE_URL
+              value: "jdbc:postgresql://{{ .Values.infrastructure.postgres.host }}:{{ .Values.infrastructure.postgres.port }}/{{ .Values.infrastructure.postgres.databases.guardrail }}"
+          resources:
+            {{- toYaml .Values.guardrail.resources | nindent 12 }}
+          startupProbe:
+            httpGet:
+              path: {{ .Values.guardrail.probes.startup.httpGet.path }}
+              port: {{ .Values.guardrail.probes.startup.httpGet.port }}
+            initialDelaySeconds: {{ .Values.guardrail.probes.startup.initialDelaySeconds }}
+            periodSeconds: {{ .Values.guardrail.probes.startup.periodSeconds }}
+            timeoutSeconds: {{ .Values.guardrail.probes.startup.timeoutSeconds }}
+            failureThreshold: {{ .Values.guardrail.probes.startup.failureThreshold }}
+          livenessProbe:
+            httpGet:
+              path: {{ .Values.guardrail.probes.liveness.httpGet.path }}
+              port: {{ .Values.guardrail.probes.liveness.httpGet.port }}
+            periodSeconds: {{ .Values.guardrail.probes.liveness.periodSeconds }}
+            timeoutSeconds: {{ .Values.guardrail.probes.liveness.timeoutSeconds }}
+            failureThreshold: {{ .Values.guardrail.probes.liveness.failureThreshold }}
+          readinessProbe:
+            httpGet:
+              path: {{ .Values.guardrail.probes.readiness.httpGet.path }}
+              port: {{ .Values.guardrail.probes.readiness.httpGet.port }}
+            periodSeconds: {{ .Values.guardrail.probes.readiness.periodSeconds }}
+            timeoutSeconds: {{ .Values.guardrail.probes.readiness.timeoutSeconds }}
+            failureThreshold: {{ .Values.guardrail.probes.readiness.failureThreshold }}
+            successThreshold: {{ .Values.guardrail.probes.readiness.successThreshold }}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: guardrail-service
+  labels:
+    app.kubernetes.io/component: guardrail
+    {{- include "orvix.labels" . | nindent 4 }}
+spec:
+  type: {{ .Values.guardrail.service.type }}
+  ports:
+    - name: http
+      port: {{ .Values.guardrail.service.port }}
+      targetPort: {{ .Values.guardrail.service.targetPort }}
+      protocol: TCP
+  selector:
+    app.kubernetes.io/component: guardrail
+    {{- include "orvix.selectorLabels" . | nindent 4 }}
+---
+{{- if .Values.guardrail.autoscaling.enabled }}
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: guardrail-hpa
+  labels:
+    app.kubernetes.io/component: guardrail
+    {{- include "orvix.labels" . | nindent 4 }}
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: guardrail-service
+  minReplicas: {{ .Values.guardrail.autoscaling.minReplicas }}
+  maxReplicas: {{ .Values.guardrail.autoscaling.maxReplicas }}
+  metrics:
+    - type: Resource
+      resource:
+        name: cpu
+        target:
+          type: Utilization
+          averageUtilization: {{ .Values.guardrail.autoscaling.targetCPUUtilizationPercentage }}
+---
+{{- end }}
+{{- if .Values.guardrail.podDisruptionBudget.enabled }}
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: guardrail-pdb
+  labels:
+    app.kubernetes.io/component: guardrail
+    {{- include "orvix.labels" . | nindent 4 }}
+spec:
+  minAvailable: {{ .Values.guardrail.podDisruptionBudget.minAvailable }}
+  selector:
+    matchLabels:
+      app.kubernetes.io/component: guardrail
+      {{- include "orvix.selectorLabels" . | nindent 6 }}
+{{- end }}
+{{- end }}

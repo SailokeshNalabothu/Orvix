@@ -1,0 +1,137 @@
+{{- if .Values.billing.enabled }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: billing-service
+  labels:
+    app.kubernetes.io/component: billing
+    {{- include "orvix.labels" . | nindent 4 }}
+spec:
+  {{- if not .Values.billing.autoscaling.enabled }}
+  replicas: {{ .Values.billing.replicaCount }}
+  {{- end }}
+  strategy:
+    type: {{ .Values.billing.strategy.type }}
+    rollingUpdate:
+      maxSurge: {{ .Values.billing.strategy.rollingUpdate.maxSurge }}
+      maxUnavailable: {{ .Values.billing.strategy.rollingUpdate.maxUnavailable }}
+  selector:
+    matchLabels:
+      app.kubernetes.io/component: billing
+      {{- include "orvix.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/path: "/actuator/prometheus"
+        prometheus.io/port: "8083"
+      labels:
+        app.kubernetes.io/component: billing
+        {{- include "orvix.selectorLabels" . | nindent 8 }}
+    spec:
+      securityContext:
+        runAsNonRoot: {{ .Values.billing.securityContext.runAsNonRoot }}
+        runAsUser: {{ .Values.billing.securityContext.runAsUser }}
+        runAsGroup: {{ .Values.billing.securityContext.runAsGroup }}
+      containers:
+        - name: billing-service
+          image: "{{ .Values.global.imageRegistry }}/{{ .Values.billing.image.repository }}:{{ .Values.billing.image.tag }}"
+          imagePullPolicy: {{ .Values.billing.image.pullPolicy }}
+          ports:
+            - name: http
+              containerPort: {{ .Values.billing.service.port }}
+              protocol: TCP
+          envFrom:
+            - configMapRef:
+                name: orvix-config
+            - secretRef:
+                name: orvix-secrets
+          env:
+            - name: JAVA_OPTS
+              value: "{{ .Values.billing.env.JAVA_OPTS }}"
+            - name: SPRING_DATASOURCE_URL
+              value: "jdbc:postgresql://{{ .Values.infrastructure.postgres.host }}:{{ .Values.infrastructure.postgres.port }}/{{ .Values.infrastructure.postgres.databases.billing }}"
+          resources:
+            {{- toYaml .Values.billing.resources | nindent 12 }}
+          startupProbe:
+            httpGet:
+              path: {{ .Values.billing.probes.startup.httpGet.path }}
+              port: {{ .Values.billing.probes.startup.httpGet.port }}
+            initialDelaySeconds: {{ .Values.billing.probes.startup.initialDelaySeconds }}
+            periodSeconds: {{ .Values.billing.probes.startup.periodSeconds }}
+            timeoutSeconds: {{ .Values.billing.probes.startup.timeoutSeconds }}
+            failureThreshold: {{ .Values.billing.probes.startup.failureThreshold }}
+          livenessProbe:
+            httpGet:
+              path: {{ .Values.billing.probes.liveness.httpGet.path }}
+              port: {{ .Values.billing.probes.liveness.httpGet.port }}
+            periodSeconds: {{ .Values.billing.probes.liveness.periodSeconds }}
+            timeoutSeconds: {{ .Values.billing.probes.liveness.timeoutSeconds }}
+            failureThreshold: {{ .Values.billing.probes.liveness.failureThreshold }}
+          readinessProbe:
+            httpGet:
+              path: {{ .Values.billing.probes.readiness.httpGet.path }}
+              port: {{ .Values.billing.probes.readiness.httpGet.port }}
+            periodSeconds: {{ .Values.billing.probes.readiness.periodSeconds }}
+            timeoutSeconds: {{ .Values.billing.probes.readiness.timeoutSeconds }}
+            failureThreshold: {{ .Values.billing.probes.readiness.failureThreshold }}
+            successThreshold: {{ .Values.billing.probes.readiness.successThreshold }}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: billing-service
+  labels:
+    app.kubernetes.io/component: billing
+    {{- include "orvix.labels" . | nindent 4 }}
+spec:
+  type: {{ .Values.billing.service.type }}
+  ports:
+    - name: http
+      port: {{ .Values.billing.service.port }}
+      targetPort: {{ .Values.billing.service.targetPort }}
+      protocol: TCP
+  selector:
+    app.kubernetes.io/component: billing
+    {{- include "orvix.selectorLabels" . | nindent 4 }}
+---
+{{- if .Values.billing.autoscaling.enabled }}
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: billing-hpa
+  labels:
+    app.kubernetes.io/component: billing
+    {{- include "orvix.labels" . | nindent 4 }}
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: billing-service
+  minReplicas: {{ .Values.billing.autoscaling.minReplicas }}
+  maxReplicas: {{ .Values.billing.autoscaling.maxReplicas }}
+  metrics:
+    - type: Resource
+      resource:
+        name: cpu
+        target:
+          type: Utilization
+          averageUtilization: {{ .Values.billing.autoscaling.targetCPUUtilizationPercentage }}
+---
+{{- end }}
+{{- if .Values.billing.podDisruptionBudget.enabled }}
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: billing-pdb
+  labels:
+    app.kubernetes.io/component: billing
+    {{- include "orvix.labels" . | nindent 4 }}
+spec:
+  minAvailable: {{ .Values.billing.podDisruptionBudget.minAvailable }}
+  selector:
+    matchLabels:
+      app.kubernetes.io/component: billing
+      {{- include "orvix.selectorLabels" . | nindent 6 }}
+{{- end }}
+{{- end }}

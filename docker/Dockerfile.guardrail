@@ -1,0 +1,23 @@
+FROM eclipse-temurin:21-jre-jammy
+
+LABEL maintainer="Orvix Engineering Team"
+LABEL description="Orvix Guardrail Service - PII Redaction, Injection Firewall & Tenant Policies"
+
+RUN groupadd --gid 10001 orvix && \
+    useradd --uid 10001 --gid orvix --shell /bin/false --create-home appuser && \
+    apt-get update && apt-get install -y --no-install-recommends curl && \
+    rm -rf /var/lib/apt/lists/*
+
+WORKDIR /app
+
+COPY guardrail-service/target/guardrail-service-1.0.0-SNAPSHOT.jar app.jar
+
+RUN chown -R appuser:orvix /app
+
+USER 10001:10001
+
+EXPOSE 8081
+
+ENV JAVA_OPTS="-XX:+UseG1GC -XX:MaxRAMPercentage=75.0 -XX:InitialRAMPercentage=50.0 -XX:+ExitOnOutOfMemoryError -Djava.security.egd=file:/dev/./urandom"
+
+ENTRYPOINT ["sh", "-c", "exec java $JAVA_OPTS -jar app.jar"]
