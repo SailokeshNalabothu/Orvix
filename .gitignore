@@ -1,36 +1,96 @@
+# ==============================================================================
+# Orvix AI Control Plane & FinOps Engine - .gitignore
+# ==============================================================================
+
+### Build & Package Artifacts ###
 target/
 !.mvn/wrapper/maven-wrapper.jar
 !**/src/main/**/target/
 !**/src/test/**/target/
+build/
+dist/
+out/
+bin/
+*.jar
+*.war
+*.ear
+*.class
+
+### Environment Variables & Secrets ###
+.env
+.env.*
+*.env
+*.pem
+*.key
+*.cert
+*.crt
+*.p12
+*.pfx
+*.jks
+*.keystore
+id_rsa
+id_rsa.pub
+secrets/
+credentials.json
+auth_tokens/
+
+### Database Dumps, State & Volume Mounts ###
+docker/data/
+data/
+db/
+*.db
+*.sqlite
+*.sqlite3
+*.rdb
+*.aof
+dump.rdb
+postgres-data/
+pgdata/
+redis-data/
+kafka-data/
+
+### Logs & Diagnostics ###
+*.log
+*.log.*
+*.err
+*.out
+logs/
+log/
+hs_err_pid*
+replay_pid*
+heapdump*
 
 ### IntelliJ IDEA ###
 .idea/
 *.iws
 *.iml
 *.ipr
-out/
-!**/src/main/**/out/
-!**/src/test/**/out/
+*.idea
 
 ### Visual Studio Code ###
 .vscode/
 *.code-workspace
+.history/
 
-### NetBeans ###
+### Eclipse / NetBeans ###
+.settings/
+.project
+.classpath
+.factorypath
 **/nbproject/private/
 **/nbbuild/
 **/dist/
 **/nbproject/load-context.properties
 **/nbproject/genfiles.properties
 
-### OS generated files ###
+### OS Generated Files ###
 Thumbs.db
 ehthumbs.db
 ehthumbs_vista.db
 [Dd]esktop.ini
 $RECYCLE.BIN/
 .DS_Store
-
-### Docker volume mounts ###
-*.log
-docker/data/
+*.tmp
+*.bak
+*.swp
+*~
