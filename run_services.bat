@@ -29,7 +29,10 @@ start "Orvix - Gateway Service (8080)" cmd /k "title Gateway-8080 && java -jar g
 echo.
 echo ==========================================================
 echo All 4 microservices have been launched in separate windows!
-echo Once they show 'Started [ApplicationName] in ... seconds',
-echo they are ready to accept traffic on http://localhost:8080
+echo Once they report 'Started [ApplicationName]', they are ready.
+echo.
+echo Open the Commercial Developer Platform Console:
+echo    http://localhost:8080/dashboard
+echo    http://localhost:8080
 echo ==========================================================
 pause
