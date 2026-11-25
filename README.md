@@ -1,5 +1,7 @@
 # Orvix: Distributed AI Control Plane & FinOps Billing Engine
 
+![Orvix banner](assets/banner.svg)
+
 [![Java 21](https://img.shields.io/badge/Java-21-orange.svg)](https://adoptium.net/)
 [![Spring Boot](https://img.shields.io/badge/Spring%20Boot-3.3.5-brightgreen.svg)](https://spring.io/projects/spring-boot)
 [![Kafka](https://img.shields.io/badge/Apache%20Kafka-3.7.0%20(KRaft)-black.svg)](https://kafka.apache.org/)
@@ -14,6 +16,8 @@
 ## 🏛 System Architecture
 
 Orvix enforces strict **database-per-service isolation**. Cross-service communication is conducted via versioned REST APIs and asynchronous, partitioned Apache Kafka event streams.
+
+![Orvix request flow](assets/request-flow.svg)
 
 ```mermaid
 flowchart TD

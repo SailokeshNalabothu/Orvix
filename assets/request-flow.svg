@@ -1,0 +1,139 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 510" width="1200" height="510" role="img" aria-label="Orvix request lifecycle: client to gateway, guardrail, semantic cache and LLM providers, with asynchronous billing through Kafka and a quota feedback loop" xmlns:c2pa="http://c2pa.org/manifest">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#0a0f1f"/>
+      <stop offset="1" stop-color="#151a3d"/>
+    </linearGradient>
+    <pattern id="grid" width="36" height="36" patternUnits="userSpaceOnUse">
+      <path d="M36 0H0V36" fill="none" stroke="#ffffff" stroke-opacity="0.04"/>
+    </pattern>
+    <filter id="glow" x="-150%" y="-150%" width="400%" height="400%">
+      <feGaussianBlur stdDeviation="3" result="b"/>
+      <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+    <marker id="aC" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#38bdf8"/></marker>
+    <marker id="aG" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#34d399"/></marker>
+    <marker id="aP" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#a78bfa"/></marker>
+    <marker id="aR" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#f87171"/></marker>
+    <style>
+      text { font-family: 'Segoe UI', Inter, Helvetica, Arial, sans-serif; }
+      .t { font-size: 15px; font-weight: 700; fill: #f8fafc; }
+      .s { font-size: 11px; fill: #94a3b8; }
+      .l { font-size: 12px; font-weight: 600; }
+      .n { font-size: 11px; font-weight: 700; fill: #0a0f1f; }
+      .flow { stroke-dasharray: 6 6; animation: dash 1s linear infinite; fill: none; stroke-width: 2; }
+      @keyframes dash { to { stroke-dashoffset: -12; } }
+    </style>
+  </defs>
+
+  <rect width="1200" height="510" rx="18" fill="url(#bg)"/>
+  <rect width="1200" height="510" rx="18" fill="url(#grid)"/>
+
+  <!-- connectors (drawn first so boxes sit on top) -->
+  <path class="flow" stroke="#38bdf8" d="M190,135 H266" marker-end="url(#aC)"/>
+  <path class="flow" stroke="#38bdf8" d="M430,135 H506" marker-end="url(#aC)"/>
+  <path class="flow" stroke="#38bdf8" d="M670,135 H746" marker-end="url(#aC)"/>
+  <path class="flow" stroke="#38bdf8" d="M910,135 H986" marker-end="url(#aC)"/>
+
+  <!-- cache hit shortcut back to client -->
+  <path class="flow" stroke="#34d399" d="M830,100 C830,20 110,20 110,98" marker-end="url(#aG)"/>
+  <text class="l" x="470" y="30" text-anchor="middle" fill="#34d399">Cache hit returns here, 0 tokens billed</text>
+
+  <!-- redis link -->
+  <path class="flow" stroke="#fbbf24" d="M270,155 H230 V355 H192" stroke-width="1.6"/>
+  <text class="l" x="222" y="250" text-anchor="end" fill="#fbbf24">auth and rate limit</text>
+
+  <!-- async settlement -->
+  <path class="flow" stroke="#a78bfa" d="M335,170 V316" marker-end="url(#aP)"/>
+  <path class="flow" stroke="#a78bfa" d="M430,355 H506" marker-end="url(#aP)"/>
+  <path class="flow" stroke="#a78bfa" d="M670,355 H746" marker-end="url(#aP)"/>
+  <text class="l" x="327" y="250" text-anchor="end" fill="#a78bfa">usage event</text>
+
+  <!-- quota feedback loop -->
+  <path class="flow" stroke="#f87171" d="M590,392 C590,447 365,447 365,394" marker-end="url(#aR)"/>
+  <path class="flow" stroke="#f87171" d="M365,320 V174" marker-end="url(#aR)"/>
+  <text class="l" x="373" y="250" fill="#f87171">quota blocked, HTTP 402</text>
+  <text class="l" x="478" y="466" text-anchor="middle" fill="#f87171">QuotaExhaustedEvent</text>
+
+  <!-- moving packets -->
+  <g filter="url(#glow)">
+    <circle r="6" fill="#38bdf8" opacity="0">
+      <animateMotion dur="6s" repeatCount="indefinite" path="M190,135 H990"/>
+      <animate attributeName="opacity" values="0;1;1;0" keyTimes="0;0.05;0.95;1" dur="6s" repeatCount="indefinite"/>
+    </circle>
+    <circle r="6" fill="#38bdf8" opacity="0">
+      <animateMotion dur="6s" begin="-3s" repeatCount="indefinite" path="M190,135 H990"/>
+      <animate attributeName="opacity" values="0;1;1;0" keyTimes="0;0.05;0.95;1" dur="6s" begin="-3s" repeatCount="indefinite"/>
+    </circle>
+    <circle r="6" fill="#34d399" opacity="0">
+      <animateMotion dur="3.6s" begin="1s" repeatCount="indefinite" path="M830,100 C830,20 110,20 110,98"/>
+      <animate attributeName="opacity" values="0;1;1;0" keyTimes="0;0.05;0.95;1" dur="3.6s" begin="1s" repeatCount="indefinite"/>
+    </circle>
+    <circle r="6" fill="#a78bfa" opacity="0">
+      <animateMotion dur="5s" begin="0.5s" repeatCount="indefinite" path="M335,170 V355 H750"/>
+      <animate attributeName="opacity" values="0;1;1;0" keyTimes="0;0.05;0.95;1" dur="5s" begin="0.5s" repeatCount="indefinite"/>
+    </circle>
+    <circle r="6" fill="#f87171" opacity="0">
+      <animateMotion dur="5s" begin="3s" repeatCount="indefinite" path="M590,392 C590,447 365,447 365,394 V174"/>
+      <animate attributeName="opacity" values="0;1;1;0" keyTimes="0;0.05;0.95;1" dur="5s" begin="3s" repeatCount="indefinite"/>
+    </circle>
+  </g>
+
+  <!-- boxes row 1 -->
+  <g>
+    <rect x="30" y="100" width="160" height="70" rx="14" fill="#0f172a" stroke="#38bdf8" stroke-opacity="0.7" stroke-width="1.5"/>
+    <text class="t" x="110" y="130" text-anchor="middle">B2B client</text>
+    <text class="s" x="110" y="150" text-anchor="middle">/v1/chat/completions</text>
+
+    <rect x="270" y="100" width="160" height="70" rx="14" fill="#0f172a" stroke="#38bdf8" stroke-opacity="0.7" stroke-width="1.5"/>
+    <text class="t" x="350" y="130" text-anchor="middle">Gateway :8080</text>
+    <text class="s" x="350" y="150" text-anchor="middle">route, limit, dispatch</text>
+    <circle cx="282" cy="100" r="11" fill="#38bdf8"/><text class="n" x="282" y="104" text-anchor="middle">1</text>
+
+    <rect x="510" y="100" width="160" height="70" rx="14" fill="#0f172a" stroke="#f472b6" stroke-opacity="0.7" stroke-width="1.5"/>
+    <text class="t" x="590" y="130" text-anchor="middle">Guardrail :8081</text>
+    <text class="s" x="590" y="150" text-anchor="middle">fail-closed inspection</text>
+    <circle cx="522" cy="100" r="11" fill="#f472b6"/><text class="n" x="522" y="104" text-anchor="middle">2</text>
+
+    <rect x="750" y="100" width="160" height="70" rx="14" fill="#0f172a" stroke="#34d399" stroke-opacity="0.7" stroke-width="1.5"/>
+    <text class="t" x="830" y="130" text-anchor="middle">Cache :8082</text>
+    <text class="s" x="830" y="150" text-anchor="middle">pgvector HNSW, fail-open</text>
+    <circle cx="762" cy="100" r="11" fill="#34d399"/><text class="n" x="762" y="104" text-anchor="middle">3</text>
+
+    <rect x="990" y="100" width="160" height="70" rx="14" fill="#0f172a" stroke="#818cf8" stroke-opacity="0.7" stroke-width="1.5"/>
+    <text class="t" x="1070" y="130" text-anchor="middle">LLM providers</text>
+    <text class="s" x="1070" y="150" text-anchor="middle">Gemini, OpenAI failover</text>
+    <circle cx="1002" cy="100" r="11" fill="#818cf8"/><text class="n" x="1002" y="104" text-anchor="middle">4</text>
+  </g>
+
+  <!-- boxes row 2 -->
+  <g>
+    <rect x="30" y="320" width="160" height="70" rx="14" fill="#0f172a" stroke="#fbbf24" stroke-opacity="0.7" stroke-width="1.5"/>
+    <text class="t" x="110" y="350" text-anchor="middle">Redis 7</text>
+    <text class="s" x="110" y="370" text-anchor="middle">buckets, keys, quota flags</text>
+
+    <rect x="270" y="320" width="160" height="70" rx="14" fill="#0f172a" stroke="#a78bfa" stroke-opacity="0.7" stroke-width="1.5"/>
+    <text class="t" x="350" y="350" text-anchor="middle">Apache Kafka</text>
+    <text class="s" x="350" y="370" text-anchor="middle">usage and quota events</text>
+    <circle cx="282" cy="320" r="11" fill="#a78bfa"/><text class="n" x="282" y="324" text-anchor="middle">5</text>
+
+    <rect x="510" y="320" width="160" height="70" rx="14" fill="#0f172a" stroke="#a78bfa" stroke-opacity="0.7" stroke-width="1.5"/>
+    <text class="t" x="590" y="350" text-anchor="middle">Billing :8083</text>
+    <text class="s" x="590" y="370" text-anchor="middle">idempotent consumer</text>
+    <circle cx="522" cy="320" r="11" fill="#a78bfa"/><text class="n" x="522" y="324" text-anchor="middle">6</text>
+
+    <rect x="750" y="320" width="160" height="70" rx="14" fill="#0f172a" stroke="#a78bfa" stroke-opacity="0.7" stroke-width="1.5"/>
+    <text class="t" x="830" y="350" text-anchor="middle">PostgreSQL</text>
+    <text class="s" x="830" y="370" text-anchor="middle">double-entry ledger</text>
+    <circle cx="762" cy="320" r="11" fill="#a78bfa"/><text class="n" x="762" y="324" text-anchor="middle">7</text>
+  </g>
+
+  <!-- legend -->
+  <g>
+    <circle cx="70" cy="490" r="5" fill="#38bdf8"/><text class="s" x="82" y="494">Request path</text>
+    <circle cx="230" cy="490" r="5" fill="#34d399"/><text class="s" x="242" y="494">Cache hit</text>
+    <circle cx="370" cy="490" r="5" fill="#a78bfa"/><text class="s" x="382" y="494">Async usage and ledger</text>
+    <circle cx="590" cy="490" r="5" fill="#f87171"/><text class="s" x="602" y="494">Quota feedback loop</text>
+    <circle cx="790" cy="490" r="5" fill="#fbbf24"/><text class="s" x="802" y="494">Redis state</text>
+  </g>
+<metadata><c2pa:manifest>AAAWgmp1bWIAAAAeanVtZGMycGEAEQAQgAAAqgA4m3EDYzJwYQAAABZcanVtYgAAAEdqdW1kYzJtYQARABCAAACqADibcQN1cm46YzJwYTo3MWM5OTZkYi05NzFkLTQ1NTEtOGI0OS04NDY1ODlkNjk4ODkAAAADl2p1bWIAAAApanVtZGMyYXMAEQAQgAAAqgA4m3EDYzJwYS5hc3NlcnRpb25zAAAAALxqdW1iAAAARGp1bWRjYm9yABEAEIAAAKoAOJtxE2MycGEuaW5ncmVkaWVudC52MwAAAAAYYzJzaLUoFT/O1I1vkm1N4Ywc+58AAABwY2JvcqNpZGM6Zm9ybWF0bWltYWdlL3N2Zyt4bWxqaW5zdGFuY2VJRHgseG1wOmlpZDo4Mjc3ZmM4Mi1mNDA4LTQwMzEtOWY3MS1iNmY1Zjc4ZjhiOThscmVsYXRpb25zaGlwaHBhcmVudE9mAAAB4mp1bWIAAABBanVtZGNib3IAEQAQgAAAqgA4m3ETYzJwYS5hY3Rpb25zLnYyAAAAABhjMnNoyNOjVL/DmyIEvLOYVu0P0AAAAZljYm9yomdhY3Rpb25zgqJmYWN0aW9ua2MycGEub3BlbmVkanBhcmFtZXRlcnOha2luZ3JlZGllbnRzgaJjdXJseC1zZWxmI2p1bWJmPWMycGEuYXNzZXJ0aW9ucy9jMnBhLmluZ3JlZGllbnQudjNkaGFzaFggYppD6/pTv+eM/o/RR3ZtG5Z4wDo5Z0f05SmeR/Hr13KkZmFjdGlvbngdY29tLmFudGhyb3BpYy5jbGF1ZGUucHJvdmlkZWRqcGFyYW1ldGVyc6F4H2NvbS5hbnRocm9waWMub3JpZ2luLWNvbmZpZGVuY2VndW5rbm93bmtkZXNjcmlwdGlvbnhmQ2xhdWRlIHByb3ZpZGVkIHRoaXMgZmlsZSBhdCB0aGUgcmVxdWVzdCBvZiBhIHVzZXIgYW5kIG1heSBoYXZlIGNyZWF0ZWQgb3IgbW9kaWZpZWQgdGhlIGZpbGUgY29udGVudHMubXNvZnR3YXJlQWdlbnShZG5hbWVmQ2xhdWRlcmFsbEFjdGlvbnNJbmNsdWRlZPUAAADIanVtYgAAAEBqdW1kY2JvcgARABCAAACqADibcRNjMnBhLmhhc2guZGF0YQAAAAAYYzJzaIMHK8wRaU4bF9yy9cIEX8gAAACAY2JvcqVjYWxnZnNoYTI1NmNwYWRMAAAAAAAAAAAAAAAAZGhhc2hYIONistEXiDp8Vhoe2KdG6WPNNqJMANGCJim/5d6s/M+oZG5hbWVuanVtYmYgbWFuaWZlc3RqZXhjbHVzaW9uc4GiZXN0YXJ0GSRxZmxlbmd0aBkeBAAAAj5qdW1iAAAAJ2p1bWRjMmNsABEAEIAAAKoAOJtxA2MycGEuY2xhaW0udjIAAAACD2Nib3KlY2FsZ2ZzaGEyNTZpc2lnbmF0dXJleE1zZWxmI2p1bWJmPS9jMnBhL3VybjpjMnBhOjcxYzk5NmRiLTk3MWQtNDU1MS04YjQ5LTg0NjU4OWQ2OTg4OS9jMnBhLnNpZ25hdHVyZWppbnN0YW5jZUlEeCx4bXA6aWlkOjFjNWJhMjRjLTFkOTMtNGI5YS04YmVhLWFlOTJiODFmYjdhY3JjcmVhdGVkX2Fzc2VydGlvbnODomN1cmx4LXNlbGYjanVtYmY9YzJwYS5hc3NlcnRpb25zL2MycGEuaW5ncmVkaWVudC52M2RoYXNoWCBimkPr+lO/54z+j9FHdm0blnjAOjlnR/TlKZ5H8evXcqJjdXJseCpzZWxmI2p1bWJmPWMycGEuYXNzZXJ0aW9ucy9jMnBhLmFjdGlvbnMudjJkaGFzaFggrRY3eSqD41GHFWHmro7Y+D40womiLFqT4+c5sXbzKsyiY3VybHgpc2VsZiNqdW1iZj1jMnBhLmFzc2VydGlvbnMvYzJwYS5oYXNoLmRhdGFkaGFzaFggvlkt8u4xl/lU1MGqzfCf3XmQG/F+gBtAvhrqYc59fep0Y2xhaW1fZ2VuZXJhdG9yX2luZm+jZG5hbWVvQW50aHJvcGljIEZpbGVzZ3ZlcnNpb25lMS4wLjBrc3BlY1ZlcnNpb25lMi40LjAAABA4anVtYgAAAChqdW1kYzJjcwARABCAAACqADibcQNjMnBhLnNpZ25hdHVyZQAAABAIY2JvctKEWQISogEmGCFZAgowggIGMIIBjaADAgECAhRA5aAK7sI50L64g/oGQgU9Z1UTADAKBggqhkjOPQQDAzBJMRcwFQYDVQQKEw5BbnRocm9waWMsIFBCQzEuMCwGA1UEAxMlQW50aHJvcGljIENvbnRlbnQgQ3JlZGVudGlhbHMgUm9vdCBDQTAeFw0yNjA4MDcxODQzNTZaFw0yODA4MDYxOTQzNTZaMEQxFzAVBgNVBAoTDkFudGhyb3BpYywgUEJDMSkwJwYDVQQDEyBBbnRocm9waWMgQ2xhdWRlIENvbnRlbnQgU2lnbmluZzBZMBMGByqGSM49AgEGCCqGSM49AwEHA0IABJh6CmvLUBgFFNU0vUKlOVtE6djd17L5SuwX0LemFisBM3dkd/3cyjxFA3Qo5S46fX0/ihY0VZ7mfb9KF703t5OjWDBWMA4GA1UdDwEB/wQEAwIHgDAVBgNVHSUEDjAMBgorBgEEAYPoXgIBMAwGA1UdEwEB/wQCMAAwHwYDVR0jBBgwFoAUzlHiBIFOZFsj+OPEz5o+nMHXXMIwCgYIKoZIzj0EAwMDZwAwZAIwMXMdFJ4BetLLVY7ORuE9noqbbAZOZn/aArXyTwFAZfKrPzxF2vPoJNf1+UCdg1XGAjBwX1zd9WGqYkqmL5SFqw1QySjr1zJfpJM9+1rdDwSPLMOPOjKuiXjoU/pUUeG9RwmhY3BhZFkNngAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAPZYQAjlsAbSqXuO2eTCjhK/JiRqvfWOwzw8fyzwF0Iw5mQzZ10sqrm+IpmWRz/j794g/DcC88oyrebimD7gZRSfNc0=</c2pa:manifest></metadata></svg>
