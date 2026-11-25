@@ -437,7 +437,7 @@
         /* Inspector Metrics Grid */
         .metrics-grid {
             display: grid;
-            grid-template-columns: repeat(4, 1fr);
+            grid-template-columns: repeat(auto-fit, minmax(110px, 1fr));
             gap: 8px;
         }
 
@@ -656,6 +656,9 @@
                 <button class="btn btn-primary" onclick="autoProvisionTenant()">
                     <span>⚡ Provision Tenant</span>
                 </button>
+                <button class="btn btn-outline" onclick="autoProvisionTenant()" title="Regenerate authenticated key">
+                    <span>🔄 Reset Key</span>
+                </button>
                 <button class="btn btn-outline" onclick="topUpCredits(5000000)">
                     <span>+$5 Top Up</span>
                 </button>
@@ -704,6 +707,7 @@
                     <div class="field-group">
                         <label class="field-label">Target Model</label>
                         <select class="select" id="input-model">
+                            <option value="auto-cascade" selected>auto-cascade (Adaptive AI Complexity Routing)</option>
                             <option value="gemini-1.5-flash">gemini-1.5-flash (Fast Ingress)</option>
                             <option value="gemini-1.5-pro">gemini-1.5-pro (Reasoning)</option>
                             <option value="gpt-4o">gpt-4o (Fallback Route)</option>
@@ -756,12 +760,16 @@
                         <div class="stat-card-value mono" id="stat-cache">--</div>
                     </div>
                     <div class="stat-card">
-                        <div class="stat-card-label">Provider</div>
-                        <div class="stat-card-value mono" id="stat-provider" style="font-size: 12.5px;">--</div>
+                        <div class="stat-card-label">AI Complexity</div>
+                        <div class="stat-card-value mono" id="stat-complexity" style="font-size: 12px; color: var(--accent-cyan);">--</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-card-label">Routed Model</div>
+                        <div class="stat-card-value mono" id="stat-provider" style="font-size: 12px;">--</div>
                     </div>
                     <div class="stat-card">
                         <div class="stat-card-label">Tokens / Cost</div>
-                        <div class="stat-card-value mono" id="stat-cost" style="font-size: 12.5px;">--</div>
+                        <div class="stat-card-value mono" id="stat-cost" style="font-size: 12px;">--</div>
                     </div>
                 </div>
 
@@ -1033,11 +1041,17 @@
                 const traceId = res.headers.get('X-Trace-Id') || 'unknown';
                 const cacheStatus = res.headers.get('X-Cache-Status') || (res.ok ? 'MISS' : '--');
                 const provider = res.headers.get('X-Provider-Used') || (res.ok ? 'gemini-primary' : '--');
+                const complexity = res.headers.get('X-Prompt-Complexity');
+                const tier = res.headers.get('X-Complexity-Tier');
+                const routedModel = res.headers.get('X-Routed-Model') || provider;
 
                 // Update UI badges
                 document.getElementById('stat-latency').innerText = `${duration} ms`;
                 document.getElementById('stat-cache').innerText = cacheStatus;
-                document.getElementById('stat-provider').innerText = provider;
+                document.getElementById('stat-provider').innerText = routedModel;
+                if (document.getElementById('stat-complexity')) {
+                    document.getElementById('stat-complexity').innerText = complexity ? `${complexity} (${tier || 'AUTO'})` : '--';
+                }
 
                 // Trace Box
                 if (traceId && traceId !== 'unknown') {
@@ -1068,8 +1082,21 @@
                         document.getElementById('stat-guardrail').innerHTML = `<span style="color: var(--accent-emerald);">${gStatus}</span>`;
                     }
 
-                    ind.innerText = `Completed in ${duration}ms (${provider})`;
+                    ind.innerText = `Completed in ${duration}ms (${routedModel})`;
                 } else {
+                    if (res.status === 401) {
+                        statusBadge.className = 'status-badge status-400';
+                        statusBadge.innerText = '401 UNAUTHORIZED';
+                        document.getElementById('response-body').innerHTML = `
+<div style="padding: 12px; background: rgba(244,63,94,0.1); border: 1px solid var(--accent-rose); border-radius: 8px;">
+    <div style="font-weight: 700; color: var(--accent-rose); margin-bottom: 6px;">❌ 401 Unauthorized: Invalid API Key</div>
+    <div style="font-size: 12px; color: var(--text-secondary); margin-bottom: 12px;">Your browser sent an invalid or expired API key. Click below to provision a fresh authenticated tenant with $5.00 wallet credits:</div>
+    <button class="btn btn-primary" onclick="autoProvisionTenant()">⚡ Provision Fresh Verified Key</button>
+</div>`;
+                        ind.innerText = '401: Invalid API Key';
+                        return;
+                    }
+
                     const err = await res.json().catch(() => ({ title: 'Request Error', detail: res.statusText }));
                     statusBadge.innerText = `${res.status} ${err.title || 'ERROR'}`;
 

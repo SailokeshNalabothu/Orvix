@@ -21,7 +21,7 @@ public class GatewayApplication {
                         .allowedOriginPatterns("*")
                         .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS", "HEAD")
                         .allowedHeaders("*")
-                        .exposedHeaders("X-Trace-Id", "X-Cache-Status", "X-Provider-Used", "Retry-After");
+                        .exposedHeaders("X-Trace-Id", "X-Cache-Status", "X-Provider-Used", "X-Prompt-Complexity", "X-Complexity-Tier", "X-Routed-Model", "Retry-After");
             }
         };
     }

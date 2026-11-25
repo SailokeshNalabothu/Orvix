@@ -86,6 +86,7 @@ public class GatewayController {
         boolean cacheEnabled = request.cache_enabled() == null || request.cache_enabled();
         CacheStatus cacheStatus = CacheStatus.MISS;
         String providerUsed;
+        String effectiveModel = request.model();
         String completionContent;
         int promptTokens;
         int completionTokens;
@@ -103,22 +104,30 @@ public class GatewayController {
             promptTokens = 0;
             completionTokens = 0;
             estimatedCost = 50L; // 50 micro-dollars cache hit fee
+            servletResponse.setHeader("X-Prompt-Complexity", "0.0");
+            servletResponse.setHeader("X-Complexity-Tier", "CACHE_HIT");
+            servletResponse.setHeader("X-Routed-Model", effectiveModel);
         } else {
             if (cacheLookup != null && "BYPASS".equals(cacheLookup.cacheStatus())) {
                 cacheStatus = CacheStatus.BYPASS;
             }
 
-            // 5. LLM Provider Dispatch with Resilience4j (Automatic Failover)
+            // 5. LLM Provider Dispatch with Adaptive Model Cascading & Resilience4j
             var llmResult = llmRouter.dispatch(request.model(), promptToUse);
             providerUsed = llmResult.provider();
+            effectiveModel = llmResult.routedModel() != null ? llmResult.routedModel() : request.model();
             completionContent = llmResult.content();
             promptTokens = llmResult.promptTokens();
             completionTokens = llmResult.completionTokens();
             estimatedCost = llmResult.estimatedCostMicros();
 
+            servletResponse.setHeader("X-Prompt-Complexity", String.valueOf(llmResult.complexityScore()));
+            servletResponse.setHeader("X-Complexity-Tier", llmResult.complexityTier());
+            servletResponse.setHeader("X-Routed-Model", effectiveModel);
+
             // Fire-and-forget cache write on cache miss
             if (cacheEnabled) {
-                cacheClient.storeAsync(tenant.tenantId(), request.model(), promptToUse, completionContent);
+                cacheClient.storeAsync(tenant.tenantId(), effectiveModel, promptToUse, completionContent);
             }
         }
 
@@ -131,7 +140,7 @@ public class GatewayController {
                 tenant.tenantId(),
                 requestId,
                 providerUsed,
-                request.model(),
+                effectiveModel,
                 cacheStatus == CacheStatus.HIT,
                 promptTokens,
                 completionTokens,
@@ -148,7 +157,7 @@ public class GatewayController {
         ChatCompletionResponse response = new ChatCompletionResponse(
                 requestId,
                 providerUsed,
-                request.model(),
+                effectiveModel,
                 completionContent,
                 new ChatCompletionResponse.GuardrailSummary(
                         guardrailResult.status(),
