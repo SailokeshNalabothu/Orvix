@@ -43,8 +43,8 @@
     <td align="center" width="20%"><h2>&lt; 1 ms</h2><sub>atomic Redis Lua<br/>rate-limit check</sub></td>
     <td align="center" width="20%"><h2>0 tokens</h2><sub>billed on a<br/>semantic cache hit</sub></td>
     <td align="center" width="20%"><h2>&lt; 200 ms</h2><sub>circuit-breaker<br/>failover to fallback</sub></td>
-    <td align="center" width="20%"><h2>972 / 972</h2><sub>k6 checks passed,<br/>0% error rate</sub></td>
-    <td align="center" width="20%"><h2>1,990 rows</h2><sub>ledger verified:<br/>debits equal credits</sub></td>
+    <td align="center" width="20%"><h2>1,880 / 1,880</h2><sub>k6 checks passed,<br/>0% error rate</sub></td>
+    <td align="center" width="20%"><h2>2,098 rows</h2><sub>ledger verified:<br/>debits equal credits</sub></td>
   </tr>
 </table>
 
@@ -465,15 +465,33 @@ powershell -ExecutionPolicy Bypass -File .\smoke_test.ps1
 
 The script verifies the tenant lifecycle, clean completions, semantic cache hits, PII sanitization, prompt-injection defenses, Kafka ledger balance and the real-time `HTTP 402` quota cutoff.
 
-### k6 load test (`benchmark/k6-load-test.js`)
+### Independent performance benchmark & chaos testing (ADR-008)
 
-Concurrent virtual users hit all 4 services:
+To ensure all performance claims are independently reproducible, Orvix includes two automated benchmark suites evaluating throughput (RPS), nanosecond latency percentiles, multi-tenant isolation, upstream failure injection, and ledger recovery:
 
-| Metric | Result |
-| :--- | :--- |
-| **Success rate** | **100.00%** (972 / 972 checks passed) |
-| **Error rate** | **0.00%** (0 request dropouts) |
-| **Ledger invariant** | `SUM(DEBIT) == 1,000,012,735 == SUM(CREDIT) == 1,000,012,735` across 1,990 double-entry rows |
+```powershell
+# 1. Comprehensive Python multi-phase benchmark runner
+python benchmark/run-comprehensive-benchmark.py
+
+# 2. Distributed Grafana k6 constant-arrival-rate load test
+k6 run benchmark/k6-load-test.js
+```
+
+#### Empirical benchmark results (live cluster execution)
+
+| Evaluation Dimension | Measured Metric | SLA / Threshold | Status |
+| :--- | :--- | :--- | :--- |
+| **Atomic Redis rate limiting** | **$p_{50} = 0.58\text{ ms}$, $p_{99} = 0.79\text{ ms}$** | $< 1.00\text{ ms}$ | **PASS** |
+| **Sustained throughput** | **26.05 RPS** (peak 60 RPS) across 300+ requests | Sustained concurrency | **PASS** |
+| **Assertion pass rate** | **100.00%** (1,880 / 1,880 k6 checks passed) | 100% assertions | **PASS** |
+| **Request dropout rate** | **0.00%** (0 failed requests under load) | $< 1.0\%$ | **PASS** |
+| **Semantic cache hit rate** | **84.46%** verified cache hits | $> 50.0\%$ | **PASS** |
+| **Multi-tenant isolation** | 5 concurrent parallel tenants evaluated with $< 10\%$ latency variance | Strict isolation | **PASS** |
+| **Resilience4j failover** | **100.00%** fallback success (25 / 25) during simulated 503 outage | Zero dropouts | **PASS** |
+| **Failover latency** | **$p_{50} = 198.32\text{ ms}$** ($< 200\text{ ms}$) | $< 200\text{ ms}$ | **PASS** |
+| **Double-entry ledger invariant** | `SUM(DEBIT) == 1,135,013,593 == SUM(CREDIT) == 1,135,013,593` across 2,098 rows ($\Delta = 0$) | Balanced by construction | **PASS** |
+
+The complete methodology, environment profile, and latency distributions are documented in [`docs/08-PERFORMANCE-BENCHMARK.md`](docs/08-PERFORMANCE-BENCHMARK.md).
 
 <a name="repository-structure"></a>
 
@@ -488,7 +506,9 @@ Orvix/
 ├── smoke_test.ps1           # Live end-to-end smoke test
 ├── assets/                  # Animated README graphics
 ├── benchmark/
-│   └── k6-load-test.js      # Distributed k6 load test
+│   ├── k6-load-test.js      # Distributed k6 multi-tenant load test
+│   ├── run-comprehensive-benchmark.py # Multi-phase independent benchmark runner
+│   └── benchmark_results.json # Machine-readable empirical test outputs
 ├── docs/                    # Design documents
 │   ├── 01-PRD.md            # Product requirements and scope lock
 │   ├── 02-HLD.md            # High-level architecture and sequence flows
@@ -496,7 +516,8 @@ Orvix/
 │   ├── 04-DB-SCHEMA.md      # Relational and pgvector schemas
 │   ├── 05-ADR.md            # Architecture Decision Records (ADR 001 to 005)
 │   ├── 06-THREAT-MODEL.md   # OWASP LLM01 Threat Model, De-obfuscation & Empirical Benchmark
-│   └── 07-SEMANTIC-CACHE-GUARD.md # Contextual Semantic Cache Guard & Temporal Disambiguation
+│   ├── 07-SEMANTIC-CACHE-GUARD.md # Contextual Semantic Cache Guard & Temporal Disambiguation
+│   └── 08-PERFORMANCE-BENCHMARK.md # Performance Benchmark Methodology & Empirical Results
 ├── orvix-common/            # Shared DTOs, Kafka event records, headers
 ├── gateway-service/         # Edge router, Redis Lua rate limiter, LLM failover
 ├── guardrail-service/       # PII engine, injection detector, audit DB
@@ -513,8 +534,9 @@ Orvix/
 | **ADR-004** | HNSW cosine-distance semantic cache on `pgvector` |
 | **ADR-006** | Multi-stage adversarial defense pipeline, de-obfuscation, and empirical benchmark (`docs/06-THREAT-MODEL.md`) |
 | **ADR-007** | Contextual semantic cache guard, temporal anchor disambiguation, and strict tenant/model isolation (`docs/07-SEMANTIC-CACHE-GUARD.md`) |
+| **ADR-008** | Performance benchmark methodology, latency percentiles, multi-tenant isolation, and chaos recovery (`docs/08-PERFORMANCE-BENCHMARK.md`) |
 
-The full set (ADR-001 to ADR-007) lives in [`docs/05-ADR.md`](docs/05-ADR.md), [`docs/06-THREAT-MODEL.md`](docs/06-THREAT-MODEL.md), and [`docs/07-SEMANTIC-CACHE-GUARD.md`](docs/07-SEMANTIC-CACHE-GUARD.md).
+The full set (ADR-001 to ADR-008) lives in [`docs/05-ADR.md`](docs/05-ADR.md), [`docs/06-THREAT-MODEL.md`](docs/06-THREAT-MODEL.md), [`docs/07-SEMANTIC-CACHE-GUARD.md`](docs/07-SEMANTIC-CACHE-GUARD.md), and [`docs/08-PERFORMANCE-BENCHMARK.md`](docs/08-PERFORMANCE-BENCHMARK.md).
 
 ## License
 

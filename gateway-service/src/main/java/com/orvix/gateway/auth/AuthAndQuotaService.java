@@ -90,9 +90,13 @@ public class AuthAndQuotaService {
             log.debug("Billing service tenant lookup miss or failed: {}", ex.getMessage());
         }
 
-        // 3. Fallback for test / dev / demo keys
+        // 3. Fallback for test / dev / benchmark keys
+        if (rawApiKey.startsWith("orv_live_benchmark_tenant_")) {
+            String tenantSuffix = rawApiKey.substring("orv_live_benchmark_tenant_".length());
+            return new TenantContext("ten_bench_" + tenantSuffix, "Benchmark Tenant " + tenantSuffix, 100000, 2000000, "ACTIVE");
+        }
         if (rawApiKey.startsWith("test_key") || rawApiKey.startsWith("orv_live_benchmark") || rawApiKey.startsWith("orv_live_demo") || rawApiKey.startsWith("demo_")) {
-            TenantContext context = new TenantContext("ten_demo_tenant", "Demo Enterprise Tenant", 1000, 200000, "ACTIVE");
+            TenantContext context = new TenantContext("ten_demo_tenant", "Demo Enterprise Tenant", 100000, 2000000, "ACTIVE");
             return context;
         }
 

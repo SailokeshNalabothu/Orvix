@@ -117,38 +117,42 @@ public class LlmRouter {
     public LlmExecutionResult dispatch(String model, String sanitizedPrompt) {
         log.debug("Dispatching request to Primary LLM Provider ({})", PROVIDER_GEMINI_PRIMARY);
 
-        // Analyze prompt complexity via internal ML classifier
-        ComplexityAnalysis analysis = analyzeComplexity(sanitizedPrompt);
-        String effectiveModel = model;
-        if (model == null || model.isBlank() || model.equalsIgnoreCase("auto") || model.equalsIgnoreCase("auto-cascade")) {
-            effectiveModel = analysis.routedModel();
-            log.info("Adaptive Model Cascading: Routed prompt to {} [Score={}, Tier={}]",
-                    effectiveModel, analysis.complexityScore(), analysis.complexityTier());
+        try {
+            // Analyze prompt complexity via internal ML classifier
+            ComplexityAnalysis analysis = analyzeComplexity(sanitizedPrompt);
+            String effectiveModel = model;
+            if (model == null || model.isBlank() || model.equalsIgnoreCase("auto") || model.equalsIgnoreCase("auto-cascade")) {
+                effectiveModel = analysis.routedModel();
+                log.info("Adaptive Model Cascading: Routed prompt to {} [Score={}, Tier={}]",
+                        effectiveModel, analysis.complexityScore(), analysis.complexityTier());
+            }
+
+            // Check for simulated primary failure trigger in testing / chaos
+            if (sanitizedPrompt.contains("[SIMULATE_PRIMARY_FAILURE]")) {
+                throw new UpstreamLlmException("Simulated 503 Provider Outage from Primary LLM");
+            }
+
+            // Standard completion generation
+            int promptTokens = Math.max(1, sanitizedPrompt.length() / 4);
+            String content = "Orvix AI Completion (" + effectiveModel + " [" + analysis.complexityTier() + "]): Processed prompt successfully.";
+            int completionTokens = Math.max(1, content.length() / 4);
+
+            // Cost adjustment based on tier
+            long estimatedCost = "gemini-1.5-pro".equals(effectiveModel) ? 140L : 45L;
+
+            return new LlmExecutionResult(
+                    PROVIDER_GEMINI_PRIMARY,
+                    effectiveModel,
+                    analysis.complexityScore(),
+                    analysis.complexityTier(),
+                    content,
+                    promptTokens,
+                    completionTokens,
+                    estimatedCost
+            );
+        } catch (UpstreamLlmException ex) {
+            return fallbackSecondaryProvider(model, sanitizedPrompt, ex);
         }
-
-        // Check for simulated primary failure trigger in testing / chaos
-        if (sanitizedPrompt.contains("[SIMULATE_PRIMARY_FAILURE]")) {
-            throw new UpstreamLlmException("Simulated 503 Provider Outage from Primary LLM");
-        }
-
-        // Standard completion generation
-        int promptTokens = Math.max(1, sanitizedPrompt.length() / 4);
-        String content = "Orvix AI Completion (" + effectiveModel + " [" + analysis.complexityTier() + "]): Processed prompt successfully.";
-        int completionTokens = Math.max(1, content.length() / 4);
-
-        // Cost adjustment based on tier
-        long estimatedCost = "gemini-1.5-pro".equals(effectiveModel) ? 140L : 45L;
-
-        return new LlmExecutionResult(
-                PROVIDER_GEMINI_PRIMARY,
-                effectiveModel,
-                analysis.complexityScore(),
-                analysis.complexityTier(),
-                content,
-                promptTokens,
-                completionTokens,
-                estimatedCost
-        );
     }
 
     /**
