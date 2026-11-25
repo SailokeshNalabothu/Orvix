@@ -10,5 +10,11 @@ public record RefundRequest(
         @Positive(message = "amountMicros must be positive")
         long amountMicros,
 
-        String reason
-) {}
+        String reason,
+
+        String idempotencyKey
+) {
+    public RefundRequest(String referenceTransactionId, long amountMicros, String reason) {
+        this(referenceTransactionId, amountMicros, reason, null);
+    }
+}

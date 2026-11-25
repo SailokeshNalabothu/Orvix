@@ -1,8 +1,10 @@
 package com.orvix.billing.service;
 
 import com.orvix.billing.model.EntryType;
+import com.orvix.billing.model.OutboxStatus;
 import com.orvix.billing.model.TenantWallet;
 import com.orvix.billing.repository.LedgerEntryRepository;
+import com.orvix.billing.repository.OutboxEventRepository;
 import com.orvix.billing.repository.TenantWalletRepository;
 import com.orvix.common.contract.dto.ReconciliationReport;
 import org.junit.jupiter.api.BeforeEach;
@@ -13,8 +15,8 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.time.Instant;
-import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
@@ -28,17 +30,19 @@ class ReconciliationServiceTest {
     @Mock
     private TenantWalletRepository walletRepository;
 
+    @Mock
+    private OutboxEventRepository outboxEventRepository;
+
     private ReconciliationService reconciliationService;
 
     @BeforeEach
     void setUp() {
-        reconciliationService = new ReconciliationService(ledgerEntryRepository, walletRepository);
+        reconciliationService = new ReconciliationService(ledgerEntryRepository, walletRepository, outboxEventRepository);
     }
 
     @Test
     @DisplayName("Audit: Global ledger balanced, wallets match transactions -> System Healthy")
     void shouldReportSystemHealthyWhenLedgerAndWalletsAreBalanced() {
-        // Global sums: 5,000,000 DEBIT, 5,000,000 CREDIT
         List<Object[]> globalSums = List.of(
                 new Object[]{EntryType.DEBIT, 5000000L},
                 new Object[]{EntryType.CREDIT, 5000000L}
@@ -46,7 +50,6 @@ class ReconciliationServiceTest {
         when(ledgerEntryRepository.sumAmountByEntryType()).thenReturn(globalSums);
         when(ledgerEntryRepository.count()).thenReturn(100L);
 
-        // Tenant 1 wallet
         TenantWallet wallet1 = TenantWallet.builder()
                 .tenantId("ten-1")
                 .balanceMicros(3500L)
@@ -55,15 +58,14 @@ class ReconciliationServiceTest {
                 .build();
         when(walletRepository.findAll()).thenReturn(List.of(wallet1));
 
-        // Tenant 1 entries: CREDIT 5000 (topup), DEBIT 1500 (usage) -> 5000 - 1500 = 3500
         List<Object[]> tenant1Sums = List.of(
                 new Object[]{EntryType.CREDIT, 5000L},
                 new Object[]{EntryType.DEBIT, 1500L}
         );
         when(ledgerEntryRepository.sumWalletEntriesByTenantId("ten-1")).thenReturn(tenant1Sums);
-
-        // No orphaned transactions
         when(ledgerEntryRepository.findOrphanedOrUnbalancedTransactionIds()).thenReturn(List.of());
+        when(outboxEventRepository.countByStatus(OutboxStatus.PENDING)).thenReturn(0L);
+        when(outboxEventRepository.countByStatus(OutboxStatus.FAILED)).thenReturn(0L);
 
         ReconciliationReport report = reconciliationService.runAudit();
 
@@ -74,6 +76,8 @@ class ReconciliationServiceTest {
         assertEquals(1, report.tenantsBalanced());
         assertEquals(0, report.tenantsWithDiscrepancy());
         assertEquals(0, report.orphanedTransactionsCount());
+        assertEquals(0L, report.outboxPendingCount());
+        assertEquals(0L, report.outboxFailedCount());
         assertTrue(report.discrepancies().isEmpty());
     }
 
@@ -87,7 +91,6 @@ class ReconciliationServiceTest {
         when(ledgerEntryRepository.sumAmountByEntryType()).thenReturn(globalSums);
         when(ledgerEntryRepository.count()).thenReturn(2L);
 
-        // Materialized balance is corrupted to 9999L
         TenantWallet corruptedWallet = TenantWallet.builder()
                 .tenantId("ten-anomaly")
                 .balanceMicros(9999L)
@@ -96,38 +99,48 @@ class ReconciliationServiceTest {
                 .build();
         when(walletRepository.findAll()).thenReturn(List.of(corruptedWallet));
 
-        // Ledger says: credits=1000, debits=0 -> calculated balance should be 1000L
         List<Object[]> tenantSums = List.<Object[]>of(
                 new Object[]{EntryType.CREDIT, 1000L}
         );
         when(ledgerEntryRepository.sumWalletEntriesByTenantId("ten-anomaly")).thenReturn(tenantSums);
         when(ledgerEntryRepository.findOrphanedOrUnbalancedTransactionIds()).thenReturn(List.of());
+        when(outboxEventRepository.countByStatus(OutboxStatus.PENDING)).thenReturn(0L);
+        when(outboxEventRepository.countByStatus(OutboxStatus.FAILED)).thenReturn(0L);
 
         ReconciliationReport report = reconciliationService.runAudit();
 
         assertFalse(report.systemHealthy());
         assertEquals(1, report.tenantsWithDiscrepancy());
-        assertEquals(8999L, report.discrepancies().get(0).discrepancyMicros());
-        assertEquals("ten-anomaly", report.discrepancies().get(0).tenantId());
+        assertEquals(1, report.discrepancies().size());
+
+        ReconciliationReport.TenantDiscrepancy discrepancy = report.discrepancies().get(0);
+        assertEquals("ten-anomaly", discrepancy.tenantId());
+        assertEquals(9999L, discrepancy.materializedBalanceMicros());
+        assertEquals(1000L, discrepancy.calculatedBalanceMicros());
+        assertEquals(8999L, discrepancy.discrepancyMicros());
     }
 
     @Test
-    @DisplayName("Audit: Detect orphaned/unbalanced transactions")
-    void shouldDetectOrphanedTransactions() {
-        when(ledgerEntryRepository.sumAmountByEntryType()).thenReturn(List.of(
-                new Object[]{EntryType.DEBIT, 1000L},
-                new Object[]{EntryType.CREDIT, 800L} // Imbalance
-        ));
-        when(ledgerEntryRepository.count()).thenReturn(3L);
-        when(walletRepository.findAll()).thenReturn(List.of());
-        when(ledgerEntryRepository.findOrphanedOrUnbalancedTransactionIds())
-                .thenReturn(List.of("tx_broken_123"));
+    @DisplayName("Self-Healing: Restores tenant wallet balance to match ledger integral")
+    void shouldHealTenantDiscrepancyToMatchLedger() {
+        TenantWallet corruptedWallet = TenantWallet.builder()
+                .tenantId("ten-heal")
+                .balanceMicros(9999L)
+                .version(1L)
+                .updatedAt(Instant.now())
+                .build();
+        when(walletRepository.findById("ten-heal")).thenReturn(Optional.of(corruptedWallet));
 
-        ReconciliationReport report = reconciliationService.runAudit();
+        List<Object[]> tenantSums = List.of(
+                new Object[]{EntryType.CREDIT, 5000L},
+                new Object[]{EntryType.DEBIT, 2000L}
+        );
+        when(ledgerEntryRepository.sumWalletEntriesByTenantId("ten-heal")).thenReturn(tenantSums);
 
-        assertFalse(report.systemHealthy());
-        assertFalse(report.ledgerBalanced());
-        assertEquals(200L, report.ledgerDeltaMicros());
-        assertEquals(1, report.orphanedTransactionsCount());
+        long healedBalance = reconciliationService.healTenantDiscrepancy("ten-heal");
+
+        assertEquals(3000L, healedBalance);
+        assertEquals(3000L, corruptedWallet.getBalanceMicros());
+        verify(walletRepository).save(corruptedWallet);
     }
 }

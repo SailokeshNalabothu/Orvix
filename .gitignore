@@ -37,7 +37,8 @@ auth_tokens/
 ### Database Dumps, State & Volume Mounts ###
 docker/data/
 data/
-db/
+/db/
+!**/src/main/resources/db/**
 *.db
 *.sqlite
 *.sqlite3

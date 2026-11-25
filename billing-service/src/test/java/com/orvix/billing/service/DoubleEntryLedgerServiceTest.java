@@ -3,8 +3,10 @@ package com.orvix.billing.service;
 import com.orvix.billing.model.*;
 import com.orvix.billing.repository.LedgerEntryRepository;
 import com.orvix.billing.repository.ProcessedEventRepository;
+import com.orvix.billing.repository.RefundIdempotencyRepository;
 import com.orvix.billing.repository.TenantWalletRepository;
 import com.orvix.common.contract.dto.CreditWalletResponse;
+import com.orvix.common.contract.dto.RefundResponse;
 import com.orvix.common.contract.event.QuotaExhaustedEvent;
 import com.orvix.common.contract.event.UsageRecordedEvent;
 import org.junit.jupiter.api.BeforeEach;
@@ -13,7 +15,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.kafka.core.KafkaTemplate;
+import org.springframework.dao.DataIntegrityViolationException;
 
 import java.time.Instant;
 import java.util.List;
@@ -36,10 +38,13 @@ class DoubleEntryLedgerServiceTest {
     private ProcessedEventRepository processedEventRepository;
 
     @Mock
+    private RefundIdempotencyRepository refundIdempotencyRepository;
+
+    @Mock
     private CostCalculator costCalculator;
 
     @Mock
-    private KafkaTemplate<String, Object> kafkaTemplate;
+    private OutboxPublisherService outboxPublisherService;
 
     @Mock
     private org.springframework.data.redis.core.StringRedisTemplate redisTemplate;
@@ -49,7 +54,8 @@ class DoubleEntryLedgerServiceTest {
     @BeforeEach
     void setUp() {
         ledgerService = new DoubleEntryLedgerService(
-                walletRepository, ledgerEntryRepository, processedEventRepository, costCalculator, kafkaTemplate, redisTemplate
+                walletRepository, ledgerEntryRepository, processedEventRepository,
+                refundIdempotencyRepository, costCalculator, outboxPublisherService, redisTemplate
         );
     }
 
@@ -65,7 +71,24 @@ class DoubleEntryLedgerServiceTest {
 
         verify(ledgerEntryRepository, never()).save(any());
         verify(walletRepository, never()).save(any());
-        verify(kafkaTemplate, never()).send(anyString(), anyString(), any());
+        verify(outboxPublisherService, never()).stageOutboxEvent(anyString(), anyString(), anyString(), anyString(), any());
+    }
+
+    @Test
+    void shouldHandleConcurrentDuplicateEventGracefully() {
+        UsageRecordedEvent event = new UsageRecordedEvent(
+                "evt-concurrent", "trace-1", "ten-1", "req-1", "gemini", "gpt-4o-mini",
+                false, 10, 20, Instant.now()
+        );
+        when(processedEventRepository.existsById("evt-concurrent")).thenReturn(false);
+        when(processedEventRepository.saveAndFlush(any(ProcessedEvent.class)))
+                .thenThrow(new DataIntegrityViolationException("Unique constraint violation on event_id"));
+
+        // Should return cleanly without throwing or debiting
+        assertDoesNotThrow(() -> ledgerService.recordUsageDebit(event));
+
+        verify(ledgerEntryRepository, never()).save(any());
+        verify(walletRepository, never()).save(any());
     }
 
     @Test
@@ -88,7 +111,7 @@ class DoubleEntryLedgerServiceTest {
         ledgerService.recordUsageDebit(event);
 
         // Verify idempotency record saved
-        verify(processedEventRepository).save(any(ProcessedEvent.class));
+        verify(processedEventRepository).saveAndFlush(any(ProcessedEvent.class));
 
         // Verify two balanced entries (DEBIT and CREDIT)
         ArgumentCaptor<LedgerEntry> entryCaptor = ArgumentCaptor.forClass(LedgerEntry.class);
@@ -109,11 +132,11 @@ class DoubleEntryLedgerServiceTest {
         verify(walletRepository).save(wallet);
 
         // No quota exhaustion event because balance > 0
-        verify(kafkaTemplate, never()).send(anyString(), anyString(), any());
+        verify(outboxPublisherService, never()).stageOutboxEvent(anyString(), anyString(), anyString(), anyString(), any());
     }
 
     @Test
-    void shouldEmitQuotaExhaustedEventWhenBalanceReachesZeroOrNegative() {
+    void shouldStageQuotaExhaustedEventInOutboxWhenBalanceReachesZeroOrNegative() {
         UsageRecordedEvent event = new UsageRecordedEvent(
                 "evt-exhaust", "trace-1", "ten-1", "req-1", "gemini", "gpt-4o-mini",
                 false, 1000, 2000, Instant.now()
@@ -134,8 +157,14 @@ class DoubleEntryLedgerServiceTest {
         assertEquals(-500L, wallet.getBalanceMicros());
         verify(walletRepository).save(wallet);
 
-        // Verify QuotaExhaustedEvent published
-        verify(kafkaTemplate).send(eq(DoubleEntryLedgerService.TOPIC_QUOTA_EXHAUSTED), eq("ten-1"), any(QuotaExhaustedEvent.class));
+        // Verify QuotaExhaustedEvent staged in Transactional Outbox
+        verify(outboxPublisherService).stageOutboxEvent(
+                eq("TENANT_WALLET"),
+                eq("ten-1"),
+                eq("QUOTA_EXHAUSTED"),
+                eq(DoubleEntryLedgerService.TOPIC_QUOTA_EXHAUSTED),
+                any(QuotaExhaustedEvent.class)
+        );
     }
 
     @Test
@@ -176,8 +205,11 @@ class DoubleEntryLedgerServiceTest {
                 .updatedAt(Instant.now())
                 .build();
         when(walletRepository.findById("ten-1")).thenReturn(Optional.of(wallet));
+        when(refundIdempotencyRepository.findById("ref_idem_tx_orig_123")).thenReturn(Optional.empty());
+        when(ledgerEntryRepository.findOriginalDebitAmount("tx_orig_123")).thenReturn(2000L);
+        when(ledgerEntryRepository.findCumulativeRefundAmount("tx_orig_123")).thenReturn(0L);
 
-        com.orvix.common.contract.dto.RefundResponse response = ledgerService.processRefund(
+        RefundResponse response = ledgerService.processRefund(
                 "ten-1", "tx_orig_123", 1500L, "SERVICE_CREDIT_DISPUTE"
         );
 
@@ -202,8 +234,56 @@ class DoubleEntryLedgerServiceTest {
         assertEquals(1500L, wallet.getBalanceMicros());
         verify(walletRepository).save(wallet);
 
+        // Verify RefundIdempotency saved and Outbox event staged
+        verify(refundIdempotencyRepository).save(any(RefundIdempotency.class));
+        verify(outboxPublisherService).stageOutboxEvent(eq("REFUND"), eq("ten-1"), eq("REFUND_PROCESSED"), anyString(), any());
+
         // Verify Redis quota block flag cleared because balance > 0
         verify(redisTemplate).delete("quota:blocked:ten-1");
+    }
+
+    @Test
+    void shouldReturnExistingRefundOnIdempotencyReplayWithoutDoubleRefunding() {
+        RefundIdempotency existing = RefundIdempotency.builder()
+                .idempotencyKey("idem_ref_999")
+                .tenantId("ten-1")
+                .referenceTransactionId("tx_orig_123")
+                .refundTransactionId("ref_prior_456")
+                .amountMicros(1000L)
+                .previousBalance(0L)
+                .newBalance(1000L)
+                .createdAt(Instant.now())
+                .build();
+        when(refundIdempotencyRepository.findById("idem_ref_999")).thenReturn(Optional.of(existing));
+
+        // Replay refund with same idempotency key
+        RefundResponse response = ledgerService.processRefund(
+                "ten-1", "tx_orig_123", 1000L, "Duplicate retry", "idem_ref_999"
+        );
+
+        // Verifies original response returned
+        assertEquals("ref_prior_456", response.refundTransactionId());
+        assertEquals(1000L, response.newBalanceMicros());
+
+        // Verifies NO new ledger entries or wallet mutations were executed
+        verify(ledgerEntryRepository, never()).save(any());
+        verify(walletRepository, never()).save(any());
+        verify(outboxPublisherService, never()).stageOutboxEvent(anyString(), anyString(), anyString(), anyString(), any());
+    }
+
+    @Test
+    void shouldRejectOverRefundExceedingOriginalDebit() {
+        when(refundIdempotencyRepository.findById(anyString())).thenReturn(Optional.empty());
+        when(ledgerEntryRepository.findOriginalDebitAmount("tx_debit_100")).thenReturn(500L);
+        when(ledgerEntryRepository.findCumulativeRefundAmount("tx_debit_100")).thenReturn(300L);
+
+        // Original debit was 500, already refunded 300, remaining eligible is 200. Requesting 300 must fail.
+        IllegalArgumentException ex = assertThrows(IllegalArgumentException.class, () ->
+                ledgerService.processRefund("ten-1", "tx_debit_100", 300L, "Over refund attempt"));
+
+        assertTrue(ex.getMessage().contains("exceeds remaining eligible refund"));
+        verify(ledgerEntryRepository, never()).save(any());
+        verify(walletRepository, never()).save(any());
     }
 
     @Test

@@ -98,7 +98,7 @@ class AdminBillingControllerTest {
         RefundResponse response = new RefundResponse(
                 "ten_12345", "ref_tx_99", "tx_orig_1", 50000L, 1000000L, 1050000L, Instant.now()
         );
-        when(ledgerService.processRefund(eq("ten_12345"), eq("tx_orig_1"), eq(50000L), eq("QUALITY_ISSUE")))
+        when(ledgerService.processRefund(eq("ten_12345"), eq("tx_orig_1"), eq(50000L), eq("QUALITY_ISSUE"), any()))
                 .thenReturn(response);
 
         mockMvc.perform(post("/admin/v1/tenants/ten_12345/refunds")

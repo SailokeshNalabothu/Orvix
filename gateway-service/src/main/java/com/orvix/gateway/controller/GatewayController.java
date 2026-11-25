@@ -11,6 +11,7 @@ import com.orvix.gateway.auth.AuthAndQuotaService;
 import com.orvix.gateway.client.GuardrailClient;
 import com.orvix.gateway.client.SemanticCacheClient;
 import com.orvix.gateway.event.UsageEventPublisher;
+import com.orvix.gateway.idempotency.GatewayIdempotencyService;
 import com.orvix.gateway.ratelimit.RedisRateLimiter;
 import com.orvix.gateway.router.LlmRouter;
 import jakarta.servlet.http.HttpServletResponse;
@@ -20,6 +21,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.nio.charset.StandardCharsets;
 import java.time.Instant;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -37,16 +39,20 @@ public class GatewayController {
     private final SemanticCacheClient cacheClient;
     private final LlmRouter llmRouter;
     private final UsageEventPublisher usageEventPublisher;
+    private final GatewayIdempotencyService idempotencyService;
 
     @PostMapping("/chat/completions")
     public ResponseEntity<ChatCompletionResponse> createChatCompletion(
             @RequestHeader(value = OrvixHeaders.API_KEY, required = false) String rawApiKey,
             @RequestHeader(value = "X-Orvix-Api-Key", required = false) String rawOrvixApiKey,
             @RequestHeader(value = "Authorization", required = false) String authHeader,
-            @RequestHeader(value = OrvixHeaders.IDEMPOTENCY_KEY, required = false) String idempotencyKey,
+            @RequestHeader(value = OrvixHeaders.IDEMPOTENCY_KEY, required = false) String rawXIdempotencyKey,
+            @RequestHeader(value = "Idempotency-Key", required = false) String rawIdempotencyKey,
             @Valid @RequestBody ChatCompletionRequest request,
             HttpServletResponse servletResponse
     ) {
+        String idempotencyKey = (rawXIdempotencyKey != null && !rawXIdempotencyKey.isBlank())
+                ? rawXIdempotencyKey : rawIdempotencyKey;
         long startTimeMs = System.currentTimeMillis();
         String traceId = UUID.randomUUID().toString().replace("-", "");
         String requestId = idempotencyKey != null && !idempotencyKey.isBlank() ? idempotencyKey : "req_" + UUID.randomUUID();
@@ -63,6 +69,19 @@ public class GatewayController {
         // 1. Auth & Quota Check (Fail Fast)
         var tenant = authAndQuotaService.authenticate(effectiveApiKey);
         authAndQuotaService.checkQuota(tenant.tenantId());
+
+        // 1b. Gateway-Level Idempotency Check (Client Retry Replay Defense)
+        if (idempotencyKey != null && !idempotencyKey.isBlank()) {
+            ChatCompletionResponse cached = idempotencyService.getCachedResponse(tenant.tenantId(), idempotencyKey);
+            if (cached != null) {
+                servletResponse.setHeader(OrvixHeaders.TRACE_ID, traceId);
+                servletResponse.setHeader("X-Idempotency-Replayed", "true");
+                servletResponse.setHeader(OrvixHeaders.PROVIDER_USED, cached.provider());
+                servletResponse.setHeader(OrvixHeaders.CACHE_STATUS, CacheStatus.HIT.name());
+                log.info("Idempotent completion request replayed for tenant: {}, key: {}", tenant.tenantId(), idempotencyKey);
+                return ResponseEntity.ok(cached);
+            }
+        }
 
         // 2. Atomic Redis Token Bucket Rate Limiting (ADR-001)
         var rateLimitResult = rateLimiter.checkRateLimit(tenant.tenantId(), tenant.rpmLimit(), 1);
@@ -147,9 +166,13 @@ public class GatewayController {
 
         long latencyMs = System.currentTimeMillis() - startTimeMs;
 
-        // 6. Async Side Effects: Non-blocking Kafka usage emission
+        // 6. Async Side Effects: Non-blocking Kafka usage emission with deterministic event ID on idempotency
+        String eventId = (idempotencyKey != null && !idempotencyKey.isBlank())
+                ? "evt_idem_" + UUID.nameUUIDFromBytes((tenant.tenantId() + ":" + idempotencyKey).getBytes(StandardCharsets.UTF_8)).toString().replace("-", "").substring(0, 24)
+                : "evt_" + UUID.randomUUID();
+
         UsageRecordedEvent usageEvent = new UsageRecordedEvent(
-                "evt_" + UUID.randomUUID(),
+                eventId,
                 traceId,
                 tenant.tenantId(),
                 requestId,
@@ -185,6 +208,11 @@ public class GatewayController {
                 ),
                 latencyMs
         );
+
+        // 9. Store in Redis for 24h Idempotency Replays
+        if (idempotencyKey != null && !idempotencyKey.isBlank()) {
+            idempotencyService.storeResponse(tenant.tenantId(), idempotencyKey, response);
+        }
 
         return ResponseEntity.ok(response);
     }

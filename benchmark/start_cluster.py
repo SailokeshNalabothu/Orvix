@@ -41,7 +41,24 @@ def wait_for_health(port, name, timeout=60):
     print(f"[HEALTH-TIMEOUT] {name} on port {port} failed to become UP within {timeout}s")
     return False
 
+def kill_port(port):
+    try:
+        res = subprocess.run(["powershell", "-Command", f"(Get-NetTCPConnection -LocalPort {port} -State Listen -ErrorAction SilentlyContinue).OwningProcess"], capture_output=True, text=True)
+        out = res.stdout.strip()
+        if out and out.isdigit():
+            subprocess.run(["powershell", "-Command", f"Stop-Process -Id {out} -Force -ErrorAction SilentlyContinue"], capture_output=True)
+            time.sleep(1)
+    except Exception:
+        pass
+
 def main():
+    force_restart = "--restart" in sys.argv
+    if force_restart:
+        print("[RESTART] Stopping existing microservices on ports 8080, 8081, 8082, 8083...")
+        for port in [8080, 8081, 8082, 8083]:
+            kill_port(port)
+        time.sleep(2)
+
     env = os.environ.copy()
     env["JAVA_HOME"] = JAVA_HOME
     env["PATH"] = f"{JAVA_HOME}\\bin;{env.get('PATH', '')}"

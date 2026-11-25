@@ -52,10 +52,15 @@ public class AdminBillingController {
     @PostMapping("/tenants/{tenantId}/refunds")
     public ResponseEntity<RefundResponse> processRefund(
             @PathVariable("tenantId") String tenantId,
+            @RequestHeader(value = "Idempotency-Key", required = false) String idempotencyKeyHeader,
             @Valid @RequestBody RefundRequest request
     ) {
+        String effectiveKey = request.idempotencyKey();
+        if (effectiveKey == null || effectiveKey.isBlank()) {
+            effectiveKey = idempotencyKeyHeader;
+        }
         RefundResponse response = ledgerService.processRefund(
-                tenantId, request.referenceTransactionId(), request.amountMicros(), request.reason()
+                tenantId, request.referenceTransactionId(), request.amountMicros(), request.reason(), effectiveKey
         );
         return ResponseEntity.ok(response);
     }

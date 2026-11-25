@@ -25,4 +25,10 @@ public interface LedgerEntryRepository extends JpaRepository<LedgerEntry, Long> 
 
     @Query("SELECT l.transactionId FROM LedgerEntry l GROUP BY l.transactionId HAVING COUNT(l.id) != 2 OR SUM(CASE WHEN l.entryType = com.orvix.billing.model.EntryType.DEBIT THEN l.amountMicros ELSE -l.amountMicros END) != 0")
     List<String> findOrphanedOrUnbalancedTransactionIds();
+
+    @Query("SELECT COALESCE(SUM(l.amountMicros), 0) FROM LedgerEntry l WHERE (l.transactionId = :referenceId OR l.referenceEventId = :referenceId) AND l.accountType = com.orvix.billing.model.AccountType.TENANT_WALLET AND l.entryType = com.orvix.billing.model.EntryType.DEBIT")
+    long findOriginalDebitAmount(@Param("referenceId") String referenceId);
+
+    @Query("SELECT COALESCE(SUM(l.amountMicros), 0) FROM LedgerEntry l WHERE l.referenceEventId = :referenceId AND l.accountType = com.orvix.billing.model.AccountType.TENANT_WALLET AND l.entryType = com.orvix.billing.model.EntryType.CREDIT")
+    long findCumulativeRefundAmount(@Param("referenceId") String referenceId);
 }

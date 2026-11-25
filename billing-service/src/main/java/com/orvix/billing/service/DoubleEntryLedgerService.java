@@ -3,6 +3,7 @@ package com.orvix.billing.service;
 import com.orvix.billing.model.*;
 import com.orvix.billing.repository.LedgerEntryRepository;
 import com.orvix.billing.repository.ProcessedEventRepository;
+import com.orvix.billing.repository.RefundIdempotencyRepository;
 import com.orvix.billing.repository.TenantWalletRepository;
 import com.orvix.common.contract.dto.CreditWalletResponse;
 import com.orvix.common.contract.dto.RefundResponse;
@@ -10,8 +11,8 @@ import com.orvix.common.contract.event.QuotaExhaustedEvent;
 import com.orvix.common.contract.event.UsageRecordedEvent;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.dao.OptimisticLockingFailureException;
-import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.retry.annotation.Backoff;
 import org.springframework.retry.annotation.Retryable;
 import org.springframework.stereotype.Service;
@@ -30,8 +31,9 @@ public class DoubleEntryLedgerService {
     private final TenantWalletRepository walletRepository;
     private final LedgerEntryRepository ledgerEntryRepository;
     private final ProcessedEventRepository processedEventRepository;
+    private final RefundIdempotencyRepository refundIdempotencyRepository;
     private final CostCalculator costCalculator;
-    private final KafkaTemplate<String, Object> kafkaTemplate;
+    private final OutboxPublisherService outboxPublisherService;
     private final org.springframework.data.redis.core.StringRedisTemplate redisTemplate;
 
     /**
@@ -40,7 +42,7 @@ public class DoubleEntryLedgerService {
      * 2. Writes append-only double-entry ledger rows (DEBIT tenant wallet, CREDIT platform revenue).
      * 3. Updates materialized wallet balance with JPA @Version optimistic locking.
      * 4. Automatically retries upon concurrent version conflict (@Retryable max 5 attempts, 20ms jitter).
-     * 5. Emits QuotaExhaustedEvent if balance falls to or below zero.
+     * 5. Atomically stages QuotaExhaustedEvent in Transactional Outbox if balance falls to or below zero.
      */
     @Retryable(
             retryFor = {OptimisticLockingFailureException.class},
@@ -55,10 +57,15 @@ public class DoubleEntryLedgerService {
             return;
         }
 
-        processedEventRepository.save(ProcessedEvent.builder()
-                .eventId(event.event_id())
-                .processedAt(Instant.now())
-                .build());
+        try {
+            processedEventRepository.saveAndFlush(ProcessedEvent.builder()
+                    .eventId(event.event_id())
+                    .processedAt(Instant.now())
+                    .build());
+        } catch (DataIntegrityViolationException ex) {
+            log.info("Concurrent duplicate usage event detected for event: {}, skipping debit", event.event_id());
+            return;
+        }
 
         // 2. Cost Calculation (Micro-dollars)
         long costMicros = costCalculator.calculateCostMicros(event);
@@ -101,9 +108,9 @@ public class DoubleEntryLedgerService {
         log.info("Deducted {} micro-dollars from tenant: {}, new balance: {} (tx: {})",
                 costMicros, event.tenant_id(), newBalance, txId);
 
-        // 5. Quota Exhaustion Check
+        // 5. Quota Exhaustion Check via Transactional Outbox (Zero Dual-Write Risk)
         if (newBalance <= 0) {
-            log.warn("Tenant {} wallet exhausted! Balance: {} micro-dollars. Emitting QuotaExhaustedEvent.",
+            log.warn("Tenant {} wallet exhausted! Balance: {} micro-dollars. Staging QuotaExhaustedEvent in Transactional Outbox.",
                     event.tenant_id(), newBalance);
 
             QuotaExhaustedEvent quotaEvent = new QuotaExhaustedEvent(
@@ -111,7 +118,13 @@ public class DoubleEntryLedgerService {
                     event.tenant_id(),
                     now
             );
-            kafkaTemplate.send(TOPIC_QUOTA_EXHAUSTED, event.tenant_id(), quotaEvent);
+            outboxPublisherService.stageOutboxEvent(
+                    "TENANT_WALLET",
+                    event.tenant_id(),
+                    "QUOTA_EXHAUSTED",
+                    TOPIC_QUOTA_EXHAUSTED,
+                    quotaEvent
+            );
         }
     }
 
@@ -190,14 +203,20 @@ public class DoubleEntryLedgerService {
         );
     }
 
+    public RefundResponse processRefund(String tenantId, String referenceTransactionId, long amountMicros, String reason) {
+        return processRefund(tenantId, referenceTransactionId, amountMicros, reason, null);
+    }
+
     /**
-     * Atomically processes a refund for a prior transaction:
-     * 1. Validates positive refund amount and tenant wallet existence.
-     * 2. Writes double-entry reversal entries:
+     * Atomically processes an idempotent refund for a prior transaction:
+     * 1. Checks refund idempotency key to prevent double-refunding upon retries.
+     * 2. Validates refund amount against original debit to prevent over-refunding.
+     * 3. Writes double-entry reversal entries:
      *    - DEBIT entry to PLATFORM_REVENUE (reversing collected revenue)
      *    - CREDIT entry to TENANT_WALLET (restoring funds to customer)
-     * 3. Atomically increases materialized wallet balance with @Version optimistic locking.
-     * 4. Unblocks Redis quota block flag if wallet balance is restored above zero.
+     * 4. Atomically increases materialized wallet balance with @Version optimistic locking.
+     * 5. Unblocks Redis quota block flag if wallet balance is restored above zero.
+     * 6. Persists refund idempotency record and stages Transactional Outbox event.
      */
     @Retryable(
             retryFor = {OptimisticLockingFailureException.class},
@@ -205,9 +224,50 @@ public class DoubleEntryLedgerService {
             backoff = @Backoff(delay = 20, random = true)
     )
     @Transactional
-    public RefundResponse processRefund(String tenantId, String referenceTransactionId, long amountMicros, String reason) {
+    public RefundResponse processRefund(String tenantId, String referenceTransactionId, long amountMicros,
+                                        String reason, String idempotencyKey) {
         if (amountMicros <= 0) {
             throw new IllegalArgumentException("Refund amount must be greater than zero");
+        }
+
+        String effectiveKey = idempotencyKey != null && !idempotencyKey.isBlank()
+                ? idempotencyKey
+                : "ref_idem_" + referenceTransactionId;
+
+        // 1. Idempotency Check: Return existing record on retry
+        var existingOpt = refundIdempotencyRepository.findById(effectiveKey);
+        if (existingOpt.isPresent()) {
+            var existing = existingOpt.get();
+            log.info("Idempotent refund replay for key: {}, refundTx: {}", effectiveKey, existing.getRefundTransactionId());
+            return new RefundResponse(
+                    existing.getTenantId(),
+                    existing.getRefundTransactionId(),
+                    existing.getReferenceTransactionId(),
+                    existing.getAmountMicros(),
+                    existing.getPreviousBalance(),
+                    existing.getNewBalance(),
+                    existing.getCreatedAt()
+            );
+        }
+
+        // 2. Over-refund validation against original debit
+        if (referenceTransactionId != null && !referenceTransactionId.isBlank()
+                && !referenceTransactionId.equalsIgnoreCase("NONE")
+                && !referenceTransactionId.equalsIgnoreCase("REFUND")) {
+            long originalDebit = ledgerEntryRepository.findOriginalDebitAmount(referenceTransactionId);
+            if (originalDebit <= 0) {
+                throw new IllegalArgumentException(String.format(
+                        "Original transaction '%s' was not found or was not a debit for tenant '%s'",
+                        referenceTransactionId, tenantId
+                ));
+            }
+            long cumulativeRefunded = ledgerEntryRepository.findCumulativeRefundAmount(referenceTransactionId);
+            if (cumulativeRefunded + amountMicros > originalDebit) {
+                throw new IllegalArgumentException(String.format(
+                        "Refund amount %d exceeds remaining eligible refund %d for transaction %s (original: %d, already refunded: %d)",
+                        amountMicros, (originalDebit - cumulativeRefunded), referenceTransactionId, originalDebit, cumulativeRefunded
+                ));
+            }
         }
 
         TenantWallet wallet = walletRepository.findById(tenantId)
@@ -218,7 +278,7 @@ public class DoubleEntryLedgerService {
         String refundTxId = "ref_" + UUID.randomUUID();
         Instant now = Instant.now();
 
-        // Double-entry ledger reversal rows
+        // 3. Double-entry ledger reversal rows
         LedgerEntry revenueDebit = LedgerEntry.builder()
                 .transactionId(refundTxId)
                 .tenantId(tenantId)
@@ -246,7 +306,19 @@ public class DoubleEntryLedgerService {
         wallet.setUpdatedAt(now);
         walletRepository.save(wallet);
 
-        // Clear Redis quota block flag if wallet is restored above zero
+        // 4. Save Refund Idempotency Record
+        refundIdempotencyRepository.save(RefundIdempotency.builder()
+                .idempotencyKey(effectiveKey)
+                .tenantId(tenantId)
+                .referenceTransactionId(referenceTransactionId)
+                .refundTransactionId(refundTxId)
+                .amountMicros(amountMicros)
+                .previousBalance(previousBalance)
+                .newBalance(newBalance)
+                .createdAt(now)
+                .build());
+
+        // 5. Clear Redis quota block flag if wallet is restored above zero
         if (newBalance > 0 && redisTemplate != null) {
             try {
                 redisTemplate.delete("quota:blocked:" + tenantId);
@@ -256,10 +328,8 @@ public class DoubleEntryLedgerService {
             }
         }
 
-        log.info("Processed refund of {} micro-dollars for tenant: {} (ref: {}). Previous: {}, New: {} (tx: {})",
-                amountMicros, tenantId, referenceTransactionId, previousBalance, newBalance, refundTxId);
-
-        return new RefundResponse(
+        // 6. Stage Outbox Event for downstream reconciliation and audit
+        RefundResponse response = new RefundResponse(
                 tenantId,
                 refundTxId,
                 referenceTransactionId,
@@ -268,5 +338,17 @@ public class DoubleEntryLedgerService {
                 newBalance,
                 now
         );
+        outboxPublisherService.stageOutboxEvent(
+                "REFUND",
+                tenantId,
+                "REFUND_PROCESSED",
+                "orvix.billing.refunds",
+                response
+        );
+
+        log.info("Processed refund of {} micro-dollars for tenant: {} (ref: {}). Previous: {}, New: {} (tx: {})",
+                amountMicros, tenantId, referenceTransactionId, previousBalance, newBalance, refundTxId);
+
+        return response;
     }
 }

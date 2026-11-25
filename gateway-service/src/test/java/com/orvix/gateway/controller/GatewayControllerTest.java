@@ -9,6 +9,7 @@ import com.orvix.gateway.auth.AuthAndQuotaService;
 import com.orvix.gateway.client.GuardrailClient;
 import com.orvix.gateway.client.SemanticCacheClient;
 import com.orvix.gateway.event.UsageEventPublisher;
+import com.orvix.gateway.idempotency.GatewayIdempotencyService;
 import com.orvix.gateway.ratelimit.RedisRateLimiter;
 import com.orvix.gateway.router.LlmRouter;
 import org.junit.jupiter.api.BeforeEach;
@@ -52,6 +53,9 @@ class GatewayControllerTest {
 
     @MockBean
     private UsageEventPublisher usageEventPublisher;
+
+    @MockBean
+    private GatewayIdempotencyService idempotencyService;
 
     private ChatCompletionRequest validRequest;
 
@@ -165,5 +169,37 @@ class GatewayControllerTest {
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.status").value(400))
                 .andExpect(jsonPath("$.title").value("Prompt Injection Blocked"));
+    }
+
+    @Test
+    void shouldReplayCachedResponseOnIdempotencyKeyHit() throws Exception {
+        var tenant = new AuthAndQuotaService.TenantContext("ten_1", "Test Tenant", 60, 10000, "ACTIVE");
+        when(authAndQuotaService.authenticate("orv_live_validkey")).thenReturn(tenant);
+        doNothing().when(authAndQuotaService).checkQuota("ten_1");
+
+        var cachedResponse = new com.orvix.common.contract.dto.ChatCompletionResponse(
+                "idemp_test_key",
+                "cached-provider",
+                "gemini-1.5-flash",
+                "Cached idempotency replay response",
+                new com.orvix.common.contract.dto.ChatCompletionResponse.GuardrailSummary("CLEAN", 0),
+                new com.orvix.common.contract.dto.ChatCompletionResponse.UsageSummary(10, 20, 30, 50L),
+                5L
+        );
+        when(idempotencyService.getCachedResponse("ten_1", "idemp_test_key")).thenReturn(cachedResponse);
+
+        mockMvc.perform(post("/v1/chat/completions")
+                        .header(OrvixHeaders.API_KEY, "orv_live_validkey")
+                        .header(OrvixHeaders.IDEMPOTENCY_KEY, "idemp_test_key")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(validRequest)))
+                .andExpect(status().isOk())
+                .andExpect(header().string("X-Idempotency-Replayed", "true"))
+                .andExpect(jsonPath("$.id").value("idemp_test_key"))
+                .andExpect(jsonPath("$.content").value("Cached idempotency replay response"));
+
+        // Verify LLM router was NEVER dispatched and usage was NEVER published
+        verify(llmRouter, never()).dispatch(anyString(), anyString());
+        verify(usageEventPublisher, never()).publishUsageAsync(any());
     }
 }

@@ -44,7 +44,7 @@
     <td align="center" width="20%"><h2>0 tokens</h2><sub>billed on a<br/>semantic cache hit</sub></td>
     <td align="center" width="20%"><h2>&lt; 200 ms</h2><sub>circuit-breaker<br/>failover to fallback</sub></td>
     <td align="center" width="20%"><h2>1,880 / 1,880</h2><sub>k6 checks passed,<br/>0% error rate</sub></td>
-    <td align="center" width="20%"><h2>2,268 rows</h2><sub>ledger verified:<br/>19/19 tenants balanced</sub></td>
+    <td align="center" width="20%"><h2>2,300 rows</h2><sub>ledger verified:<br/>19/19 tenants balanced</sub></td>
   </tr>
 </table>
 
@@ -178,6 +178,17 @@ flowchart TD
 | **PostgreSQL crash recovery & offset holding** | Transient DB disconnections (`CannotCreateTransactionException`, `JDBCConnectionException`) are explicitly detected. In-flight Kafka offsets are held without commit and **never** routed to DLQs, guaranteeing zero poison pills and 100% eventual consistency |
 | **Microservice isolation & failure policies** | Security Guardrail is strictly **Fail-Closed** (HTTP 503 prevents uninspected prompts reaching upstream LLMs); Semantic Cache is strictly **Fail-Open** (HTTP 200 `X-Cache-Status: BYPASS` seamlessly routes to LLM without dropping traffic); Billing outage decouples safely via Kafka topic buffering |
 | **Post-chaos mathematical invariant proof** | 3-tier reconciliation audit (`POST /admin/v1/reconciliation/run`) verifies $\Delta_{\text{system}} = 0$, $0$ discrepancies across 19/19 tenants, and $0$ orphaned transactions after multi-service chaos injection |
+
+### 8. Real financial transaction guarantees: transactional outbox, idempotent refunds & retry defense (ADR-011)
+
+| Feature | Detail |
+| :--- | :--- |
+| **Transactional Outbox pattern** | Eliminates dual-write inconsistency between DB and Kafka. Staging events (such as `QuotaExhaustedEvent` and `RefundResponse`) within the local JPA `@Transactional` boundary and publishing via a dedicated `@Scheduled` worker with partition-key alignment |
+| **Duplicate-event storm recovery** | Burst of 10 identical Kafka usage events for a single LLM completion is safely deduplicated by the `processed_events` table constraint. The tenant wallet is debited exactly once, creating exactly 2 balanced ledger rows |
+| **Idempotent refund retries** | Refund operations guarded by `refund_idempotency` table and `Idempotency-Key` header. Repeated refund requests replay the cached response with identical `refundTransactionId` without double-crediting wallets |
+| **Strict over-refund prevention** | Cumulative refund amounts are validated against original transaction debits. Requests exceeding eligible remaining amounts or targeting invalid transactions are strictly rejected with HTTP 400 Bad Request |
+| **Gateway client-retry replay defense** | Client HTTP requests bearing `Idempotency-Key` return cached responses from Redis in $< 70\text{ ms}$ with `X-Idempotency-Replayed: true`. Zero duplicate LLM tokens dispatched, zero extra billing |
+| **4-Tier mathematical reconciliation** | System audit enforces Tier 1: $\sum \text{DEBITS} == \sum \text{CREDITS}$ ($\Delta = 0$), Tier 2: Tenant wallet balance == ledger integral, Tier 3: Zero orphaned transactions, Tier 4: Fully drained outbox with 0 failed events |
 
 <a name="services"></a>
 
@@ -556,6 +567,9 @@ python benchmark/run-comprehensive-benchmark.py
 
 # 2. Distributed Grafana k6 constant-arrival-rate load test
 k6 run benchmark/k6-load-test.js
+
+# 3. Live financial transaction guarantees and idempotency verification
+python benchmark/financial-guarantees-test.py
 ```
 
 #### Empirical benchmark results (live cluster execution)
@@ -570,7 +584,12 @@ k6 run benchmark/k6-load-test.js
 | **Multi-tenant isolation** | 5 concurrent parallel tenants evaluated with $< 10\%$ latency variance | Strict isolation | **PASS** |
 | **Resilience4j failover** | **100.00%** fallback success (25 / 25) during simulated 503 outage | Zero dropouts | **PASS** |
 | **Failover latency** | **$p_{50} = 198.32\text{ ms}$** ($< 200\text{ ms}$) | $< 200\text{ ms}$ | **PASS** |
-| **Double-entry ledger invariant** | `SUM(DEBIT) == 1,235,515,660 == SUM(CREDIT) == 1,235,515,660` across 2,268 rows ($\Delta = 0$) | Balanced by construction | **PASS** |
+| **Double-entry ledger invariant** | `SUM(DEBIT) == 2,235,516,550 == SUM(CREDIT) == 2,235,516,550` across 2,300 rows ($\Delta = 0$) | Balanced by construction | **PASS** |
+| **Duplicate-event storm recovery** | **10 duplicate events injected** $\to$ exactly 1 debit recorded (195 µ$), 9 dropped by `processed_events` | Zero double-charging | **PASS** |
+| **Idempotent refund storm** | **5 duplicate refund requests** $\to$ 5/5 HTTP 200 with identical `refundTransactionId`, credited 50 µ$ once | Zero duplicate credits | **PASS** |
+| **Strict over-refund prevention** | Attempted to refund $999.99 on a $0.0002 debit $\to$ rejected with **HTTP 400 Bad Request** | Over-refund blocked | **PASS** |
+| **Transactional Outbox staging** | 4/4 events staged atomically in DB and published reliably to Kafka (`status = PUBLISHED`) | Zero dual-write risk | **PASS** |
+| **Gateway client-retry replay** | Replay in **62.19 ms** from Redis with `X-Idempotency-Replayed: true`; 0 LLM tokens billed | Zero retry token leaks | **PASS** |
 | **3-Tier reconciliation audit** | **19 / 19 active tenants balanced ($100\%$)**, 0 discrepancies, 0 orphaned txns | Strict financial health | **PASS** |
 | **Kafka broker crash recovery** | **100% request completion** (12/12) via Gateway fallback buffer; auto-drained on broker restore ($\Delta = 0$) | Zero lost transactions | **PASS** |
 | **Redis outage fail-closed** | **100% fail-closed rejection** (5/5 HTTP 503); 0 unauthorized tokens consumed | Fail-Closed security | **PASS** |
@@ -578,7 +597,7 @@ k6 run benchmark/k6-load-test.js
 | **Microservice fault policies** | Guardrail **Fail-Closed (503)**, Semantic Cache **Fail-Open (200 BYPASS)**, Billing topic buffering | Strict SLA preservation | **PASS** |
 | **Kafka DLQ poison-pill isolation** | Unprocessable events routed to `orvix.usage.dlq` without blocking consumer group | Zero partition block | **PASS** |
 
-The complete methodology, environment profile, latency distributions, and chaos engineering architecture are documented in [`docs/08-PERFORMANCE-BENCHMARK.md`](docs/08-PERFORMANCE-BENCHMARK.md), [`docs/09-FINANCIAL-CORRECTNESS.md`](docs/09-FINANCIAL-CORRECTNESS.md), and [`docs/10-CHAOS-ENGINEERING-AND-RECOVERY.md`](docs/10-CHAOS-ENGINEERING-AND-RECOVERY.md).
+The complete methodology, environment profile, latency distributions, and chaos engineering architecture are documented in [`docs/08-PERFORMANCE-BENCHMARK.md`](docs/08-PERFORMANCE-BENCHMARK.md), [`docs/09-FINANCIAL-CORRECTNESS.md`](docs/09-FINANCIAL-CORRECTNESS.md), [`docs/10-CHAOS-ENGINEERING-AND-RECOVERY.md`](docs/10-CHAOS-ENGINEERING-AND-RECOVERY.md), and [`docs/11-REAL-FINANCIAL-TRANSACTION-GUARANTEES.md`](docs/11-REAL-FINANCIAL-TRANSACTION-GUARANTEES.md).
 
 <a name="repository-structure"></a>
 
@@ -597,7 +616,9 @@ Orvix/
 │   ├── run-comprehensive-benchmark.py # Multi-phase independent benchmark runner
 │   ├── benchmark_results.json # Machine-readable empirical test outputs
 │   ├── chaos-recovery-test.py # Automated Toxiproxy and Docker chaos test runner
-│   └── chaos_recovery_report.json # Empirical zero-loss disaster recovery report
+│   ├── chaos_recovery_report.json # Empirical zero-loss disaster recovery report
+│   ├── financial-guarantees-test.py # Live financial transaction guarantees test runner
+│   └── financial_guarantees_report.json # Empirical financial correctness verification report
 ├── docs/                    # Design documents
 │   ├── 01-PRD.md            # Product requirements and scope lock
 │   ├── 02-HLD.md            # High-level architecture and sequence flows
@@ -608,7 +629,8 @@ Orvix/
 │   ├── 07-SEMANTIC-CACHE-GUARD.md # Contextual Semantic Cache Guard & Temporal Disambiguation
 │   ├── 08-PERFORMANCE-BENCHMARK.md # Performance Benchmark Methodology & Empirical Results
 │   ├── 09-FINANCIAL-CORRECTNESS.md # 3-Tier Reconciliation, Atomicity, Refunds & DLQ
-│   └── 10-CHAOS-ENGINEERING-AND-RECOVERY.md # Chaos Engineering, Toxiproxy & Zero-Loss Recovery
+│   ├── 10-CHAOS-ENGINEERING-AND-RECOVERY.md # Chaos Engineering, Toxiproxy & Zero-Loss Recovery
+│   └── 11-REAL-FINANCIAL-TRANSACTION-GUARANTEES.md # Transactional Outbox, Idempotent Refunds & Retry Defense
 ├── orvix-common/            # Shared DTOs, Kafka event records, headers
 ├── gateway-service/         # Edge router, Redis Lua rate limiter, fallback buffer, LLM failover
 ├── guardrail-service/       # PII engine, injection detector, audit DB
@@ -628,8 +650,9 @@ Orvix/
 | **ADR-008** | Performance benchmark methodology, latency percentiles, multi-tenant isolation, and chaos recovery (`docs/08-PERFORMANCE-BENCHMARK.md`) |
 | **ADR-009** | Production-grade financial correctness, 3-tier reconciliation engine, atomic refund reversals, and Kafka DLQ (`docs/09-FINANCIAL-CORRECTNESS.md`) |
 | **ADR-010** | Chaos engineering, Toxiproxy fault injection, and zero-loss financial disaster recovery (`docs/10-CHAOS-ENGINEERING-AND-RECOVERY.md`) |
+| **ADR-011** | Real financial transaction guarantees, Transactional Outbox pattern, idempotent refunds, over-refund defense, and duplicate-event recovery (`docs/11-REAL-FINANCIAL-TRANSACTION-GUARANTEES.md`) |
 
-The full set (ADR-001 to ADR-010) lives in [`docs/05-ADR.md`](docs/05-ADR.md), [`docs/06-THREAT-MODEL.md`](docs/06-THREAT-MODEL.md), [`docs/07-SEMANTIC-CACHE-GUARD.md`](docs/07-SEMANTIC-CACHE-GUARD.md), [`docs/08-PERFORMANCE-BENCHMARK.md`](docs/08-PERFORMANCE-BENCHMARK.md), [`docs/09-FINANCIAL-CORRECTNESS.md`](docs/09-FINANCIAL-CORRECTNESS.md), and [`docs/10-CHAOS-ENGINEERING-AND-RECOVERY.md`](docs/10-CHAOS-ENGINEERING-AND-RECOVERY.md).
+The full set (ADR-001 to ADR-011) lives in [`docs/05-ADR.md`](docs/05-ADR.md), [`docs/06-THREAT-MODEL.md`](docs/06-THREAT-MODEL.md), [`docs/07-SEMANTIC-CACHE-GUARD.md`](docs/07-SEMANTIC-CACHE-GUARD.md), [`docs/08-PERFORMANCE-BENCHMARK.md`](docs/08-PERFORMANCE-BENCHMARK.md), [`docs/09-FINANCIAL-CORRECTNESS.md`](docs/09-FINANCIAL-CORRECTNESS.md), [`docs/10-CHAOS-ENGINEERING-AND-RECOVERY.md`](docs/10-CHAOS-ENGINEERING-AND-RECOVERY.md), and [`docs/11-REAL-FINANCIAL-TRANSACTION-GUARANTEES.md`](docs/11-REAL-FINANCIAL-TRANSACTION-GUARANTEES.md).
 
 ## License
 

@@ -1,0 +1,58 @@
+{
+  "startTime": "2026-11-25T18:20:41Z",
+  "guarantees": {
+    "guarantee_1_duplicate_event_storm": {
+      "status": "PASS",
+      "duplicate_events_sent": 10,
+      "ledger_entries_created": 2,
+      "actual_debit_micros": 195,
+      "proof": "Duplicate events discarded by processed_events idempotency; tenant charged exactly once."
+    },
+    "guarantee_2_idempotent_refund_storm": {
+      "status": "PASS",
+      "refund_requests_sent": 5,
+      "unique_refund_tx_ids": 1,
+      "requested_amount_micros": 50,
+      "actual_credited_micros": 50,
+      "proof": "Idempotent refund table guarantees retries replay cached response without double-crediting."
+    },
+    "guarantee_3_over_refund_protection": {
+      "status": "PASS",
+      "rejected_status": 400,
+      "proof": "Cumulative refund amount is validated against original debit entry; illegal over-refunds are blocked."
+    },
+    "guarantee_4_transactional_outbox": {
+      "status": "PASS",
+      "published_events": 4,
+      "pending_events": 0,
+      "failed_events": 0,
+      "proof": "Dual-write eliminated: Events staged inside local database transaction and published asynchronously."
+    },
+    "guarantee_5_gateway_idempotency_replay": {
+      "status": "PASS",
+      "first_latency_ms": 1414.034366607666,
+      "replay_latency_ms": 62.18981742858887,
+      "replayed_header": "true",
+      "proof": "Gateway Redis idempotency cache stops client retry storms before reaching LLMs or billing."
+    }
+  },
+  "summary": {},
+  "allGuaranteesPassed": true,
+  "finalReconciliation": {
+    "auditTimestamp": "2026-11-25T12:54:01.559342400Z",
+    "totalLedgerRows": 2300,
+    "sumDebitMicros": 2235516550,
+    "sumCreditMicros": 2235516550,
+    "ledgerDeltaMicros": 0,
+    "ledgerBalanced": true,
+    "tenantsAudited": 19,
+    "tenantsBalanced": 19,
+    "tenantsWithDiscrepancy": 0,
+    "discrepancies": [],
+    "orphanedTransactionsCount": 0,
+    "systemHealthy": true,
+    "outboxPendingCount": 0,
+    "outboxFailedCount": 0
+  },
+  "endTime": "2026-11-25T18:24:01Z"
+}
