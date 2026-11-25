@@ -22,9 +22,41 @@ import time
 import urllib.request
 import urllib.error
 import uuid
+import subprocess
 
 GATEWAY_BASE = os.environ.get("GATEWAY_URL", "http://localhost:8080")
 REPORT_PATH = os.path.join(os.path.dirname(__file__), "developer_dashboard_report.json")
+
+def is_gateway_healthy():
+    try:
+        req = urllib.request.Request(f"{GATEWAY_BASE}/actuator/health", headers={"User-Agent": "VerifyDashboard/1.0"})
+        with urllib.request.urlopen(req, timeout=2) as resp:
+            if resp.status == 200:
+                data = json.loads(resp.read().decode())
+                return data.get("status") == "UP"
+    except Exception:
+        return False
+    return False
+
+def ensure_cluster_running():
+    if is_gateway_healthy():
+        print(f"[PRE-CHECK] Orvix Gateway is already UP on {GATEWAY_BASE}.")
+        return True
+    
+    print(f"[PRE-CHECK] Orvix Gateway on {GATEWAY_BASE} is not running or not healthy.")
+    print("[AUTO-START] Automatically starting Orvix microservice cluster via benchmark/start_cluster.py...")
+    start_script = os.path.join(os.path.dirname(__file__), "start_cluster.py")
+    if os.path.exists(start_script):
+        ret = subprocess.run([sys.executable, start_script], check=False)
+        if ret.returncode == 0:
+            print("[AUTO-START] Orvix microservice cluster successfully started!\n")
+            return True
+        else:
+            print("[ERROR] Failed to start cluster via benchmark/start_cluster.py.")
+            sys.exit(1)
+    else:
+        print(f"[ERROR] Start script not found at: {start_script}")
+        sys.exit(1)
 
 def http_json(url, method="GET", body=None, headers=None, expected_status=200):
     req_headers = {"Content-Type": "application/json"}
@@ -60,6 +92,8 @@ def run_verification():
     print("=" * 80)
     print("  ORVIX DEVELOPER EXPERIENCE & ORGANIZATION DASHBOARD VERIFICATION (ADR-015)")
     print("=" * 80)
+
+    ensure_cluster_running()
 
     report = {
         "timestamp": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),

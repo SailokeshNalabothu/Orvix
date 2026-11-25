@@ -1,5 +1,5 @@
 {
-  "timestamp": "2026-11-25T14:24:40Z",
+  "timestamp": "2026-11-25T14:46:43Z",
   "checks_passed": 35,
   "total_checks": 35,
   "phases": {
@@ -12,12 +12,12 @@
       {
         "check": "Valid tenant ID generated",
         "status": "PASS",
-        "details": "ID: ten_fd9b313f47bc4164"
+        "details": "ID: ten_112afe52eefa4e25"
       },
       {
         "check": "Raw API key generated with prefix",
         "status": "PASS",
-        "details": "Key: orv_live_6774eb4..."
+        "details": "Key: orv_live_af45b57..."
       },
       {
         "check": "Initial wallet balance provisioned",
