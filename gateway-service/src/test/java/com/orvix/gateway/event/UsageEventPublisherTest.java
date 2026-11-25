@@ -1,15 +1,19 @@
 package com.orvix.gateway.event;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.orvix.common.contract.event.UsageRecordedEvent;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.api.io.TempDir;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.kafka.support.SendResult;
 
+import java.nio.file.Path;
 import java.time.Instant;
 import java.util.concurrent.CompletableFuture;
 
@@ -24,15 +28,20 @@ class UsageEventPublisherTest {
     @Mock
     private KafkaTemplate<String, Object> kafkaTemplate;
 
+    private DurableSpillwayStore spillwayStore;
     private UsageEventPublisher publisher;
 
     @BeforeEach
-    void setUp() {
-        publisher = new UsageEventPublisher(kafkaTemplate);
+    void setUp(@TempDir Path tempDir) {
+        ObjectMapper objectMapper = new ObjectMapper();
+        objectMapper.registerModule(new JavaTimeModule());
+        spillwayStore = new DurableSpillwayStore(objectMapper, tempDir.toString());
+        spillwayStore.init();
+        publisher = new UsageEventPublisher(kafkaTemplate, spillwayStore);
     }
 
     @Test
-    @DisplayName("Kafka Publisher: Enqueues to fallback buffer when Kafka broker throws exception")
+    @DisplayName("Kafka Publisher: Enqueues to durable WAL spillway when Kafka broker throws exception")
     void shouldEnqueueToFallbackBufferWhenKafkaBrokerDown() throws InterruptedException {
         when(kafkaTemplate.send(any(), any(), any()))
                 .thenThrow(new RuntimeException("Connection to Kafka broker:9092 refused"));
@@ -47,10 +56,11 @@ class UsageEventPublisherTest {
         Thread.sleep(150);
 
         assertEquals(1, publisher.getFallbackBufferSize());
+        assertEquals(1, spillwayStore.getPendingEvents().size());
     }
 
     @Test
-    @DisplayName("Kafka Publisher: Drains fallback buffer when Kafka recovers")
+    @DisplayName("Kafka Publisher: Drains durable spillway buffer when Kafka recovers")
     void shouldDrainFallbackBufferWhenKafkaRecovers() throws InterruptedException {
         // First simulate broker failure
         when(kafkaTemplate.send(any(), any(), any()))

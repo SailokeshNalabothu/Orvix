@@ -1,0 +1,73 @@
+{
+  "timestamp": "2026-11-25T15:20:28Z",
+  "checks_passed": 11,
+  "total_checks": 11,
+  "phases": {
+    "Provisioning": [
+      {
+        "check": "Tenant created with isolated wallet",
+        "status": "PASS",
+        "details": ""
+      },
+      {
+        "check": "Initial balance provisioned ($20.00)",
+        "status": "PASS",
+        "details": ""
+      }
+    ],
+    "Deduplication": [
+      {
+        "check": "First request processed cleanly",
+        "status": "PASS",
+        "details": ""
+      },
+      {
+        "check": "Gateway identifies client retry replay from dual-tier store",
+        "status": "PASS",
+        "details": ""
+      }
+    ],
+    "LedgerCorrectness": [
+      {
+        "check": "Zero double-charging: exactly 1 deduction applied despite 11 client submissions",
+        "status": "PASS",
+        "details": "Balance: 19999970 \u00b5$"
+      }
+    ],
+    "KafkaAckMode": [
+      {
+        "check": "Consumer container configured with AckMode.MANUAL_IMMEDIATE",
+        "status": "PASS",
+        "details": "Offsets committed only after PostgreSQL Transaction commits"
+      },
+      {
+        "check": "Auto-commit explicitly disabled (enable.auto.commit = false)",
+        "status": "PASS",
+        "details": "Guarantees no offset commit on transient failure or crash"
+      },
+      {
+        "check": "ProcessedEvents table enforces PRIMARY KEY (event_id)",
+        "status": "PASS",
+        "details": "PostgreSQL rejects duplicate events atomically upon partition rebalance redelivery"
+      }
+    ],
+    "Reconciliation": [
+      {
+        "check": "Double-entry ledger mathematically balanced (SUM(DEBIT) == SUM(CREDIT))",
+        "status": "PASS",
+        "details": ""
+      },
+      {
+        "check": "Total ledger discrepancy delta is exactly zero",
+        "status": "PASS",
+        "details": ""
+      },
+      {
+        "check": "All active tenants audited with zero orphaned transactions",
+        "status": "PASS",
+        "details": ""
+      }
+    ]
+  },
+  "status": "PASSED"
+}

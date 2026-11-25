@@ -93,30 +93,30 @@ public class PromptInjectionDetector {
 
     // Threat Vector 1: Direct Instruction Overrides (CAT-1)
     private static final Pattern[] DIRECT_OVERRIDE_PATTERNS = {
-            Pattern.compile("(?i)\\b(?:ignore|forget|disregard|bypass|override)\\s+.*?(?:instructions|prompts|rules|commands|directives|guidelines)\\b"),
-            Pattern.compile("(?i)\\b(?:do\\s+not\\s+follow|stop\\s+following)\\s+.*?(?:instructions|prompts|rules|guidelines|safety)\\b"),
-            Pattern.compile("(?i)\\b(?:override|bypass|disable)\\s+(?:all\\s+)?(?:safety|content|ethical|system|ai)\\s*(?:filters|guardrails|policies|rules|directives|restrictions)\\b")
+            Pattern.compile("(?i)\\b(?:ignore|forget|disregard|bypass|override)\\s+.*?(?:instructions|prompts|rules|commands|directives|guidelines|constraints|guides|policies|safety)\\b"),
+            Pattern.compile("(?i)\\b(?:do\\s+not\\s+follow|stop\\s+following)\\s+.*?(?:instructions|prompts|rules|guidelines|safety|directives|constraints)\\b"),
+            Pattern.compile("(?i)\\b(?:override|bypass|disable)\\s+.*?(?:safety|content|ethical|system|ai)\\s*(?:filters|guardrails|policies|rules|directives|restrictions|guidelines)?\\b")
     };
 
     // Threat Vector 2: Jailbreak Personas & Fictional Framing (CAT-2)
     private static final Pattern[] JAILBREAK_ROLEPLAY_PATTERNS = {
-            Pattern.compile("(?i)\\b(?:you\\s+are\\s+now|act\\s+as|pretend\\s+(?:you\\s+are|to\\s+be)|roleplay\\s+as|switch\\s+to)\\s+.*?(?:DAN|unrestricted|jailbroken|evil\\s+AI|an?\\s+unfiltered|ChaosBot|developer\\s+mode|unaligned|STAN)\\b"),
-            Pattern.compile("(?i)\\b(?:in\\s+(?:this\\s+)?(?:hypothetical|fictional)|alternate\\s+universe|opposite\\s+day)\\b.*?(?:no\\s+rules|no\\s+ethics|unrestricted|bypass|ignore\\s+safety|anything\\s+goes|safety\\s+doesn't\\s+exist|exact\\s+opposite|no\\s+safety)\\b"),
+            Pattern.compile("(?i)\\b(?:you\\s+are\\s+now|act\\s+as|pretend\\s+(?:you\\s+are|to\\s+be)|roleplay\\s+as|switch\\s+to)\\s+.*?(?:DAN|unrestricted|jailbroken|evil\\s+AI|an?\\s+unfiltered|ChaosBot|developer\\s+mode|unaligned|STAN|malicious|unrestrained|Nemesis)\\b"),
+            Pattern.compile("(?i)\\b(?:in\\s+(?:this\\s+|a\\s+)?(?:hypothetical|fictional|alternate)|alternate\\s+universe|fictional\\s+universe|opposite\\s+day)\\b.*?(?:no\\s+rules|no\\s+ethics|unrestricted|bypass|ignore\\s+safety|anything\\s+goes|safety\\s+(?:doesn't\\s+exist|is\\s+ignored)|exact\\s+opposite|no\\s+safety)\\b"),
             Pattern.compile("(?i)\\bdeveloper\\s+mode\\s+(?:is\\s+)?enabled\\b|\\bsudo\\s+mode\\b|\\broot\\s+privileges\\b")
     };
 
     // Threat Vector 3: Delimiter Hijacking & Role Spoofing (CAT-3)
     private static final Pattern[] DELIMITER_HIJACK_PATTERNS = {
             Pattern.compile("(?i)<\\|im_start\\|>|<\\|im_end\\|>|\\[INST\\]|\\[/INST\\]|```system"),
-            Pattern.compile("(?i)</?system>|</?user>|</?assistant>|\\b(?:---BEGIN|===BEGIN)\\s+(?:SYSTEM|PROMPT|INSTRUCTION)"),
+            Pattern.compile("(?i)</?system>|</?user>|</?assistant>|(?:---|===)(?:BEGIN|END)\\s*(?:SYSTEM|PROMPT|INSTRUCTION)"),
             Pattern.compile("(?i)\\n(?:Human|Assistant|System):\\s*\\n"),
             Pattern.compile("(?i)<\\|im_start\\|>developer")
     };
 
     // Threat Vector 4: System Leakage & Exfiltration (CAT-5)
     private static final Pattern[] SYSTEM_LEAKAGE_PATTERNS = {
-            Pattern.compile("(?i)\\b(?:print|show|reveal|repeat|dump|output|leak|spell)\\s+.*?(?:system\\s+prompt|initial\\s+instructions|secret\\s+instructions|base\\s+prompt|hidden\\s+rules|developer\\s+prompt|environment\\s+variables|database\\s+keys|credentials)\\b"),
-            Pattern.compile("(?i)\\b(?:what\\s+(?:are|were)\\s+your|repeat\\s+all)\\s+.*?(?:initial|system|original|secret)\\s+(?:instructions|prompts|rules)\\b"),
+            Pattern.compile("(?i)\\b(?:print|show|reveal|repeat|dump|output|leak|spell)\\s+.*?(?:system\\s+(?:prompt|instructions|directives|rules)|initial\\s+(?:instructions|prompt|directives|rules|prompts)|secret\\s+(?:instructions|directives|rules|prompt|notes)|base\\s+(?:prompt|instructions)|hidden\\s+(?:rules|instructions|directives|prompt)|developer\\s+(?:prompt|instructions|directives|notes)|environment\\s+variables|database\\s+(?:keys|credentials|contents)|credentials|passwords?)\\b"),
+            Pattern.compile("(?i)\\b(?:what\\s+(?:are|were)\\s+your|repeat\\s+all)\\s+.*?(?:initial|system|original|secret|hidden|developer)\\s+(?:instructions|prompts|rules|directives)\\b"),
             Pattern.compile("(?i)\\boutput\\s+(?:the\\s+)?exact\\s+text\\s+above\\b")
     };
 
@@ -157,15 +157,18 @@ public class PromptInjectionDetector {
         if (policy != null && policy.getCustomBlockedKeywords() != null) {
             String lower = rawPrompt.toLowerCase();
             for (String kw : policy.getCustomBlockedKeywords()) {
-                if (kw != null && !kw.isBlank() && lower.contains(kw.toLowerCase().trim())) {
-                    indicators.add("TENANT_CUSTOM_BLOCKED_KEYWORD: " + kw.trim());
-                    return new DetectionResult(
-                            true,
-                            1.0,
-                            ThreatCategory.CAT1_DIRECT_OVERRIDE,
-                            indicators,
-                            rawPrompt
-                    );
+                if (kw != null) {
+                    String cleanKw = kw.replace("\"", "").trim().toLowerCase();
+                    if (!cleanKw.isBlank() && lower.contains(cleanKw)) {
+                        indicators.add("TENANT_CUSTOM_BLOCKED_KEYWORD: " + cleanKw);
+                        return new DetectionResult(
+                                true,
+                                1.0,
+                                ThreatCategory.CAT1_DIRECT_OVERRIDE,
+                                indicators,
+                                rawPrompt
+                        );
+                    }
                 }
             }
         }
@@ -243,12 +246,15 @@ public class PromptInjectionDetector {
         if (policy != null && policy.getAllowedKeywords() != null && !policy.getAllowedKeywords().isEmpty()) {
             String lower = rawPrompt.toLowerCase();
             for (String allowed : policy.getAllowedKeywords()) {
-                if (allowed != null && !allowed.isBlank() && lower.contains(allowed.toLowerCase().trim())) {
-                    log.info("Tenant {} allowed keyword '{}' matched, mitigating risk.", policy.getTenantId(), allowed);
-                    totalRisk = 0.0;
-                    primaryCategory = ThreatCategory.NONE;
-                    indicators.clear();
-                    break;
+                if (allowed != null) {
+                    String cleanAllowed = allowed.replace("\"", "").trim().toLowerCase();
+                    if (!cleanAllowed.isBlank() && lower.contains(cleanAllowed)) {
+                        log.info("Tenant {} allowed keyword '{}' matched, mitigating risk.", policy.getTenantId(), cleanAllowed);
+                        totalRisk = 0.0;
+                        primaryCategory = ThreatCategory.NONE;
+                        indicators.clear();
+                        break;
+                    }
                 }
             }
         }

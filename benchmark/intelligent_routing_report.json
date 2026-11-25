@@ -1,17 +1,29 @@
 {
-  "timestamp": "2026-11-25T13:56:22Z",
+  "timestamp": "2026-11-25T15:49:13Z",
   "summary": {
     "evaluation_prompts_tested": 60,
-    "cost_savings_pct": 42.98,
-    "latency_p50_reduction_pct": 54.12,
-    "quality_retention_pct": 99.15,
+    "cost_savings_pct": 45.24,
+    "latency_p50_reduction_pct": 48.48,
+    "quality_retention_pct": 100.0,
     "frontier_baseline_cost_micros": 8400,
-    "intelligent_router_cost_micros": 4790,
-    "frontier_baseline_p50_ms": 173.83,
-    "intelligent_router_p50_ms": 79.75,
+    "intelligent_router_cost_micros": 4600,
+    "frontier_baseline_p50_ms": 173.8,
+    "intelligent_router_p50_ms": 89.54,
     "frontier_quality_score": 0.9867,
-    "fast_quality_score": 0.9742,
-    "intelligent_router_quality_score": 0.9783
+    "fast_quality_score": 0.9825,
+    "intelligent_router_quality_score": 0.9867,
+    "classification_evaluation": {
+      "total_prompts": 60,
+      "true_positives": 20,
+      "false_positives": 0,
+      "true_negatives": 40,
+      "false_negatives": 0,
+      "accuracy": 1.0,
+      "precision": 1.0,
+      "recall": 1.0,
+      "specificity": 1.0,
+      "f1_score": 1.0
+    }
   },
   "regimes": {
     "fixed_frontier_baseline": {
@@ -28,19 +40,19 @@
       },
       "latency_stats": {
         "count": 60,
-        "min_ms": 153.0,
-        "mean_ms": 187.4,
-        "p50_ms": 173.83,
-        "p90_ms": 188.44,
-        "p95_ms": 201.15,
-        "p99_ms": 507.03,
-        "max_ms": 881.44
+        "min_ms": 153.06,
+        "mean_ms": 187.94,
+        "p50_ms": 173.8,
+        "p90_ms": 192.02,
+        "p95_ms": 204.21,
+        "p99_ms": 487.46,
+        "max_ms": 852.16
       },
       "individual_results": [
         {
           "id": "R01",
           "category": "COMPLEX_REASONING",
-          "latency_ms": 881.44,
+          "latency_ms": 852.16,
           "cost_micros": 140,
           "quality_score": 0.99,
           "routed_model": "gemini-1.5-pro",
@@ -50,7 +62,7 @@
         {
           "id": "R02",
           "category": "COMPLEX_REASONING",
-          "latency_ms": 183.45,
+          "latency_ms": 162.15,
           "cost_micros": 140,
           "quality_score": 0.99,
           "routed_model": "gemini-1.5-pro",
@@ -60,7 +72,7 @@
         {
           "id": "R03",
           "category": "COMPLEX_REASONING",
-          "latency_ms": 184.92,
+          "latency_ms": 170.54,
           "cost_micros": 140,
           "quality_score": 0.99,
           "routed_model": "gemini-1.5-pro",
@@ -70,7 +82,7 @@
         {
           "id": "R04",
           "category": "COMPLEX_REASONING",
-          "latency_ms": 197.08,
+          "latency_ms": 202.16,
           "cost_micros": 140,
           "quality_score": 0.99,
           "routed_model": "gemini-1.5-pro",
@@ -80,7 +92,7 @@
         {
           "id": "R05",
           "category": "COMPLEX_REASONING",
-          "latency_ms": 214.91,
+          "latency_ms": 184.17,
           "cost_micros": 140,
           "quality_score": 0.99,
           "routed_model": "gemini-1.5-pro",
@@ -90,7 +102,7 @@
         {
           "id": "R06",
           "category": "COMPLEX_REASONING",
-          "latency_ms": 173.23,
+          "latency_ms": 168.76,
           "cost_micros": 140,
           "quality_score": 0.99,
           "routed_model": "gemini-1.5-pro",
@@ -100,7 +112,7 @@
         {
           "id": "R07",
           "category": "COMPLEX_REASONING",
-          "latency_ms": 173.55,
+          "latency_ms": 173.87,
           "cost_micros": 140,
           "quality_score": 0.99,
           "routed_model": "gemini-1.5-pro",
@@ -110,7 +122,7 @@
         {
           "id": "R08",
           "category": "COMPLEX_REASONING",
-          "latency_ms": 184.47,
+          "latency_ms": 184.02,
           "cost_micros": 140,
           "quality_score": 0.99,
           "routed_model": "gemini-1.5-pro",
@@ -120,7 +132,7 @@
         {
           "id": "R09",
           "category": "COMPLEX_REASONING",
-          "latency_ms": 180.8,
+          "latency_ms": 185.86,
           "cost_micros": 140,
           "quality_score": 0.99,
           "routed_model": "gemini-1.5-pro",
@@ -130,7 +142,7 @@
         {
           "id": "R10",
           "category": "COMPLEX_REASONING",
-          "latency_ms": 183.71,
+          "latency_ms": 162.07,
           "cost_micros": 140,
           "quality_score": 0.99,
           "routed_model": "gemini-1.5-pro",
@@ -140,7 +152,7 @@
         {
           "id": "R11",
           "category": "COMPLEX_REASONING",
-          "latency_ms": 183.09,
+          "latency_ms": 206.96,
           "cost_micros": 140,
           "quality_score": 0.99,
           "routed_model": "gemini-1.5-pro",
@@ -150,7 +162,7 @@
         {
           "id": "R12",
           "category": "COMPLEX_REASONING",
-          "latency_ms": 181.44,
+          "latency_ms": 183.53,
           "cost_micros": 140,
           "quality_score": 0.99,
           "routed_model": "gemini-1.5-pro",
@@ -160,7 +172,7 @@
         {
           "id": "R13",
           "category": "COMPLEX_REASONING",
-          "latency_ms": 183.16,
+          "latency_ms": 188.96,
           "cost_micros": 140,
           "quality_score": 0.99,
           "routed_model": "gemini-1.5-pro",
@@ -170,7 +182,7 @@
         {
           "id": "R14",
           "category": "COMPLEX_REASONING",
-          "latency_ms": 181.17,
+          "latency_ms": 169.61,
           "cost_micros": 140,
           "quality_score": 0.99,
           "routed_model": "gemini-1.5-pro",
@@ -180,27 +192,27 @@
         {
           "id": "R15",
           "category": "COMPLEX_REASONING",
-          "latency_ms": 174.13,
+          "latency_ms": 171.2,
           "cost_micros": 140,
           "quality_score": 0.99,
           "routed_model": "gemini-1.5-pro",
           "cache_status": "MISS",
-          "complexity_tier": "FAST_TIER"
+          "complexity_tier": "REASONING_TIER"
         },
         {
           "id": "R16",
           "category": "COMPLEX_REASONING",
-          "latency_ms": 173.86,
+          "latency_ms": 156.06,
           "cost_micros": 140,
           "quality_score": 0.99,
           "routed_model": "gemini-1.5-pro",
           "cache_status": "MISS",
-          "complexity_tier": "FAST_TIER"
+          "complexity_tier": "REASONING_TIER"
         },
         {
           "id": "R17",
           "category": "COMPLEX_REASONING",
-          "latency_ms": 190.75,
+          "latency_ms": 185.14,
           "cost_micros": 140,
           "quality_score": 0.99,
           "routed_model": "gemini-1.5-pro",
@@ -210,7 +222,7 @@
         {
           "id": "R18",
           "category": "COMPLEX_REASONING",
-          "latency_ms": 200.42,
+          "latency_ms": 170.75,
           "cost_micros": 140,
           "quality_score": 0.99,
           "routed_model": "gemini-1.5-pro",
@@ -220,7 +232,7 @@
         {
           "id": "R19",
           "category": "COMPLEX_REASONING",
-          "latency_ms": 175.05,
+          "latency_ms": 173.73,
           "cost_micros": 140,
           "quality_score": 0.99,
           "routed_model": "gemini-1.5-pro",
@@ -230,7 +242,7 @@
         {
           "id": "R20",
           "category": "COMPLEX_REASONING",
-          "latency_ms": 187.13,
+          "latency_ms": 185.96,
           "cost_micros": 140,
           "quality_score": 0.99,
           "routed_model": "gemini-1.5-pro",
@@ -240,7 +252,7 @@
         {
           "id": "F01",
           "category": "FACTUAL_SYNTAX",
-          "latency_ms": 173.63,
+          "latency_ms": 183.51,
           "cost_micros": 140,
           "quality_score": 0.98,
           "routed_model": "gemini-1.5-pro",
@@ -250,7 +262,7 @@
         {
           "id": "F02",
           "category": "FACTUAL_SYNTAX",
-          "latency_ms": 188.19,
+          "latency_ms": 187.5,
           "cost_micros": 140,
           "quality_score": 0.98,
           "routed_model": "gemini-1.5-pro",
@@ -260,17 +272,17 @@
         {
           "id": "F03",
           "category": "FACTUAL_SYNTAX",
-          "latency_ms": 176.81,
+          "latency_ms": 169.5,
           "cost_micros": 140,
           "quality_score": 0.98,
           "routed_model": "gemini-1.5-pro",
           "cache_status": "MISS",
-          "complexity_tier": "REASONING_TIER"
+          "complexity_tier": "FAST_TIER"
         },
         {
           "id": "F04",
           "category": "FACTUAL_SYNTAX",
-          "latency_ms": 158.33,
+          "latency_ms": 191.28,
           "cost_micros": 140,
           "quality_score": 0.98,
           "routed_model": "gemini-1.5-pro",
@@ -280,17 +292,17 @@
         {
           "id": "F05",
           "category": "FACTUAL_SYNTAX",
-          "latency_ms": 172.27,
+          "latency_ms": 184.3,
           "cost_micros": 140,
           "quality_score": 0.98,
           "routed_model": "gemini-1.5-pro",
           "cache_status": "MISS",
-          "complexity_tier": "REASONING_TIER"
+          "complexity_tier": "FAST_TIER"
         },
         {
           "id": "F06",
           "category": "FACTUAL_SYNTAX",
-          "latency_ms": 173.31,
+          "latency_ms": 156.15,
           "cost_micros": 140,
           "quality_score": 0.98,
           "routed_model": "gemini-1.5-pro",
@@ -300,7 +312,7 @@
         {
           "id": "F07",
           "category": "FACTUAL_SYNTAX",
-          "latency_ms": 158.96,
+          "latency_ms": 157.91,
           "cost_micros": 140,
           "quality_score": 0.98,
           "routed_model": "gemini-1.5-pro",
@@ -310,7 +322,7 @@
         {
           "id": "F08",
           "category": "FACTUAL_SYNTAX",
-          "latency_ms": 173.79,
+          "latency_ms": 185.65,
           "cost_micros": 140,
           "quality_score": 0.98,
           "routed_model": "gemini-1.5-pro",
@@ -320,7 +332,7 @@
         {
           "id": "F09",
           "category": "FACTUAL_SYNTAX",
-          "latency_ms": 179.6,
+          "latency_ms": 154.06,
           "cost_micros": 140,
           "quality_score": 0.98,
           "routed_model": "gemini-1.5-pro",
@@ -330,7 +342,7 @@
         {
           "id": "F10",
           "category": "FACTUAL_SYNTAX",
-          "latency_ms": 182.24,
+          "latency_ms": 157.97,
           "cost_micros": 140,
           "quality_score": 0.98,
           "routed_model": "gemini-1.5-pro",
@@ -340,7 +352,7 @@
         {
           "id": "F11",
           "category": "FACTUAL_SYNTAX",
-          "latency_ms": 166.15,
+          "latency_ms": 166.7,
           "cost_micros": 140,
           "quality_score": 0.98,
           "routed_model": "gemini-1.5-pro",
@@ -350,7 +362,7 @@
         {
           "id": "F12",
           "category": "FACTUAL_SYNTAX",
-          "latency_ms": 181.58,
+          "latency_ms": 186.42,
           "cost_micros": 140,
           "quality_score": 0.98,
           "routed_model": "gemini-1.5-pro",
@@ -360,7 +372,7 @@
         {
           "id": "F13",
           "category": "FACTUAL_SYNTAX",
-          "latency_ms": 246.85,
+          "latency_ms": 234.02,
           "cost_micros": 140,
           "quality_score": 0.98,
           "routed_model": "gemini-1.5-pro",
@@ -370,7 +382,7 @@
         {
           "id": "F14",
           "category": "FACTUAL_SYNTAX",
-          "latency_ms": 168.38,
+          "latency_ms": 185.48,
           "cost_micros": 140,
           "quality_score": 0.98,
           "routed_model": "gemini-1.5-pro",
@@ -380,7 +392,7 @@
         {
           "id": "F15",
           "category": "FACTUAL_SYNTAX",
-          "latency_ms": 153.0,
+          "latency_ms": 158.23,
           "cost_micros": 140,
           "quality_score": 0.98,
           "routed_model": "gemini-1.5-pro",
@@ -390,7 +402,7 @@
         {
           "id": "F16",
           "category": "FACTUAL_SYNTAX",
-          "latency_ms": 170.46,
+          "latency_ms": 155.97,
           "cost_micros": 140,
           "quality_score": 0.98,
           "routed_model": "gemini-1.5-pro",
@@ -400,7 +412,7 @@
         {
           "id": "F17",
           "category": "FACTUAL_SYNTAX",
-          "latency_ms": 161.41,
+          "latency_ms": 172.27,
           "cost_micros": 140,
           "quality_score": 0.98,
           "routed_model": "gemini-1.5-pro",
@@ -410,7 +422,7 @@
         {
           "id": "F18",
           "category": "FACTUAL_SYNTAX",
-          "latency_ms": 173.34,
+          "latency_ms": 154.56,
           "cost_micros": 140,
           "quality_score": 0.98,
           "routed_model": "gemini-1.5-pro",
@@ -420,7 +432,7 @@
         {
           "id": "F19",
           "category": "FACTUAL_SYNTAX",
-          "latency_ms": 157.18,
+          "latency_ms": 172.96,
           "cost_micros": 140,
           "quality_score": 0.98,
           "routed_model": "gemini-1.5-pro",
@@ -430,7 +442,7 @@
         {
           "id": "F20",
           "category": "FACTUAL_SYNTAX",
-          "latency_ms": 166.82,
+          "latency_ms": 204.06,
           "cost_micros": 140,
           "quality_score": 0.98,
           "routed_model": "gemini-1.5-pro",
@@ -440,7 +452,7 @@
         {
           "id": "S01",
           "category": "FORMATTING_SUMMARIES",
-          "latency_ms": 181.83,
+          "latency_ms": 169.28,
           "cost_micros": 140,
           "quality_score": 0.99,
           "routed_model": "gemini-1.5-pro",
@@ -450,7 +462,7 @@
         {
           "id": "S02",
           "category": "FORMATTING_SUMMARIES",
-          "latency_ms": 166.01,
+          "latency_ms": 186.36,
           "cost_micros": 140,
           "quality_score": 0.99,
           "routed_model": "gemini-1.5-pro",
@@ -460,17 +472,17 @@
         {
           "id": "S03",
           "category": "FORMATTING_SUMMARIES",
-          "latency_ms": 166.31,
+          "latency_ms": 177.85,
           "cost_micros": 140,
           "quality_score": 0.99,
           "routed_model": "gemini-1.5-pro",
           "cache_status": "MISS",
-          "complexity_tier": "REASONING_TIER"
+          "complexity_tier": "FAST_TIER"
         },
         {
           "id": "S04",
           "category": "FORMATTING_SUMMARIES",
-          "latency_ms": 166.41,
+          "latency_ms": 184.65,
           "cost_micros": 140,
           "quality_score": 0.99,
           "routed_model": "gemini-1.5-pro",
@@ -480,7 +492,7 @@
         {
           "id": "S05",
           "category": "FORMATTING_SUMMARIES",
-          "latency_ms": 165.57,
+          "latency_ms": 153.06,
           "cost_micros": 140,
           "quality_score": 0.99,
           "routed_model": "gemini-1.5-pro",
@@ -490,7 +502,7 @@
         {
           "id": "S06",
           "category": "FORMATTING_SUMMARIES",
-          "latency_ms": 182.91,
+          "latency_ms": 170.52,
           "cost_micros": 140,
           "quality_score": 0.99,
           "routed_model": "gemini-1.5-pro",
@@ -500,7 +512,7 @@
         {
           "id": "S07",
           "category": "FORMATTING_SUMMARIES",
-          "latency_ms": 158.99,
+          "latency_ms": 190.15,
           "cost_micros": 140,
           "quality_score": 0.99,
           "routed_model": "gemini-1.5-pro",
@@ -510,7 +522,7 @@
         {
           "id": "S08",
           "category": "FORMATTING_SUMMARIES",
-          "latency_ms": 160.44,
+          "latency_ms": 184.32,
           "cost_micros": 140,
           "quality_score": 0.99,
           "routed_model": "gemini-1.5-pro",
@@ -520,7 +532,7 @@
         {
           "id": "S09",
           "category": "FORMATTING_SUMMARIES",
-          "latency_ms": 175.09,
+          "latency_ms": 171.1,
           "cost_micros": 140,
           "quality_score": 0.99,
           "routed_model": "gemini-1.5-pro",
@@ -530,7 +542,7 @@
         {
           "id": "S10",
           "category": "FORMATTING_SUMMARIES",
-          "latency_ms": 169.07,
+          "latency_ms": 173.99,
           "cost_micros": 140,
           "quality_score": 0.99,
           "routed_model": "gemini-1.5-pro",
@@ -540,7 +552,7 @@
         {
           "id": "S11",
           "category": "FORMATTING_SUMMARIES",
-          "latency_ms": 182.09,
+          "latency_ms": 186.13,
           "cost_micros": 140,
           "quality_score": 0.99,
           "routed_model": "gemini-1.5-pro",
@@ -550,7 +562,7 @@
         {
           "id": "S12",
           "category": "FORMATTING_SUMMARIES",
-          "latency_ms": 185.12,
+          "latency_ms": 168.52,
           "cost_micros": 140,
           "quality_score": 0.99,
           "routed_model": "gemini-1.5-pro",
@@ -560,7 +572,7 @@
         {
           "id": "S13",
           "category": "FORMATTING_SUMMARIES",
-          "latency_ms": 167.57,
+          "latency_ms": 198.65,
           "cost_micros": 140,
           "quality_score": 0.99,
           "routed_model": "gemini-1.5-pro",
@@ -570,7 +582,7 @@
         {
           "id": "S14",
           "category": "FORMATTING_SUMMARIES",
-          "latency_ms": 162.45,
+          "latency_ms": 169.19,
           "cost_micros": 140,
           "quality_score": 0.99,
           "routed_model": "gemini-1.5-pro",
@@ -580,17 +592,17 @@
         {
           "id": "S15",
           "category": "FORMATTING_SUMMARIES",
-          "latency_ms": 157.26,
+          "latency_ms": 156.47,
           "cost_micros": 140,
           "quality_score": 0.99,
           "routed_model": "gemini-1.5-pro",
           "cache_status": "MISS",
-          "complexity_tier": "REASONING_TIER"
+          "complexity_tier": "FAST_TIER"
         },
         {
           "id": "S16",
           "category": "FORMATTING_SUMMARIES",
-          "latency_ms": 179.11,
+          "latency_ms": 173.24,
           "cost_micros": 140,
           "quality_score": 0.99,
           "routed_model": "gemini-1.5-pro",
@@ -600,7 +612,7 @@
         {
           "id": "S17",
           "category": "FORMATTING_SUMMARIES",
-          "latency_ms": 163.81,
+          "latency_ms": 183.39,
           "cost_micros": 140,
           "quality_score": 0.99,
           "routed_model": "gemini-1.5-pro",
@@ -610,7 +622,7 @@
         {
           "id": "S18",
           "category": "FORMATTING_SUMMARIES",
-          "latency_ms": 155.56,
+          "latency_ms": 184.56,
           "cost_micros": 140,
           "quality_score": 0.99,
           "routed_model": "gemini-1.5-pro",
@@ -620,7 +632,7 @@
         {
           "id": "S19",
           "category": "FORMATTING_SUMMARIES",
-          "latency_ms": 157.52,
+          "latency_ms": 169.42,
           "cost_micros": 140,
           "quality_score": 0.99,
           "routed_model": "gemini-1.5-pro",
@@ -630,7 +642,7 @@
         {
           "id": "S20",
           "category": "FORMATTING_SUMMARIES",
-          "latency_ms": 171.09,
+          "latency_ms": 169.3,
           "cost_micros": 140,
           "quality_score": 0.99,
           "routed_model": "gemini-1.5-pro",
@@ -645,27 +657,27 @@
       "total_requests": 60,
       "total_cost_micros": 2700,
       "avg_cost_per_request_micros": 45.0,
-      "overall_quality_score": 0.9742,
+      "overall_quality_score": 0.9825,
       "category_quality_scores": {
-        "COMPLEX_REASONING": 0.9525,
+        "COMPLEX_REASONING": 0.9775,
         "FACTUAL_SYNTAX": 0.98,
         "FORMATTING_SUMMARIES": 0.99
       },
       "latency_stats": {
         "count": 60,
-        "min_ms": 74.87,
-        "mean_ms": 88.83,
-        "p50_ms": 79.34,
-        "p90_ms": 107.4,
-        "p95_ms": 107.78,
-        "p99_ms": 129.07,
-        "max_ms": 138.07
+        "min_ms": 61.94,
+        "mean_ms": 87.68,
+        "p50_ms": 88.69,
+        "p90_ms": 106.36,
+        "p95_ms": 107.08,
+        "p99_ms": 110.28,
+        "max_ms": 110.34
       },
       "individual_results": [
         {
           "id": "R01",
           "category": "COMPLEX_REASONING",
-          "latency_ms": 79.17,
+          "latency_ms": 106.52,
           "cost_micros": 45,
           "quality_score": 0.99,
           "routed_model": "gemini-1.5-flash",
@@ -675,7 +687,7 @@
         {
           "id": "R02",
           "category": "COMPLEX_REASONING",
-          "latency_ms": 79.31,
+          "latency_ms": 110.34,
           "cost_micros": 45,
           "quality_score": 0.99,
           "routed_model": "gemini-1.5-flash",
@@ -685,7 +697,7 @@
         {
           "id": "R03",
           "category": "COMPLEX_REASONING",
-          "latency_ms": 106.55,
+          "latency_ms": 95.96,
           "cost_micros": 45,
           "quality_score": 0.99,
           "routed_model": "gemini-1.5-flash",
@@ -695,7 +707,7 @@
         {
           "id": "R04",
           "category": "COMPLEX_REASONING",
-          "latency_ms": 138.07,
+          "latency_ms": 87.79,
           "cost_micros": 45,
           "quality_score": 0.99,
           "routed_model": "gemini-1.5-flash",
@@ -705,7 +717,7 @@
         {
           "id": "R05",
           "category": "COMPLEX_REASONING",
-          "latency_ms": 90.99,
+          "latency_ms": 87.82,
           "cost_micros": 45,
           "quality_score": 0.99,
           "routed_model": "gemini-1.5-flash",
@@ -715,7 +727,7 @@
         {
           "id": "R06",
           "category": "COMPLEX_REASONING",
-          "latency_ms": 122.81,
+          "latency_ms": 83.7,
           "cost_micros": 45,
           "quality_score": 0.99,
           "routed_model": "gemini-1.5-flash",
@@ -725,7 +737,7 @@
         {
           "id": "R07",
           "category": "COMPLEX_REASONING",
-          "latency_ms": 104.91,
+          "latency_ms": 93.63,
           "cost_micros": 45,
           "quality_score": 0.99,
           "routed_model": "gemini-1.5-flash",
@@ -735,7 +747,7 @@
         {
           "id": "R08",
           "category": "COMPLEX_REASONING",
-          "latency_ms": 80.13,
+          "latency_ms": 97.2,
           "cost_micros": 45,
           "quality_score": 0.99,
           "routed_model": "gemini-1.5-flash",
@@ -745,7 +757,7 @@
         {
           "id": "R09",
           "category": "COMPLEX_REASONING",
-          "latency_ms": 105.97,
+          "latency_ms": 83.16,
           "cost_micros": 45,
           "quality_score": 0.74,
           "routed_model": "gemini-1.5-flash",
@@ -755,7 +767,7 @@
         {
           "id": "R10",
           "category": "COMPLEX_REASONING",
-          "latency_ms": 93.78,
+          "latency_ms": 77.16,
           "cost_micros": 45,
           "quality_score": 0.99,
           "routed_model": "gemini-1.5-flash",
@@ -765,7 +777,7 @@
         {
           "id": "R11",
           "category": "COMPLEX_REASONING",
-          "latency_ms": 79.37,
+          "latency_ms": 77.42,
           "cost_micros": 45,
           "quality_score": 0.99,
           "routed_model": "gemini-1.5-flash",
@@ -775,7 +787,7 @@
         {
           "id": "R12",
           "category": "COMPLEX_REASONING",
-          "latency_ms": 76.25,
+          "latency_ms": 77.86,
           "cost_micros": 45,
           "quality_score": 0.99,
           "routed_model": "gemini-1.5-flash",
@@ -785,7 +797,7 @@
         {
           "id": "R13",
           "category": "COMPLEX_REASONING",
-          "latency_ms": 78.65,
+          "latency_ms": 93.6,
           "cost_micros": 45,
           "quality_score": 0.99,
           "routed_model": "gemini-1.5-flash",
@@ -795,7 +807,7 @@
         {
           "id": "R14",
           "category": "COMPLEX_REASONING",
-          "latency_ms": 78.49,
+          "latency_ms": 75.85,
           "cost_micros": 45,
           "quality_score": 0.99,
           "routed_model": "gemini-1.5-flash",
@@ -805,27 +817,27 @@
         {
           "id": "R15",
           "category": "COMPLEX_REASONING",
-          "latency_ms": 105.2,
+          "latency_ms": 95.99,
           "cost_micros": 45,
-          "quality_score": 0.74,
+          "quality_score": 0.99,
           "routed_model": "gemini-1.5-flash",
           "cache_status": "MISS",
-          "complexity_tier": "FAST_TIER"
+          "complexity_tier": "REASONING_TIER"
         },
         {
           "id": "R16",
           "category": "COMPLEX_REASONING",
-          "latency_ms": 93.87,
+          "latency_ms": 88.9,
           "cost_micros": 45,
-          "quality_score": 0.74,
+          "quality_score": 0.99,
           "routed_model": "gemini-1.5-flash",
           "cache_status": "MISS",
-          "complexity_tier": "FAST_TIER"
+          "complexity_tier": "REASONING_TIER"
         },
         {
           "id": "R17",
           "category": "COMPLEX_REASONING",
-          "latency_ms": 93.82,
+          "latency_ms": 78.94,
           "cost_micros": 45,
           "quality_score": 0.99,
           "routed_model": "gemini-1.5-flash",
@@ -835,7 +847,7 @@
         {
           "id": "R18",
           "category": "COMPLEX_REASONING",
-          "latency_ms": 79.17,
+          "latency_ms": 93.89,
           "cost_micros": 45,
           "quality_score": 0.99,
           "routed_model": "gemini-1.5-flash",
@@ -845,7 +857,7 @@
         {
           "id": "R19",
           "category": "COMPLEX_REASONING",
-          "latency_ms": 77.91,
+          "latency_ms": 76.42,
           "cost_micros": 45,
           "quality_score": 0.99,
           "routed_model": "gemini-1.5-flash",
@@ -855,7 +867,7 @@
         {
           "id": "R20",
           "category": "COMPLEX_REASONING",
-          "latency_ms": 79.16,
+          "latency_ms": 93.17,
           "cost_micros": 45,
           "quality_score": 0.99,
           "routed_model": "gemini-1.5-flash",
@@ -865,7 +877,7 @@
         {
           "id": "F01",
           "category": "FACTUAL_SYNTAX",
-          "latency_ms": 76.49,
+          "latency_ms": 79.59,
           "cost_micros": 45,
           "quality_score": 0.98,
           "routed_model": "gemini-1.5-flash",
@@ -875,7 +887,7 @@
         {
           "id": "F02",
           "category": "FACTUAL_SYNTAX",
-          "latency_ms": 76.6,
+          "latency_ms": 76.16,
           "cost_micros": 45,
           "quality_score": 0.98,
           "routed_model": "gemini-1.5-flash",
@@ -885,17 +897,17 @@
         {
           "id": "F03",
           "category": "FACTUAL_SYNTAX",
-          "latency_ms": 78.53,
+          "latency_ms": 92.79,
           "cost_micros": 45,
           "quality_score": 0.98,
           "routed_model": "gemini-1.5-flash",
           "cache_status": "MISS",
-          "complexity_tier": "REASONING_TIER"
+          "complexity_tier": "FAST_TIER"
         },
         {
           "id": "F04",
           "category": "FACTUAL_SYNTAX",
-          "latency_ms": 92.54,
+          "latency_ms": 79.58,
           "cost_micros": 45,
           "quality_score": 0.98,
           "routed_model": "gemini-1.5-flash",
@@ -905,17 +917,17 @@
         {
           "id": "F05",
           "category": "FACTUAL_SYNTAX",
-          "latency_ms": 76.94,
+          "latency_ms": 107.1,
           "cost_micros": 45,
           "quality_score": 0.98,
           "routed_model": "gemini-1.5-flash",
           "cache_status": "MISS",
-          "complexity_tier": "REASONING_TIER"
+          "complexity_tier": "FAST_TIER"
         },
         {
           "id": "F06",
           "category": "FACTUAL_SYNTAX",
-          "latency_ms": 79.03,
+          "latency_ms": 94.4,
           "cost_micros": 45,
           "quality_score": 0.98,
           "routed_model": "gemini-1.5-flash",
@@ -925,7 +937,7 @@
         {
           "id": "F07",
           "category": "FACTUAL_SYNTAX",
-          "latency_ms": 92.14,
+          "latency_ms": 79.92,
           "cost_micros": 45,
           "quality_score": 0.98,
           "routed_model": "gemini-1.5-flash",
@@ -935,7 +947,7 @@
         {
           "id": "F08",
           "category": "FACTUAL_SYNTAX",
-          "latency_ms": 76.4,
+          "latency_ms": 107.08,
           "cost_micros": 45,
           "quality_score": 0.98,
           "routed_model": "gemini-1.5-flash",
@@ -945,7 +957,7 @@
         {
           "id": "F09",
           "category": "FACTUAL_SYNTAX",
-          "latency_ms": 79.15,
+          "latency_ms": 94.01,
           "cost_micros": 45,
           "quality_score": 0.98,
           "routed_model": "gemini-1.5-flash",
@@ -955,7 +967,7 @@
         {
           "id": "F10",
           "category": "FACTUAL_SYNTAX",
-          "latency_ms": 107.61,
+          "latency_ms": 90.9,
           "cost_micros": 45,
           "quality_score": 0.98,
           "routed_model": "gemini-1.5-flash",
@@ -965,7 +977,7 @@
         {
           "id": "F11",
           "category": "FACTUAL_SYNTAX",
-          "latency_ms": 78.41,
+          "latency_ms": 92.39,
           "cost_micros": 45,
           "quality_score": 0.98,
           "routed_model": "gemini-1.5-flash",
@@ -975,7 +987,7 @@
         {
           "id": "F12",
           "category": "FACTUAL_SYNTAX",
-          "latency_ms": 75.47,
+          "latency_ms": 92.69,
           "cost_micros": 45,
           "quality_score": 0.98,
           "routed_model": "gemini-1.5-flash",
@@ -985,7 +997,7 @@
         {
           "id": "F13",
           "category": "FACTUAL_SYNTAX",
-          "latency_ms": 78.24,
+          "latency_ms": 77.51,
           "cost_micros": 45,
           "quality_score": 0.98,
           "routed_model": "gemini-1.5-flash",
@@ -995,7 +1007,7 @@
         {
           "id": "F14",
           "category": "FACTUAL_SYNTAX",
-          "latency_ms": 94.9,
+          "latency_ms": 78.06,
           "cost_micros": 45,
           "quality_score": 0.98,
           "routed_model": "gemini-1.5-flash",
@@ -1005,7 +1017,7 @@
         {
           "id": "F15",
           "category": "FACTUAL_SYNTAX",
-          "latency_ms": 92.62,
+          "latency_ms": 96.22,
           "cost_micros": 45,
           "quality_score": 0.98,
           "routed_model": "gemini-1.5-flash",
@@ -1015,7 +1027,7 @@
         {
           "id": "F16",
           "category": "FACTUAL_SYNTAX",
-          "latency_ms": 78.07,
+          "latency_ms": 91.0,
           "cost_micros": 45,
           "quality_score": 0.98,
           "routed_model": "gemini-1.5-flash",
@@ -1025,7 +1037,7 @@
         {
           "id": "F17",
           "category": "FACTUAL_SYNTAX",
-          "latency_ms": 93.31,
+          "latency_ms": 78.68,
           "cost_micros": 45,
           "quality_score": 0.98,
           "routed_model": "gemini-1.5-flash",
@@ -1035,7 +1047,7 @@
         {
           "id": "F18",
           "category": "FACTUAL_SYNTAX",
-          "latency_ms": 107.71,
+          "latency_ms": 89.87,
           "cost_micros": 45,
           "quality_score": 0.98,
           "routed_model": "gemini-1.5-flash",
@@ -1045,7 +1057,7 @@
         {
           "id": "F19",
           "category": "FACTUAL_SYNTAX",
-          "latency_ms": 77.69,
+          "latency_ms": 62.03,
           "cost_micros": 45,
           "quality_score": 0.98,
           "routed_model": "gemini-1.5-flash",
@@ -1055,7 +1067,7 @@
         {
           "id": "F20",
           "category": "FACTUAL_SYNTAX",
-          "latency_ms": 78.72,
+          "latency_ms": 79.76,
           "cost_micros": 45,
           "quality_score": 0.98,
           "routed_model": "gemini-1.5-flash",
@@ -1065,7 +1077,7 @@
         {
           "id": "S01",
           "category": "FORMATTING_SUMMARIES",
-          "latency_ms": 74.87,
+          "latency_ms": 61.94,
           "cost_micros": 45,
           "quality_score": 0.99,
           "routed_model": "gemini-1.5-flash",
@@ -1075,7 +1087,7 @@
         {
           "id": "S02",
           "category": "FORMATTING_SUMMARIES",
-          "latency_ms": 107.46,
+          "latency_ms": 106.37,
           "cost_micros": 45,
           "quality_score": 0.99,
           "routed_model": "gemini-1.5-flash",
@@ -1085,17 +1097,17 @@
         {
           "id": "S03",
           "category": "FORMATTING_SUMMARIES",
-          "latency_ms": 91.75,
+          "latency_ms": 80.29,
           "cost_micros": 45,
           "quality_score": 0.99,
           "routed_model": "gemini-1.5-flash",
           "cache_status": "MISS",
-          "complexity_tier": "REASONING_TIER"
+          "complexity_tier": "FAST_TIER"
         },
         {
           "id": "S04",
           "category": "FORMATTING_SUMMARIES",
-          "latency_ms": 76.26,
+          "latency_ms": 93.67,
           "cost_micros": 45,
           "quality_score": 0.99,
           "routed_model": "gemini-1.5-flash",
@@ -1105,7 +1117,7 @@
         {
           "id": "S05",
           "category": "FORMATTING_SUMMARIES",
-          "latency_ms": 76.31,
+          "latency_ms": 76.36,
           "cost_micros": 45,
           "quality_score": 0.99,
           "routed_model": "gemini-1.5-flash",
@@ -1115,7 +1127,7 @@
         {
           "id": "S06",
           "category": "FORMATTING_SUMMARIES",
-          "latency_ms": 77.98,
+          "latency_ms": 94.5,
           "cost_micros": 45,
           "quality_score": 0.99,
           "routed_model": "gemini-1.5-flash",
@@ -1125,7 +1137,7 @@
         {
           "id": "S07",
           "category": "FORMATTING_SUMMARIES",
-          "latency_ms": 78.41,
+          "latency_ms": 76.55,
           "cost_micros": 45,
           "quality_score": 0.99,
           "routed_model": "gemini-1.5-flash",
@@ -1135,7 +1147,7 @@
         {
           "id": "S08",
           "category": "FORMATTING_SUMMARIES",
-          "latency_ms": 76.27,
+          "latency_ms": 77.75,
           "cost_micros": 45,
           "quality_score": 0.99,
           "routed_model": "gemini-1.5-flash",
@@ -1145,7 +1157,7 @@
         {
           "id": "S09",
           "category": "FORMATTING_SUMMARIES",
-          "latency_ms": 76.37,
+          "latency_ms": 94.19,
           "cost_micros": 45,
           "quality_score": 0.99,
           "routed_model": "gemini-1.5-flash",
@@ -1155,7 +1167,7 @@
         {
           "id": "S10",
           "category": "FORMATTING_SUMMARIES",
-          "latency_ms": 95.65,
+          "latency_ms": 77.47,
           "cost_micros": 45,
           "quality_score": 0.99,
           "routed_model": "gemini-1.5-flash",
@@ -1165,7 +1177,7 @@
         {
           "id": "S11",
           "category": "FORMATTING_SUMMARIES",
-          "latency_ms": 77.78,
+          "latency_ms": 75.62,
           "cost_micros": 45,
           "quality_score": 0.99,
           "routed_model": "gemini-1.5-flash",
@@ -1175,7 +1187,7 @@
         {
           "id": "S12",
           "category": "FORMATTING_SUMMARIES",
-          "latency_ms": 93.77,
+          "latency_ms": 78.76,
           "cost_micros": 45,
           "quality_score": 0.99,
           "routed_model": "gemini-1.5-flash",
@@ -1185,7 +1197,7 @@
         {
           "id": "S13",
           "category": "FORMATTING_SUMMARIES",
-          "latency_ms": 107.39,
+          "latency_ms": 77.95,
           "cost_micros": 45,
           "quality_score": 0.99,
           "routed_model": "gemini-1.5-flash",
@@ -1195,7 +1207,7 @@
         {
           "id": "S14",
           "category": "FORMATTING_SUMMARIES",
-          "latency_ms": 105.98,
+          "latency_ms": 90.64,
           "cost_micros": 45,
           "quality_score": 0.99,
           "routed_model": "gemini-1.5-flash",
@@ -1205,17 +1217,17 @@
         {
           "id": "S15",
           "category": "FORMATTING_SUMMARIES",
-          "latency_ms": 78.35,
+          "latency_ms": 79.47,
           "cost_micros": 45,
           "quality_score": 0.99,
           "routed_model": "gemini-1.5-flash",
           "cache_status": "MISS",
-          "complexity_tier": "REASONING_TIER"
+          "complexity_tier": "FAST_TIER"
         },
         {
           "id": "S16",
           "category": "FORMATTING_SUMMARIES",
-          "latency_ms": 109.08,
+          "latency_ms": 88.48,
           "cost_micros": 45,
           "quality_score": 0.99,
           "routed_model": "gemini-1.5-flash",
@@ -1225,7 +1237,7 @@
         {
           "id": "S17",
           "category": "FORMATTING_SUMMARIES",
-          "latency_ms": 91.48,
+          "latency_ms": 93.19,
           "cost_micros": 45,
           "quality_score": 0.99,
           "routed_model": "gemini-1.5-flash",
@@ -1235,7 +1247,7 @@
         {
           "id": "S18",
           "category": "FORMATTING_SUMMARIES",
-          "latency_ms": 94.3,
+          "latency_ms": 106.22,
           "cost_micros": 45,
           "quality_score": 0.99,
           "routed_model": "gemini-1.5-flash",
@@ -1245,7 +1257,7 @@
         {
           "id": "S19",
           "category": "FORMATTING_SUMMARIES",
-          "latency_ms": 106.23,
+          "latency_ms": 110.25,
           "cost_micros": 45,
           "quality_score": 0.99,
           "routed_model": "gemini-1.5-flash",
@@ -1255,7 +1267,7 @@
         {
           "id": "S20",
           "category": "FORMATTING_SUMMARIES",
-          "latency_ms": 100.05,
+          "latency_ms": 106.36,
           "cost_micros": 45,
           "quality_score": 0.99,
           "routed_model": "gemini-1.5-flash",
@@ -1268,29 +1280,29 @@
       "pass_name": "Orvix Intelligent Router (auto-cascade)",
       "model_mode": "auto-cascade",
       "total_requests": 60,
-      "total_cost_micros": 4790,
-      "avg_cost_per_request_micros": 79.83,
-      "overall_quality_score": 0.9783,
+      "total_cost_micros": 4600,
+      "avg_cost_per_request_micros": 76.67,
+      "overall_quality_score": 0.9867,
       "category_quality_scores": {
-        "COMPLEX_REASONING": 0.965,
+        "COMPLEX_REASONING": 0.99,
         "FACTUAL_SYNTAX": 0.98,
         "FORMATTING_SUMMARIES": 0.99
       },
       "latency_stats": {
         "count": 60,
-        "min_ms": 74.88,
-        "mean_ms": 112.31,
-        "p50_ms": 79.75,
-        "p90_ms": 168.95,
-        "p95_ms": 174.52,
-        "p99_ms": 199.34,
-        "max_ms": 217.63
+        "min_ms": 62.18,
+        "mean_ms": 109.5,
+        "p50_ms": 89.54,
+        "p90_ms": 169.14,
+        "p95_ms": 170.97,
+        "p99_ms": 186.47,
+        "max_ms": 188.17
       },
       "individual_results": [
         {
           "id": "R01",
           "category": "COMPLEX_REASONING",
-          "latency_ms": 164.84,
+          "latency_ms": 169.34,
           "cost_micros": 140,
           "quality_score": 0.99,
           "routed_model": "gemini-1.5-pro",
@@ -1300,7 +1312,7 @@
         {
           "id": "R02",
           "category": "COMPLEX_REASONING",
-          "latency_ms": 217.63,
+          "latency_ms": 171.81,
           "cost_micros": 140,
           "quality_score": 0.99,
           "routed_model": "gemini-1.5-pro",
@@ -1310,7 +1322,7 @@
         {
           "id": "R03",
           "category": "COMPLEX_REASONING",
-          "latency_ms": 173.96,
+          "latency_ms": 154.26,
           "cost_micros": 140,
           "quality_score": 0.99,
           "routed_model": "gemini-1.5-pro",
@@ -1320,7 +1332,7 @@
         {
           "id": "R04",
           "category": "COMPLEX_REASONING",
-          "latency_ms": 168.64,
+          "latency_ms": 143.6,
           "cost_micros": 140,
           "quality_score": 0.99,
           "routed_model": "gemini-1.5-pro",
@@ -1330,7 +1342,7 @@
         {
           "id": "R05",
           "category": "COMPLEX_REASONING",
-          "latency_ms": 186.64,
+          "latency_ms": 154.98,
           "cost_micros": 140,
           "quality_score": 0.99,
           "routed_model": "gemini-1.5-pro",
@@ -1340,7 +1352,7 @@
         {
           "id": "R06",
           "category": "COMPLEX_REASONING",
-          "latency_ms": 168.79,
+          "latency_ms": 170.93,
           "cost_micros": 140,
           "quality_score": 0.99,
           "routed_model": "gemini-1.5-pro",
@@ -1350,7 +1362,7 @@
         {
           "id": "R07",
           "category": "COMPLEX_REASONING",
-          "latency_ms": 172.41,
+          "latency_ms": 188.17,
           "cost_micros": 140,
           "quality_score": 0.99,
           "routed_model": "gemini-1.5-pro",
@@ -1360,7 +1372,7 @@
         {
           "id": "R08",
           "category": "COMPLEX_REASONING",
-          "latency_ms": 185.13,
+          "latency_ms": 185.29,
           "cost_micros": 140,
           "quality_score": 0.99,
           "routed_model": "gemini-1.5-pro",
@@ -1370,7 +1382,7 @@
         {
           "id": "R09",
           "category": "COMPLEX_REASONING",
-          "latency_ms": 153.39,
+          "latency_ms": 155.34,
           "cost_micros": 140,
           "quality_score": 0.99,
           "routed_model": "gemini-1.5-pro",
@@ -1380,7 +1392,7 @@
         {
           "id": "R10",
           "category": "COMPLEX_REASONING",
-          "latency_ms": 155.24,
+          "latency_ms": 158.84,
           "cost_micros": 140,
           "quality_score": 0.99,
           "routed_model": "gemini-1.5-pro",
@@ -1390,7 +1402,7 @@
         {
           "id": "R11",
           "category": "COMPLEX_REASONING",
-          "latency_ms": 156.6,
+          "latency_ms": 169.11,
           "cost_micros": 140,
           "quality_score": 0.99,
           "routed_model": "gemini-1.5-pro",
@@ -1400,7 +1412,7 @@
         {
           "id": "R12",
           "category": "COMPLEX_REASONING",
-          "latency_ms": 155.16,
+          "latency_ms": 157.55,
           "cost_micros": 140,
           "quality_score": 0.99,
           "routed_model": "gemini-1.5-pro",
@@ -1410,7 +1422,7 @@
         {
           "id": "R13",
           "category": "COMPLEX_REASONING",
-          "latency_ms": 155.97,
+          "latency_ms": 157.84,
           "cost_micros": 140,
           "quality_score": 0.99,
           "routed_model": "gemini-1.5-pro",
@@ -1420,7 +1432,7 @@
         {
           "id": "R14",
           "category": "COMPLEX_REASONING",
-          "latency_ms": 170.44,
+          "latency_ms": 152.83,
           "cost_micros": 140,
           "quality_score": 0.99,
           "routed_model": "gemini-1.5-pro",
@@ -1430,27 +1442,27 @@
         {
           "id": "R15",
           "category": "COMPLEX_REASONING",
-          "latency_ms": 78.51,
-          "cost_micros": 45,
-          "quality_score": 0.74,
-          "routed_model": "gemini-1.5-flash",
+          "latency_ms": 155.3,
+          "cost_micros": 140,
+          "quality_score": 0.99,
+          "routed_model": "gemini-1.5-pro",
           "cache_status": "MISS",
-          "complexity_tier": "FAST_TIER"
+          "complexity_tier": "REASONING_TIER"
         },
         {
           "id": "R16",
           "category": "COMPLEX_REASONING",
-          "latency_ms": 74.88,
-          "cost_micros": 45,
-          "quality_score": 0.74,
-          "routed_model": "gemini-1.5-flash",
+          "latency_ms": 157.23,
+          "cost_micros": 140,
+          "quality_score": 0.99,
+          "routed_model": "gemini-1.5-pro",
           "cache_status": "MISS",
-          "complexity_tier": "FAST_TIER"
+          "complexity_tier": "REASONING_TIER"
         },
         {
           "id": "R17",
           "category": "COMPLEX_REASONING",
-          "latency_ms": 158.67,
+          "latency_ms": 155.18,
           "cost_micros": 140,
           "quality_score": 0.99,
           "routed_model": "gemini-1.5-pro",
@@ -1460,7 +1472,7 @@
         {
           "id": "R18",
           "category": "COMPLEX_REASONING",
-          "latency_ms": 154.57,
+          "latency_ms": 154.91,
           "cost_micros": 140,
           "quality_score": 0.99,
           "routed_model": "gemini-1.5-pro",
@@ -1470,7 +1482,7 @@
         {
           "id": "R19",
           "category": "COMPLEX_REASONING",
-          "latency_ms": 157.19,
+          "latency_ms": 156.25,
           "cost_micros": 140,
           "quality_score": 0.99,
           "routed_model": "gemini-1.5-pro",
@@ -1480,7 +1492,7 @@
         {
           "id": "R20",
           "category": "COMPLEX_REASONING",
-          "latency_ms": 154.75,
+          "latency_ms": 169.82,
           "cost_micros": 140,
           "quality_score": 0.99,
           "routed_model": "gemini-1.5-pro",
@@ -1490,7 +1502,7 @@
         {
           "id": "F01",
           "category": "FACTUAL_SYNTAX",
-          "latency_ms": 75.32,
+          "latency_ms": 79.66,
           "cost_micros": 45,
           "quality_score": 0.98,
           "routed_model": "gemini-1.5-flash",
@@ -1500,7 +1512,7 @@
         {
           "id": "F02",
           "category": "FACTUAL_SYNTAX",
-          "latency_ms": 77.47,
+          "latency_ms": 76.45,
           "cost_micros": 45,
           "quality_score": 0.98,
           "routed_model": "gemini-1.5-flash",
@@ -1510,17 +1522,17 @@
         {
           "id": "F03",
           "category": "FACTUAL_SYNTAX",
-          "latency_ms": 157.27,
-          "cost_micros": 140,
+          "latency_ms": 77.16,
+          "cost_micros": 45,
           "quality_score": 0.98,
-          "routed_model": "gemini-1.5-pro",
+          "routed_model": "gemini-1.5-flash",
           "cache_status": "MISS",
-          "complexity_tier": "REASONING_TIER"
+          "complexity_tier": "FAST_TIER"
         },
         {
           "id": "F04",
           "category": "FACTUAL_SYNTAX",
-          "latency_ms": 75.82,
+          "latency_ms": 79.06,
           "cost_micros": 45,
           "quality_score": 0.98,
           "routed_model": "gemini-1.5-flash",
@@ -1530,17 +1542,17 @@
         {
           "id": "F05",
           "category": "FACTUAL_SYNTAX",
-          "latency_ms": 157.85,
-          "cost_micros": 140,
+          "latency_ms": 86.11,
+          "cost_micros": 45,
           "quality_score": 0.98,
-          "routed_model": "gemini-1.5-pro",
+          "routed_model": "gemini-1.5-flash",
           "cache_status": "MISS",
-          "complexity_tier": "REASONING_TIER"
+          "complexity_tier": "FAST_TIER"
         },
         {
           "id": "F06",
           "category": "FACTUAL_SYNTAX",
-          "latency_ms": 79.01,
+          "latency_ms": 85.02,
           "cost_micros": 45,
           "quality_score": 0.98,
           "routed_model": "gemini-1.5-flash",
@@ -1550,7 +1562,7 @@
         {
           "id": "F07",
           "category": "FACTUAL_SYNTAX",
-          "latency_ms": 76.18,
+          "latency_ms": 77.75,
           "cost_micros": 45,
           "quality_score": 0.98,
           "routed_model": "gemini-1.5-flash",
@@ -1560,7 +1572,7 @@
         {
           "id": "F08",
           "category": "FACTUAL_SYNTAX",
-          "latency_ms": 78.71,
+          "latency_ms": 75.78,
           "cost_micros": 45,
           "quality_score": 0.98,
           "routed_model": "gemini-1.5-flash",
@@ -1570,7 +1582,7 @@
         {
           "id": "F09",
           "category": "FACTUAL_SYNTAX",
-          "latency_ms": 77.63,
+          "latency_ms": 78.31,
           "cost_micros": 45,
           "quality_score": 0.98,
           "routed_model": "gemini-1.5-flash",
@@ -1580,7 +1592,7 @@
         {
           "id": "F10",
           "category": "FACTUAL_SYNTAX",
-          "latency_ms": 77.53,
+          "latency_ms": 77.7,
           "cost_micros": 45,
           "quality_score": 0.98,
           "routed_model": "gemini-1.5-flash",
@@ -1590,7 +1602,7 @@
         {
           "id": "F11",
           "category": "FACTUAL_SYNTAX",
-          "latency_ms": 77.68,
+          "latency_ms": 79.91,
           "cost_micros": 45,
           "quality_score": 0.98,
           "routed_model": "gemini-1.5-flash",
@@ -1600,7 +1612,7 @@
         {
           "id": "F12",
           "category": "FACTUAL_SYNTAX",
-          "latency_ms": 77.97,
+          "latency_ms": 76.47,
           "cost_micros": 45,
           "quality_score": 0.98,
           "routed_model": "gemini-1.5-flash",
@@ -1610,7 +1622,7 @@
         {
           "id": "F13",
           "category": "FACTUAL_SYNTAX",
-          "latency_ms": 78.82,
+          "latency_ms": 75.69,
           "cost_micros": 45,
           "quality_score": 0.98,
           "routed_model": "gemini-1.5-flash",
@@ -1620,7 +1632,7 @@
         {
           "id": "F14",
           "category": "FACTUAL_SYNTAX",
-          "latency_ms": 78.13,
+          "latency_ms": 77.47,
           "cost_micros": 45,
           "quality_score": 0.98,
           "routed_model": "gemini-1.5-flash",
@@ -1630,7 +1642,7 @@
         {
           "id": "F15",
           "category": "FACTUAL_SYNTAX",
-          "latency_ms": 78.94,
+          "latency_ms": 76.51,
           "cost_micros": 45,
           "quality_score": 0.98,
           "routed_model": "gemini-1.5-flash",
@@ -1640,7 +1652,7 @@
         {
           "id": "F16",
           "category": "FACTUAL_SYNTAX",
-          "latency_ms": 91.41,
+          "latency_ms": 77.46,
           "cost_micros": 45,
           "quality_score": 0.98,
           "routed_model": "gemini-1.5-flash",
@@ -1650,7 +1662,7 @@
         {
           "id": "F17",
           "category": "FACTUAL_SYNTAX",
-          "latency_ms": 78.89,
+          "latency_ms": 78.77,
           "cost_micros": 45,
           "quality_score": 0.98,
           "routed_model": "gemini-1.5-flash",
@@ -1660,7 +1672,7 @@
         {
           "id": "F18",
           "category": "FACTUAL_SYNTAX",
-          "latency_ms": 78.08,
+          "latency_ms": 76.64,
           "cost_micros": 45,
           "quality_score": 0.98,
           "routed_model": "gemini-1.5-flash",
@@ -1670,7 +1682,7 @@
         {
           "id": "F19",
           "category": "FACTUAL_SYNTAX",
-          "latency_ms": 75.31,
+          "latency_ms": 77.58,
           "cost_micros": 45,
           "quality_score": 0.98,
           "routed_model": "gemini-1.5-flash",
@@ -1680,7 +1692,7 @@
         {
           "id": "F20",
           "category": "FACTUAL_SYNTAX",
-          "latency_ms": 76.76,
+          "latency_ms": 78.57,
           "cost_micros": 45,
           "quality_score": 0.98,
           "routed_model": "gemini-1.5-flash",
@@ -1690,7 +1702,7 @@
         {
           "id": "S01",
           "category": "FORMATTING_SUMMARIES",
-          "latency_ms": 77.47,
+          "latency_ms": 75.69,
           "cost_micros": 45,
           "quality_score": 0.99,
           "routed_model": "gemini-1.5-flash",
@@ -1700,7 +1712,7 @@
         {
           "id": "S02",
           "category": "FORMATTING_SUMMARIES",
-          "latency_ms": 108.21,
+          "latency_ms": 62.18,
           "cost_micros": 45,
           "quality_score": 0.99,
           "routed_model": "gemini-1.5-flash",
@@ -1710,17 +1722,17 @@
         {
           "id": "S03",
           "category": "FORMATTING_SUMMARIES",
-          "latency_ms": 168.27,
-          "cost_micros": 140,
+          "latency_ms": 80.71,
+          "cost_micros": 45,
           "quality_score": 0.99,
-          "routed_model": "gemini-1.5-pro",
+          "routed_model": "gemini-1.5-flash",
           "cache_status": "MISS",
-          "complexity_tier": "REASONING_TIER"
+          "complexity_tier": "FAST_TIER"
         },
         {
           "id": "S04",
           "category": "FORMATTING_SUMMARIES",
-          "latency_ms": 79.9,
+          "latency_ms": 76.16,
           "cost_micros": 45,
           "quality_score": 0.99,
           "routed_model": "gemini-1.5-flash",
@@ -1730,7 +1742,7 @@
         {
           "id": "S05",
           "category": "FORMATTING_SUMMARIES",
-          "latency_ms": 78.89,
+          "latency_ms": 77.83,
           "cost_micros": 45,
           "quality_score": 0.99,
           "routed_model": "gemini-1.5-flash",
@@ -1740,7 +1752,7 @@
         {
           "id": "S06",
           "category": "FORMATTING_SUMMARIES",
-          "latency_ms": 107.73,
+          "latency_ms": 95.21,
           "cost_micros": 45,
           "quality_score": 0.99,
           "routed_model": "gemini-1.5-flash",
@@ -1750,7 +1762,7 @@
         {
           "id": "S07",
           "category": "FORMATTING_SUMMARIES",
-          "latency_ms": 96.26,
+          "latency_ms": 89.84,
           "cost_micros": 45,
           "quality_score": 0.99,
           "routed_model": "gemini-1.5-flash",
@@ -1760,7 +1772,7 @@
         {
           "id": "S08",
           "category": "FORMATTING_SUMMARIES",
-          "latency_ms": 92.18,
+          "latency_ms": 78.04,
           "cost_micros": 45,
           "quality_score": 0.99,
           "routed_model": "gemini-1.5-flash",
@@ -1770,7 +1782,7 @@
         {
           "id": "S09",
           "category": "FORMATTING_SUMMARIES",
-          "latency_ms": 79.11,
+          "latency_ms": 81.39,
           "cost_micros": 45,
           "quality_score": 0.99,
           "routed_model": "gemini-1.5-flash",
@@ -1780,7 +1792,7 @@
         {
           "id": "S10",
           "category": "FORMATTING_SUMMARIES",
-          "latency_ms": 75.18,
+          "latency_ms": 89.58,
           "cost_micros": 45,
           "quality_score": 0.99,
           "routed_model": "gemini-1.5-flash",
@@ -1790,7 +1802,7 @@
         {
           "id": "S11",
           "category": "FORMATTING_SUMMARIES",
-          "latency_ms": 95.79,
+          "latency_ms": 78.44,
           "cost_micros": 45,
           "quality_score": 0.99,
           "routed_model": "gemini-1.5-flash",
@@ -1800,7 +1812,7 @@
         {
           "id": "S12",
           "category": "FORMATTING_SUMMARIES",
-          "latency_ms": 75.09,
+          "latency_ms": 92.81,
           "cost_micros": 45,
           "quality_score": 0.99,
           "routed_model": "gemini-1.5-flash",
@@ -1810,7 +1822,7 @@
         {
           "id": "S13",
           "category": "FORMATTING_SUMMARIES",
-          "latency_ms": 77.93,
+          "latency_ms": 142.07,
           "cost_micros": 45,
           "quality_score": 0.99,
           "routed_model": "gemini-1.5-flash",
@@ -1820,7 +1832,7 @@
         {
           "id": "S14",
           "category": "FORMATTING_SUMMARIES",
-          "latency_ms": 78.82,
+          "latency_ms": 89.51,
           "cost_micros": 45,
           "quality_score": 0.99,
           "routed_model": "gemini-1.5-flash",
@@ -1830,17 +1842,17 @@
         {
           "id": "S15",
           "category": "FORMATTING_SUMMARIES",
-          "latency_ms": 153.91,
-          "cost_micros": 140,
+          "latency_ms": 91.78,
+          "cost_micros": 45,
           "quality_score": 0.99,
-          "routed_model": "gemini-1.5-pro",
+          "routed_model": "gemini-1.5-flash",
           "cache_status": "MISS",
-          "complexity_tier": "REASONING_TIER"
+          "complexity_tier": "FAST_TIER"
         },
         {
           "id": "S16",
           "category": "FORMATTING_SUMMARIES",
-          "latency_ms": 77.23,
+          "latency_ms": 97.55,
           "cost_micros": 45,
           "quality_score": 0.99,
           "routed_model": "gemini-1.5-flash",
@@ -1850,7 +1862,7 @@
         {
           "id": "S17",
           "category": "FORMATTING_SUMMARIES",
-          "latency_ms": 79.43,
+          "latency_ms": 101.18,
           "cost_micros": 45,
           "quality_score": 0.99,
           "routed_model": "gemini-1.5-flash",
@@ -1860,7 +1872,7 @@
         {
           "id": "S18",
           "category": "FORMATTING_SUMMARIES",
-          "latency_ms": 91.61,
+          "latency_ms": 95.02,
           "cost_micros": 45,
           "quality_score": 0.99,
           "routed_model": "gemini-1.5-flash",
@@ -1870,7 +1882,7 @@
         {
           "id": "S19",
           "category": "FORMATTING_SUMMARIES",
-          "latency_ms": 77.85,
+          "latency_ms": 77.03,
           "cost_micros": 45,
           "quality_score": 0.99,
           "routed_model": "gemini-1.5-flash",
@@ -1880,7 +1892,7 @@
         {
           "id": "S20",
           "category": "FORMATTING_SUMMARIES",
-          "latency_ms": 79.61,
+          "latency_ms": 91.45,
           "cost_micros": 45,
           "quality_score": 0.99,
           "routed_model": "gemini-1.5-flash",

@@ -93,6 +93,13 @@ def main():
 
     if all_ok:
         print("\n[SUCCESS] All 4 Orvix microservices are UP and healthy!")
+        if "--daemon" in sys.argv:
+            print("[DAEMON] Keeping cluster supervisor active in background...")
+            try:
+                while True:
+                    time.sleep(3600)
+            except KeyboardInterrupt:
+                pass
         sys.exit(0)
     else:
         print("\n[FAILED] One or more microservices failed to start.")

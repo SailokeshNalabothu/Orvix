@@ -6,6 +6,7 @@ import org.springframework.stereotype.Service;
 
 import java.util.Arrays;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Locale;
 import java.util.Set;
 import java.util.regex.Pattern;
@@ -19,21 +20,33 @@ public class LlmRouter {
 
     public static final String FAST_TIER = "FAST_TIER";
     public static final String REASONING_TIER = "REASONING_TIER";
-    public static final double COMPLEXITY_THRESHOLD = 0.40;
+    public static final double COMPLEXITY_THRESHOLD = 0.35;
     public static final String MODEL_FAST = "gemini-1.5-flash";
     public static final String MODEL_REASONING = "gemini-1.5-pro";
 
-    // High-cognitive reasoning indicators (System Design, Algorithms, Concurrency, Formal Logic)
+    // High-cognitive reasoning indicators (System Design, Algorithms, Concurrency, Formal Logic, Advanced Math)
     private static final Set<String> COMPLEXITY_KEYWORDS = new HashSet<>(Arrays.asList(
             "algorithm", "concurrent", "concurrency", "distributed", "consensus", "raft", "paxos",
             "deadlock", "race condition", "mutex", "reentrancy", "virtual thread", "optimizing",
-            "architecture", "refactor", "implement", "debug", "asymptotic", "derivation", "proof", "prove",
-            "microservice", "latency", "throughput", "idempotency", "byzantine", "partition",
-            "pacelc", "2pc", "3pc", "shannon", "entropy", "outbox", "dijkstra", "fibonacci",
-            "hnsw", "vector", "euclidean", "write skew", "invariant", "happens-before", "lock-free", "wait-free"
+            "asymptotic", "derivation", "proof", "prove", "byzantine", "partition",
+            "pacelc", "2pc", "3pc", "shannon", "entropy", "dijkstra", "fibonacci",
+            "hnsw", "vector similarity", "euclidean", "write skew", "invariant", "happens-before",
+            "lock-free", "wait-free", "fault-tolerant", "replication", "state machine", "epoll",
+            "kernel level", "scaling bottleneck", "eigenvalue", "calculus", "differential",
+            "stochastic", "markov", "fourier", "laplace", "topology", "cryptographic", "compiler",
+            "ast", "zero-knowledge", "zk-snark", "bloom filter", "linearizability", "vector clock",
+            "lamport", "two-phase commit", "byzantine fault", "distributed consensus",
+            "transactional consumer", "distributed rate limiter", "distributed relational",
+            "formal verify", "formally verify", "formal verification", "dual-write", "outbox table",
+            "algorithmic", "heuristic", "admissible", "split-brain"
     ));
 
-    private static final Pattern CODE_INDICATORS = Pattern.compile("(\\{|\\}|->|=>|::|public |class |def |fn |function|void |return )");
+    private static final List<String> FORMATTING_INTENTS = Arrays.asList(
+            "summarize", "draft", "format ", "markdown table", "checklist", "slack message",
+            "email", "bullet points", "release notes", "write a polite", "write a short", "write a sample"
+    );
+
+    private static final Pattern CODE_INDICATORS = Pattern.compile("(\\bpublic\\s+(?:class|interface|void|int|boolean)\\b|\\bdef\\s+\\w+\\(|\\bfunc\\s+\\w+\\(|\\bclass\\s+\\w+\\b|[{}\\[\\]]{2,}|->|=>|::)");
 
     public record ComplexityAnalysis(
             double complexityScore,
@@ -77,11 +90,11 @@ public class LlmRouter {
                 keywordHits++;
             }
         }
-        score += Math.min(0.40, keywordHits * 0.15);
+        score += Math.min(0.45, keywordHits * 0.22);
 
         // 2. Code and formal syntax markers
-        if (CODE_INDICATORS.matcher(prompt).find() || prompt.contains("```") || prompt.contains("`")) {
-            score += 0.30;
+        if (CODE_INDICATORS.matcher(prompt).find() || prompt.contains("```")) {
+            score += 0.25;
         }
 
         // 3. Length and prompt depth factor
@@ -95,11 +108,23 @@ public class LlmRouter {
         Set<String> uniqueWords = new HashSet<>(Arrays.asList(words));
         double ttr = (double) uniqueWords.size() / words.length;
         if (ttr > 0.85 && words.length > 8) {
-            score += 0.15;
+            score += 0.10;
         }
 
-        double finalScore = Math.min(1.0, Math.round(score * 100.0) / 100.0);
-        boolean isHighComplexity = finalScore >= 0.40;
+        // 5. Conversational / Formatting Intent discount (prevents lightweight summaries from escalating to pro tier)
+        boolean hasFormattingIntent = false;
+        for (String fi : FORMATTING_INTENTS) {
+            if (lower.contains(fi)) {
+                hasFormattingIntent = true;
+                break;
+            }
+        }
+        if (hasFormattingIntent && !lower.contains("prove") && !lower.contains("proof") && !lower.contains("derive") && !lower.contains("consensus")) {
+            score -= 0.25;
+        }
+
+        double finalScore = Math.min(1.0, Math.max(0.0, Math.round(score * 100.0) / 100.0));
+        boolean isHighComplexity = finalScore >= COMPLEXITY_THRESHOLD;
 
         String tier = isHighComplexity ? "REASONING_TIER" : "FAST_TIER";
         String model = isHighComplexity ? "gemini-1.5-pro" : "gemini-1.5-flash";

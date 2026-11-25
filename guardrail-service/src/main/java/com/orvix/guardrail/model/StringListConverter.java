@@ -22,7 +22,7 @@ public class StringListConverter implements AttributeConverter<List<String>, Str
         if (dbData == null || dbData.trim().isEmpty() || dbData.equals("{}")) {
             return Collections.emptyList();
         }
-        String clean = dbData.replaceAll("[{}]", "");
+        String clean = dbData.replaceAll("[{}\"]", "");
         return Arrays.stream(clean.split(","))
                 .map(String::trim)
                 .filter(s -> !s.isEmpty())

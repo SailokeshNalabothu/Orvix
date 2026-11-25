@@ -22,10 +22,32 @@ import sys
 import time
 import urllib.request
 import urllib.error
+import subprocess
 
 GATEWAY_URL = os.environ.get("GATEWAY_URL", "http://localhost:8080")
 REPORT_PATH = os.path.join(os.path.dirname(__file__), "intelligent_routing_report.json")
 API_KEY = "orv_live_benchmark_tenant_alpha"
+
+def is_gateway_healthy():
+    try:
+        req = urllib.request.Request(f"{GATEWAY_URL}/actuator/health", headers={"User-Agent": "VerifyRouting/1.0"})
+        with urllib.request.urlopen(req, timeout=2) as resp:
+            if resp.status == 200:
+                data = json.loads(resp.read().decode())
+                return data.get("status") == "UP"
+    except Exception:
+        return False
+    return False
+
+def ensure_cluster_running():
+    if is_gateway_healthy():
+        return True
+    print("[PRE-CHECK] Gateway is not running. Auto-starting Orvix cluster...")
+    start_script = os.path.join(os.path.dirname(__file__), "start_cluster.py")
+    if os.path.exists(start_script):
+        ret = subprocess.run([sys.executable, start_script], check=False)
+        return ret.returncode == 0
+    return False
 
 # =========================================================================
 # BENCHMARK EVALUATION CORPUS (60 ENTERPRISE PROMPTS ACROSS 3 CATEGORIES)
@@ -589,6 +611,10 @@ def main():
     print("        ORVIX INTELLIGENT ROUTING & ADAPTIVE CASCADING EVALUATION       ")
     print("=" * 80)
 
+    if not ensure_cluster_running():
+        print("[ERROR] Could not start or connect to Orvix Gateway.")
+        sys.exit(1)
+
     # 1. Fixed Frontier Model Baseline (gemini-1.5-pro) - Pure model inference without caching
     frontier_results = run_evaluation_pass("gemini-1.5-pro", "Fixed Frontier Model Baseline (gemini-1.5-pro)", cache_enabled=False)
 
@@ -597,6 +623,30 @@ def main():
 
     # 3. Orvix Intelligent Router (auto-cascade) - Pure dynamic ML complexity routing
     router_results = run_evaluation_pass("auto-cascade", "Orvix Intelligent Router (auto-cascade)", cache_enabled=False)
+
+    # Confusion Matrix & Classification Metrics Evaluation
+    # Ground Truth: COMPLEX_REASONING -> REASONING_TIER (Positive Class)
+    #               FACTUAL_SYNTAX / FORMATTING_SUMMARIES -> FAST_TIER (Negative Class)
+    tp, fp, tn, fn = 0, 0, 0, 0
+    for r in router_results["individual_results"]:
+        is_ground_truth_complex = (r["category"] == "COMPLEX_REASONING")
+        is_predicted_reasoning = (r["complexity_tier"] == "REASONING_TIER" or "pro" in r["routed_model"].lower())
+
+        if is_ground_truth_complex and is_predicted_reasoning:
+            tp += 1
+        elif not is_ground_truth_complex and is_predicted_reasoning:
+            fp += 1
+        elif not is_ground_truth_complex and not is_predicted_reasoning:
+            tn += 1
+        else: # is_ground_truth_complex and not is_predicted_reasoning
+            fn += 1
+
+    total_samples = tp + fp + tn + fn
+    accuracy = (tp + tn) / total_samples if total_samples > 0 else 0.0
+    precision = tp / (tp + fp) if (tp + fp) > 0 else 0.0
+    recall = tp / (tp + fn) if (tp + fn) > 0 else 0.0
+    specificity = tn / (tn + fp) if (tn + fp) > 0 else 0.0
+    f1_score = 2 * (precision * recall) / (precision + recall) if (precision + recall) > 0 else 0.0
 
     # Comparative Computations
     c_frontier = frontier_results["total_cost_micros"]
@@ -627,7 +677,19 @@ def main():
             "intelligent_router_p50_ms": lat_p50_router,
             "frontier_quality_score": round(q_frontier, 4),
             "fast_quality_score": round(q_fast, 4),
-            "intelligent_router_quality_score": round(q_router, 4)
+            "intelligent_router_quality_score": round(q_router, 4),
+            "classification_evaluation": {
+                "total_prompts": total_samples,
+                "true_positives": tp,
+                "false_positives": fp,
+                "true_negatives": tn,
+                "false_negatives": fn,
+                "accuracy": round(accuracy, 4),
+                "precision": round(precision, 4),
+                "recall": round(recall, 4),
+                "specificity": round(specificity, 4),
+                "f1_score": round(f1_score, 4)
+            }
         },
         "regimes": {
             "fixed_frontier_baseline": frontier_results,
@@ -638,6 +700,22 @@ def main():
 
     with open(REPORT_PATH, "w") as f:
         json.dump(report, f, indent=2)
+
+    print("\n" + "=" * 80)
+    print("               ROUTER CLASSIFICATION EVALUATION & CONFUSION MATRIX       ")
+    print("=" * 80)
+    print(f"  Total Prompts Evaluated: {total_samples}")
+    print(f"  Confusion Matrix:")
+    print(f"    {'Predicted \\ Actual':<22} | {'Complex (Actual)':<18} | {'Simple (Actual)':<18}")
+    print(f"    {'-'*64}")
+    print(f"    {'Reasoning (Pred)':<22} | TP = {tp:<13} | FP = {fp:<13}")
+    print(f"    {'Fast (Pred)':<22} | FN = {fn:<13} | TN = {tn:<13}")
+    print(f"  Metrics:")
+    print(f"    - Accuracy:    {accuracy * 100:.2f}% ({tp+tn}/{total_samples})")
+    print(f"    - Precision:   {precision * 100:.2f}%")
+    print(f"    - Recall:      {recall * 100:.2f}% (Complex Prompts Directed to Frontier)")
+    print(f"    - Specificity: {specificity * 100:.2f}% (Simple Prompts Directed to Fast)")
+    print(f"    - F1-Score:    {f1_score:.4f}")
 
     print("\n" + "=" * 80)
     print("                     FINAL COMPARATIVE EVALUATION MATRIX                ")
@@ -660,6 +738,10 @@ def main():
     assert cost_savings_pct >= 40.0, f"Cost savings must be >= 40%, got {cost_savings_pct:.1f}%"
     assert quality_retention_pct >= 98.0, f"Quality retention must be >= 98%, got {quality_retention_pct:.1f}%"
     assert latency_reduction_pct >= 35.0, f"Latency p50 reduction must be >= 35%, got {latency_reduction_pct:.1f}%"
+    assert accuracy >= 0.90, f"Classification accuracy must be >= 90%, got {accuracy*100:.2f}%"
+    assert recall >= 0.90, f"Classification recall must be >= 90%, got {recall*100:.2f}%"
+    assert precision >= 0.90, f"Classification precision must be >= 90%, got {precision*100:.2f}%"
+    assert f1_score >= 0.90, f"Classification F1 must be >= 0.90, got {f1_score:.4f}"
     print("\n[SUCCESS] Intelligent routing empirically demonstrated massive savings without sacrificing quality!")
 
 if __name__ == "__main__":
