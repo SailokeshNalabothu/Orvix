@@ -24,6 +24,7 @@ import java.time.Instant;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
+@CrossOrigin(origins = "*")
 @RestController
 @RequestMapping("/v1")
 @RequiredArgsConstructor
