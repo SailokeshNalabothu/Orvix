@@ -17,6 +17,7 @@ SERVICES = [
 ]
 
 DETACHED_FLAGS = 0x00000008 | 0x00000200 # DETACHED_PROCESS | CREATE_NEW_PROCESS_GROUP
+BREAKAWAY_FLAGS = 0x01000000 | DETACHED_FLAGS # CREATE_BREAKAWAY_FROM_JOB
 
 def is_port_open(port):
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
@@ -68,12 +69,20 @@ def main():
             print(f"[RUNNING] {svc['name']} is already listening on port {svc['port']}")
         else:
             print(f"[STARTING] Launching {svc['name']} ({svc['jar']})...")
-            subprocess.Popen([JAVA_BIN, "-jar", svc["jar"]], 
-                             env=env, 
-                             stdin=subprocess.DEVNULL, 
-                             stdout=subprocess.DEVNULL, 
-                             stderr=subprocess.DEVNULL, 
-                             creationflags=DETACHED_FLAGS)
+            try:
+                subprocess.Popen([JAVA_BIN, "-jar", svc["jar"]], 
+                                 env=env, 
+                                 stdin=subprocess.DEVNULL, 
+                                 stdout=subprocess.DEVNULL, 
+                                 stderr=subprocess.DEVNULL, 
+                                 creationflags=BREAKAWAY_FLAGS)
+            except Exception:
+                subprocess.Popen([JAVA_BIN, "-jar", svc["jar"]], 
+                                 env=env, 
+                                 stdin=subprocess.DEVNULL, 
+                                 stdout=subprocess.DEVNULL, 
+                                 stderr=subprocess.DEVNULL, 
+                                 creationflags=DETACHED_FLAGS)
 
     print("\nWaiting for all microservices to report UP...")
     all_ok = True
