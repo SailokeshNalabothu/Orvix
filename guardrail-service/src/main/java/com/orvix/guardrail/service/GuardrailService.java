@@ -28,13 +28,16 @@ public class GuardrailService {
         log.debug("Inspecting prompt for tenant: {}, traceId: {}", request.tenantId(), request.traceId());
 
         // 1. Zero-Trust Prompt Injection Defense
-        if (injectionDetector.isInjection(request.prompt())) {
-            log.warn("Prompt injection detected for tenant: {}, traceId: {}", request.tenantId(), request.traceId());
+        PromptInjectionDetector.DetectionResult detection = injectionDetector.detect(request.prompt());
+        if (detection.isInjection()) {
+            String violation = "PROMPT_INJECTION:" + detection.threatVector().name();
+            log.warn("Prompt injection detected [vector={}] for tenant: {}, traceId: {}",
+                    detection.threatVector(), request.tenantId(), request.traceId());
             auditLogRepository.save(SecurityAuditLog.builder()
                     .traceId(request.traceId())
                     .tenantId(request.tenantId())
                     .action(GuardrailAction.BLOCKED)
-                    .violationTypes(List.of("PROMPT_INJECTION"))
+                    .violationTypes(List.of("PROMPT_INJECTION", violation))
                     .createdAt(Instant.now())
                     .build());
 
@@ -42,7 +45,7 @@ public class GuardrailService {
                     PromptInspectionResponse.STATUS_BLOCKED,
                     null,
                     0,
-                    List.of("PROMPT_INJECTION")
+                    List.of("PROMPT_INJECTION", violation)
             );
         }
 

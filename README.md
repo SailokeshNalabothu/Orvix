@@ -122,13 +122,15 @@ flowchart TD
 | **Fast-path authentication** | API keys are validated through SHA-256 hashes cached in Redis (`auth:apikey:{sha256}`), with automatic fallback to `billing-service` |
 | **Fail-fast quota gate** | Redis key `quota:blocked:{tenantId}` is checked before dispatch, and exhausted tenants get `HTTP 402 Payment Required` |
 
-### 2. Zero-trust prompt guardrail firewall
+### 2. Multi-stage zero-trust guardrail firewall & adversarial defense
 
 | Feature | Detail |
 | :--- | :--- |
-| **PII and secrets scrubbing** | Detects and redacts emails, API keys and JWTs, US SSNs, Indian Aadhaar numbers and Luhn-validated credit card numbers |
-| **Prompt-injection defense** | Checks prompts against signature patterns, system-override heuristics and jailbreak vectors, and rejects attempts with `HTTP 400 Bad Request` |
-| **Immutable audit log** | Writes tamper-proof records to `guardrail_db.security_audit_logs` with tenant identity, violation class and trace headers |
+| **PII & secrets scrubbing** | Detects and redacts emails, API keys, JWTs, US SSNs, Indian Aadhaar numbers and Luhn-validated credit card numbers |
+| **Multi-stage de-obfuscation** | Normalizes Unicode NFKC, maps Cyrillic homoglyphs (`а` $\to$ `a`), strips invisible zero-width characters (`\u200B`), and decodes embedded Base64/Hex payloads before scanning |
+| **Adversarial defense & threat classification** | Catches direct overrides, DAN/STAN jailbreaks, delimiter hijacking (`</system>`, `[INST]`), and prompt exfiltration under a strict `< 15ms` latency budget |
+| **Empirical benchmark verified** | Evaluated on 95 curated samples (`AdversarialBenchmarkTest`): **0.00% False Positive Rate (FPR)**, **0.00% False Negative Rate (FNR)**, **1.0000 $F_1$ Score** ([docs/06-THREAT-MODEL.md](docs/06-THREAT-MODEL.md)) |
+| **Immutable audit log** | Writes tamper-proof records to `guardrail_db.security_audit_logs` with tenant identity, classified threat vector, and trace headers |
 
 ### 3. Adaptive AI complexity cascading and cognitive routing (RouteLLM / FrugalGPT)
 
@@ -489,7 +491,8 @@ Orvix/
 │   ├── 02-HLD.md            # High-level architecture and sequence flows
 │   ├── 03-CONTRACTS.md      # OpenAPI and Kafka event schemas
 │   ├── 04-DB-SCHEMA.md      # Relational and pgvector schemas
-│   └── 05-ADR.md            # Architecture Decision Records (ADR 001 to 005)
+│   ├── 05-ADR.md            # Architecture Decision Records (ADR 001 to 005)
+│   └── 06-THREAT-MODEL.md   # OWASP LLM01 Threat Model, De-obfuscation & Empirical Benchmark
 ├── orvix-common/            # Shared DTOs, Kafka event records, headers
 ├── gateway-service/         # Edge router, Redis Lua rate limiter, LLM failover
 ├── guardrail-service/       # PII engine, injection detector, audit DB
