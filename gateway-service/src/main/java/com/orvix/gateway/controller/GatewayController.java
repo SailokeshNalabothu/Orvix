@@ -41,6 +41,8 @@ public class GatewayController {
     @PostMapping("/chat/completions")
     public ResponseEntity<ChatCompletionResponse> createChatCompletion(
             @RequestHeader(value = OrvixHeaders.API_KEY, required = false) String rawApiKey,
+            @RequestHeader(value = "X-Orvix-Api-Key", required = false) String rawOrvixApiKey,
+            @RequestHeader(value = "Authorization", required = false) String authHeader,
             @RequestHeader(value = OrvixHeaders.IDEMPOTENCY_KEY, required = false) String idempotencyKey,
             @Valid @RequestBody ChatCompletionRequest request,
             HttpServletResponse servletResponse
@@ -49,8 +51,17 @@ public class GatewayController {
         String traceId = UUID.randomUUID().toString().replace("-", "");
         String requestId = idempotencyKey != null && !idempotencyKey.isBlank() ? idempotencyKey : "req_" + UUID.randomUUID();
 
+        // Resolve effective API key from X-API-Key, X-Orvix-Api-Key, or Authorization: Bearer
+        String effectiveApiKey = rawApiKey;
+        if (effectiveApiKey == null || effectiveApiKey.isBlank()) {
+            effectiveApiKey = rawOrvixApiKey;
+        }
+        if ((effectiveApiKey == null || effectiveApiKey.isBlank()) && authHeader != null && authHeader.startsWith("Bearer ")) {
+            effectiveApiKey = authHeader.substring(7).trim();
+        }
+
         // 1. Auth & Quota Check (Fail Fast)
-        var tenant = authAndQuotaService.authenticate(rawApiKey);
+        var tenant = authAndQuotaService.authenticate(effectiveApiKey);
         authAndQuotaService.checkQuota(tenant.tenantId());
 
         // 2. Atomic Redis Token Bucket Rate Limiting (ADR-001)

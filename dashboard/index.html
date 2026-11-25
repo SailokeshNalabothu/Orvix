@@ -1023,8 +1023,9 @@
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
+                        'X-API-Key': currentTenant.apiKey,
                         'X-Orvix-Api-Key': currentTenant.apiKey,
-                        'X-Orvix-Idempotency-Key': 'dash_' + Math.random().toString(36).substring(2, 10)
+                        'X-Idempotency-Key': 'dash_' + Math.random().toString(36).substring(2, 10)
                     },
                     body: JSON.stringify({
                         model: model,
