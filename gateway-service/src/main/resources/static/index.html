@@ -1271,18 +1271,19 @@
     let activeSnippetLang = 'python';
 
     // On Load
-    document.addEventListener('DOMContentLoaded', () => {
-      fetchOrganizations();
-      loadOverviewData();
-      renderUsageBars();
+    document.addEventListener('DOMContentLoaded', async () => {
+      await fetchOrganizations();
+      await loadOverviewData();
+      await renderUsageBars();
       showCodeSnippet('python');
     });
 
     // Switch Organization
-    function switchOrganization(tenantId) {
+    async function switchOrganization(tenantId) {
       currentTenantId = tenantId;
-      showToast(`Switched active organization to ${tenantId}`);
-      loadOverviewData();
+      showToast(`Switched active organization`);
+      await loadOverviewData();
+      await renderUsageBars();
       loadApiKeys();
       loadSpendingLimits();
       loadSecurityEvents();
@@ -1340,10 +1341,18 @@
           tenants.forEach(t => {
             const opt = document.createElement('option');
             opt.value = t.tenantId;
-            opt.innerText = `${t.name} (${t.tenantId.substring(0, 8)}...)`;
+            opt.innerText = t.name;
             sel.appendChild(opt);
           });
-          if (tenants.length > 0) currentTenantId = tenants[0].tenantId;
+          if (tenants.length > 0) {
+            const match = tenants.find(t => t.tenantId === currentTenantId);
+            if (match) {
+              sel.value = currentTenantId;
+            } else {
+              currentTenantId = tenants[0].tenantId;
+              sel.value = currentTenantId;
+            }
+          }
         }
       } catch (err) {
         console.warn('Using offline mock organizations');
@@ -1419,17 +1428,29 @@
     }
 
     // Render Request Volume Bars
-    function renderUsageBars() {
+    async function renderUsageBars() {
       const container = document.getElementById('chart-bars');
       container.innerHTML = '';
-      const counts = [12, 18, 25, 42, 38, 55, 68, 72, 85, 94, 110, 105, 98, 87, 92, 115, 128, 140, 135, 122, 108, 95, 118, 145];
-      const max = Math.max(...counts);
+      let counts = [];
+      try {
+        const res = await fetch(`/v1/dashboard/analytics/usage-chart?tenantId=${currentTenantId}&timeframe=24h`);
+        if (res.ok) {
+          const points = await res.json();
+          counts = points.map(p => p.requests);
+        }
+      } catch (e) {}
+
+      if (!counts || counts.length === 0) {
+        counts = [12, 18, 25, 42, 38, 55, 68, 72, 85, 94, 110, 105, 98, 87, 92, 115, 128, 140, 135, 122, 108, 95, 118, 145];
+      }
+      const max = Math.max(...counts, 1);
       counts.forEach((val, i) => {
         const bar = document.createElement('div');
         bar.style.flex = '1';
         bar.style.background = i === counts.length - 1 ? '#38BDF8' : 'rgba(56, 189, 248, 0.4)';
-        bar.style.height = `${(val / max) * 100}%`;
+        bar.style.height = `${Math.max(6, (val / max) * 100)}%`;
         bar.style.borderRadius = '3px 3px 0 0';
+        bar.style.transition = 'all 0.3s ease';
         bar.title = `${val} reqs/hr`;
         container.appendChild(bar);
       });

@@ -660,9 +660,6 @@ Orvix/
 ├── stop_services.bat        # Windows cluster shutdown
 ├── smoke_test.ps1           # Live end-to-end smoke test
 ├── assets/                  # Animated README graphics
-├── dashboard/               # Production commercial developer platform console
-│   ├── index.html           # Dark-mode enterprise UI (Apple/NVIDIA/Vercel palette)
-│   └── serve.py             # Lightweight standalone preview server
 ├── benchmark/
 │   ├── k6-load-test.js      # Distributed k6 multi-tenant load test
 │   ├── run-comprehensive-benchmark.py # Multi-phase independent benchmark runner

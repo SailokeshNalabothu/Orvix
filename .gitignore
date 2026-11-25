@@ -84,6 +84,12 @@ heapdump*
 **/nbproject/load-context.properties
 **/nbproject/genfiles.properties
 
+### Python Artifacts ###
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+
 ### OS Generated Files ###
 Thumbs.db
 ehthumbs.db

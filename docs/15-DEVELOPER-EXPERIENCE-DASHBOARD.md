@@ -33,7 +33,7 @@ Organizations adopting Orvix must be able to:
 ```
 ┌─────────────────────────────────────────────────────────────────────────────┐
 │                       ORVIX DEVELOPER PLATFORM UI                           │
-│     (Hosted at http://localhost:8080/dashboard or standalone port 3000)     │
+│               (Hosted natively at http://localhost:8080/dashboard)          │
 │   Obsidian Slate (#0B0F19), NVIDIA Emerald (#10B981), Sky Cyan (#38BDF8)    │
 └──────────────────────────────────────┬──────────────────────────────────────┘
                                        │ REST / JSON (CORS Enabled)
@@ -199,10 +199,7 @@ python benchmark/start_cluster.py --restart
 python benchmark/verify-developer-dashboard.py
 
 # 3. Access the Live Commercial Dashboard in any browser:
-# Native Gateway Endpoint:
+# Native Gateway Endpoints:
 http://localhost:8080/dashboard
-
-# Or run the standalone dashboard preview server:
-python dashboard/serve.py 3000
-http://localhost:3000
+http://localhost:8080/
 ```
