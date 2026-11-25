@@ -160,4 +160,23 @@ public class GatewayController {
             super(message);
         }
     }
+
+    @GetMapping("/system/mesh")
+    public ResponseEntity<java.util.Map<String, String>> getSystemMesh() {
+        java.util.Map<String, String> mesh = new java.util.LinkedHashMap<>();
+        mesh.put("gateway", "UP");
+        mesh.put("guardrail", isPortListening("localhost", 8081) ? "UP" : "DOWN");
+        mesh.put("cache", isPortListening("localhost", 8082) ? "UP" : "DOWN");
+        mesh.put("billing", isPortListening("localhost", 8083) ? "UP" : "DOWN");
+        return ResponseEntity.ok(mesh);
+    }
+
+    private boolean isPortListening(String host, int port) {
+        try (var socket = new java.net.Socket()) {
+            socket.connect(new java.net.InetSocketAddress(host, port), 200);
+            return true;
+        } catch (Exception e) {
+            return false;
+        }
+    }
 }

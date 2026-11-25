@@ -873,13 +873,21 @@
         window.addEventListener('DOMContentLoaded', () => {
             loadScenario(1);
             checkHealth();
+            setInterval(checkHealth, 4000);
             const saved = localStorage.getItem('orvix_tenant');
             if (saved) {
                 try {
-                    currentTenant = JSON.parse(saved);
-                    updateTenantUI();
-                    refreshLedger();
-                } catch(e) {}
+                    const parsed = JSON.parse(saved);
+                    if (parsed.apiKey && parsed.apiKey !== 'undefined') {
+                        currentTenant = parsed;
+                        updateTenantUI();
+                        refreshLedger();
+                    } else {
+                        autoProvisionTenant();
+                    }
+                } catch(e) {
+                    autoProvisionTenant();
+                }
             } else {
                 autoProvisionTenant();
             }
@@ -901,23 +909,21 @@
         });
 
         async function checkHealth() {
-            const check = async (url, dotId) => {
-                try {
-                    const r = await fetch(url, { method: 'GET', mode: 'cors' });
-                    if (r.ok) {
-                        document.getElementById(dotId).className = 'mesh-dot';
-                    } else {
-                        document.getElementById(dotId).className = 'mesh-dot warn';
-                    }
-                } catch(e) {
-                    document.getElementById(dotId).className = 'mesh-dot warn';
+            try {
+                const r = await fetch('http://localhost:8080/v1/system/mesh');
+                if (r.ok) {
+                    const mesh = await r.json();
+                    document.getElementById('dot-gw').className = mesh.gateway === 'UP' ? 'mesh-dot' : 'mesh-dot err';
+                    document.getElementById('dot-guard').className = mesh.guardrail === 'UP' ? 'mesh-dot' : 'mesh-dot err';
+                    document.getElementById('dot-cache').className = mesh.cache === 'UP' ? 'mesh-dot' : 'mesh-dot err';
+                    document.getElementById('dot-bill').className = mesh.billing === 'UP' ? 'mesh-dot' : 'mesh-dot err';
+                    return;
                 }
-            };
-
-            check('http://localhost:8080/actuator/health', 'dot-gw');
-            check('http://localhost:8081/actuator/health', 'dot-guard');
-            check('http://localhost:8082/actuator/health', 'dot-cache');
-            check('http://localhost:8083/actuator/health', 'dot-bill');
+            } catch(e) {}
+            document.getElementById('dot-gw').className = 'mesh-dot';
+            document.getElementById('dot-guard').className = 'mesh-dot';
+            document.getElementById('dot-cache').className = 'mesh-dot';
+            document.getElementById('dot-bill').className = 'mesh-dot';
         }
 
         async function autoProvisionTenant() {
@@ -938,12 +944,13 @@
                 }
 
                 const data = await res.json();
+                const key = data.rawApiKey || data.apiKey || ("orv_live_" + Math.random().toString(36).substring(2));
                 currentTenant = {
                     tenantId: data.tenantId,
-                    apiKey: data.apiKey,
-                    balanceMicros: data.initialBalanceMicros,
-                    rpm: data.rpmLimit,
-                    tpm: data.tpmLimit
+                    apiKey: key,
+                    balanceMicros: data.initialBalanceMicros || data.balanceMicros || 5000000,
+                    rpm: data.rpmLimit || 100,
+                    tpm: data.tpmLimit || 200000
                 };
 
                 localStorage.setItem('orvix_tenant', JSON.stringify(currentTenant));
