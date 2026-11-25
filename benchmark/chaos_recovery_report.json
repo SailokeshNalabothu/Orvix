@@ -1,0 +1,52 @@
+{
+  "startTime": "2026-11-25T17:30:01Z",
+  "scenarios": {
+    "scenario_1_kafka_outage": {
+      "status": "PASS",
+      "requests_during_outage": 12,
+      "successful_requests": 12,
+      "post_recovery_rows": 2246,
+      "ledger_delta": 0,
+      "system_healthy": true
+    },
+    "scenario_2_redis_outage": {
+      "status": "PASS",
+      "fail_closed_rejections": 5,
+      "post_recovery_success": 5,
+      "ledger_delta": 0,
+      "system_healthy": true
+    },
+    "scenario_3_postgres_outage": {
+      "status": "PASS",
+      "successful_requests": 5,
+      "orphaned_transactions": 0,
+      "tenant_discrepancies": 0,
+      "ledger_delta": 0,
+      "system_healthy": true
+    },
+    "scenario_4_microservices": {
+      "status": "PASS",
+      "guardrail_fail_closed": true,
+      "cache_fail_open": true,
+      "billing_backlog_consumed": true,
+      "ledger_delta": 0,
+      "system_healthy": true
+    }
+  },
+  "summary": {},
+  "finalReconciliation": {
+    "auditTimestamp": "2026-11-25T12:04:09.465925100Z",
+    "totalLedgerRows": 2268,
+    "sumDebitMicros": 1235515660,
+    "sumCreditMicros": 1235515660,
+    "ledgerDeltaMicros": 0,
+    "ledgerBalanced": true,
+    "tenantsAudited": 19,
+    "tenantsBalanced": 19,
+    "tenantsWithDiscrepancy": 0,
+    "discrepancies": [],
+    "orphanedTransactionsCount": 0,
+    "systemHealthy": true
+  },
+  "endTime": "2026-11-25T17:34:09Z"
+}

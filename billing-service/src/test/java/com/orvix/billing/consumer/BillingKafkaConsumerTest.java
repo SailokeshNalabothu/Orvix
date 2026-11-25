@@ -78,7 +78,7 @@ class BillingKafkaConsumerTest {
                 Instant.now()
         );
 
-        doThrow(new RuntimeException("Database timeout or corrupted payload"))
+        doThrow(new IllegalArgumentException("Corrupted payload: negative token counts"))
                 .when(ledgerService).recordUsageDebit(any());
 
         consumer.consumeUsageEvent(event, acknowledgment);
@@ -86,5 +86,34 @@ class BillingKafkaConsumerTest {
         verify(ledgerService).recordUsageDebit(event);
         verify(kafkaTemplate).send(eq("orvix.usage.dlq"), eq("ten-poison"), any(String.class));
         verify(acknowledgment).acknowledge();
+    }
+
+    @Test
+    @DisplayName("Kafka Consumer: Rethrow without ACK when transient database connection failure occurs")
+    void shouldRethrowWithoutAckWhenTransientDatabaseError() {
+        UsageRecordedEvent event = new UsageRecordedEvent(
+                "evt_db_down",
+                "trace_db_err",
+                "ten-normal",
+                "req_db",
+                "openai",
+                "gpt-4o",
+                false,
+                100,
+                50,
+                Instant.now()
+        );
+
+        doThrow(new RuntimeException("Could not open connection to PostgreSQL: Connection refused"))
+                .when(ledgerService).recordUsageDebit(any());
+
+        org.junit.jupiter.api.Assertions.assertThrows(
+                RuntimeException.class,
+                () -> consumer.consumeUsageEvent(event, acknowledgment)
+        );
+
+        verify(ledgerService).recordUsageDebit(event);
+        verifyNoInteractions(acknowledgment);
+        verifyNoInteractions(kafkaTemplate);
     }
 }

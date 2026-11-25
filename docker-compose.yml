@@ -115,6 +115,19 @@ services:
     extra_hosts:
       - "host.docker.internal:host-gateway"
 
+  # =====================================================================
+  # Toxiproxy (Chaos Engineering & Network Fault Injection Engine)
+  # =====================================================================
+  toxiproxy:
+    image: ghcr.io/shopify/toxiproxy:2.9.0
+    container_name: orvix-toxiproxy
+    restart: unless-stopped
+    ports:
+      - "8474:8474"   # Toxiproxy REST Management API
+      - "25432:25432" # Proxied PostgreSQL port
+      - "26379:26379" # Proxied Redis port
+      - "29092:29092" # Proxied Kafka port
+
 volumes:
   postgres_data:
   redis_data:

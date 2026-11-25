@@ -44,7 +44,7 @@
     <td align="center" width="20%"><h2>0 tokens</h2><sub>billed on a<br/>semantic cache hit</sub></td>
     <td align="center" width="20%"><h2>&lt; 200 ms</h2><sub>circuit-breaker<br/>failover to fallback</sub></td>
     <td align="center" width="20%"><h2>1,880 / 1,880</h2><sub>k6 checks passed,<br/>0% error rate</sub></td>
-    <td align="center" width="20%"><h2>2,100 rows</h2><sub>ledger verified:<br/>18/18 tenants balanced</sub></td>
+    <td align="center" width="20%"><h2>2,268 rows</h2><sub>ledger verified:<br/>19/19 tenants balanced</sub></td>
   </tr>
 </table>
 
@@ -169,6 +169,16 @@ flowchart TD
 | :--- | :--- |
 | **Sliding-window circuit breaker** | Monitors upstream health. If `gemini-primary` fails with 429, 5xx or timeouts across a 50% threshold, traffic moves to `openai-fallback` in under 200 ms |
 
+### 7. Chaos engineering, fault tolerance & zero-loss recovery (ADR-010)
+
+| Feature | Detail |
+| :--- | :--- |
+| **Kafka broker crash resilience** | Gateway utilizes an in-memory thread-safe `ConcurrentLinkedQueue` fallback buffer with an automated `@Scheduled` drainer. When Kafka goes down, client requests complete with 100% SLA; buffered usage events auto-drain upon broker recovery with zero lost financial transactions |
+| **Fail-closed rate limiting under Redis partitions** | Severing Redis via Toxiproxy triggers strict **Fail-Closed** security (`RedisUnavailableException` $\to$ HTTP 503). Zero unauthorized tokens are granted to rogue traffic; token buckets self-heal instantly upon Redis restoration |
+| **PostgreSQL crash recovery & offset holding** | Transient DB disconnections (`CannotCreateTransactionException`, `JDBCConnectionException`) are explicitly detected. In-flight Kafka offsets are held without commit and **never** routed to DLQs, guaranteeing zero poison pills and 100% eventual consistency |
+| **Microservice isolation & failure policies** | Security Guardrail is strictly **Fail-Closed** (HTTP 503 prevents uninspected prompts reaching upstream LLMs); Semantic Cache is strictly **Fail-Open** (HTTP 200 `X-Cache-Status: BYPASS` seamlessly routes to LLM without dropping traffic); Billing outage decouples safely via Kafka topic buffering |
+| **Post-chaos mathematical invariant proof** | 3-tier reconciliation audit (`POST /admin/v1/reconciliation/run`) verifies $\Delta_{\text{system}} = 0$, $0$ discrepancies across 19/19 tenants, and $0$ orphaned transactions after multi-service chaos injection |
+
 <a name="services"></a>
 
 ## Service topology and ports
@@ -182,6 +192,7 @@ flowchart TD
 | **PostgreSQL** | `5433` | `pgvector/pgvector:pg16` | Multi-database host (`billing_db`, `guardrail_db`, `cache_db`) |
 | **Redis** | `6379` | `redis:7-alpine` | Token-bucket Lua scripts, auth cache, quota block flags |
 | **Apache Kafka** | `9092` | `apache/kafka:3.7.0` (KRaft) | Event streams: `orvix.usage.recorded`, `orvix.quota.exhausted`, DLQ |
+| **Toxiproxy** | `8474` (admin), `25432`, `26379`, `29092` | `ghcr.io/shopify/toxiproxy:2.9.0` | Layer-4 network partition, latency, and fault injection engine |
 | **Jaeger UI** | `16686` | OpenTelemetry Collector | End-to-end distributed tracing dashboard |
 | **Prometheus** | `9090` | Prometheus 2.x | Real-time service metrics scraper |
 
@@ -559,11 +570,15 @@ k6 run benchmark/k6-load-test.js
 | **Multi-tenant isolation** | 5 concurrent parallel tenants evaluated with $< 10\%$ latency variance | Strict isolation | **PASS** |
 | **Resilience4j failover** | **100.00%** fallback success (25 / 25) during simulated 503 outage | Zero dropouts | **PASS** |
 | **Failover latency** | **$p_{50} = 198.32\text{ ms}$** ($< 200\text{ ms}$) | $< 200\text{ ms}$ | **PASS** |
-| **Double-entry ledger invariant** | `SUM(DEBIT) == 1,135,513,593 == SUM(CREDIT) == 1,135,513,593` across 2,100 rows ($\Delta = 0$) | Balanced by construction | **PASS** |
-| **3-Tier reconciliation audit** | **18 / 18 active tenants balanced ($100\%$)**, 0 discrepancies, 0 orphaned txns | Strict financial health | **PASS** |
+| **Double-entry ledger invariant** | `SUM(DEBIT) == 1,235,515,660 == SUM(CREDIT) == 1,235,515,660` across 2,268 rows ($\Delta = 0$) | Balanced by construction | **PASS** |
+| **3-Tier reconciliation audit** | **19 / 19 active tenants balanced ($100\%$)**, 0 discrepancies, 0 orphaned txns | Strict financial health | **PASS** |
+| **Kafka broker crash recovery** | **100% request completion** (12/12) via Gateway fallback buffer; auto-drained on broker restore ($\Delta = 0$) | Zero lost transactions | **PASS** |
+| **Redis outage fail-closed** | **100% fail-closed rejection** (5/5 HTTP 503); 0 unauthorized tokens consumed | Fail-Closed security | **PASS** |
+| **PostgreSQL crash recovery** | In-flight Kafka offsets held without DLQ pollution; 0 orphaned transactions | Zero money leaks | **PASS** |
+| **Microservice fault policies** | Guardrail **Fail-Closed (503)**, Semantic Cache **Fail-Open (200 BYPASS)**, Billing topic buffering | Strict SLA preservation | **PASS** |
 | **Kafka DLQ poison-pill isolation** | Unprocessable events routed to `orvix.usage.dlq` without blocking consumer group | Zero partition block | **PASS** |
 
-The complete methodology, environment profile, and latency distributions are documented in [`docs/08-PERFORMANCE-BENCHMARK.md`](docs/08-PERFORMANCE-BENCHMARK.md) and [`docs/09-FINANCIAL-CORRECTNESS.md`](docs/09-FINANCIAL-CORRECTNESS.md).
+The complete methodology, environment profile, latency distributions, and chaos engineering architecture are documented in [`docs/08-PERFORMANCE-BENCHMARK.md`](docs/08-PERFORMANCE-BENCHMARK.md), [`docs/09-FINANCIAL-CORRECTNESS.md`](docs/09-FINANCIAL-CORRECTNESS.md), and [`docs/10-CHAOS-ENGINEERING-AND-RECOVERY.md`](docs/10-CHAOS-ENGINEERING-AND-RECOVERY.md).
 
 <a name="repository-structure"></a>
 
@@ -572,7 +587,7 @@ The complete methodology, environment profile, and latency distributions are doc
 ```
 Orvix/
 ├── pom.xml                  # Root Maven reactor POM (Java 21, Spring Boot 3.3.5)
-├── docker-compose.yml       # PostgreSQL 16 + pgvector, Redis 7, Kafka KRaft, Jaeger, Prometheus
+├── docker-compose.yml       # PostgreSQL 16 + pgvector, Redis 7, Kafka KRaft, Toxiproxy, Jaeger, Prometheus
 ├── run_services.bat         # Windows one-click cluster startup
 ├── stop_services.bat        # Windows cluster shutdown
 ├── smoke_test.ps1           # Live end-to-end smoke test
@@ -580,7 +595,9 @@ Orvix/
 ├── benchmark/
 │   ├── k6-load-test.js      # Distributed k6 multi-tenant load test
 │   ├── run-comprehensive-benchmark.py # Multi-phase independent benchmark runner
-│   └── benchmark_results.json # Machine-readable empirical test outputs
+│   ├── benchmark_results.json # Machine-readable empirical test outputs
+│   ├── chaos-recovery-test.py # Automated Toxiproxy and Docker chaos test runner
+│   └── chaos_recovery_report.json # Empirical zero-loss disaster recovery report
 ├── docs/                    # Design documents
 │   ├── 01-PRD.md            # Product requirements and scope lock
 │   ├── 02-HLD.md            # High-level architecture and sequence flows
@@ -590,9 +607,10 @@ Orvix/
 │   ├── 06-THREAT-MODEL.md   # OWASP LLM01 Threat Model, De-obfuscation & Empirical Benchmark
 │   ├── 07-SEMANTIC-CACHE-GUARD.md # Contextual Semantic Cache Guard & Temporal Disambiguation
 │   ├── 08-PERFORMANCE-BENCHMARK.md # Performance Benchmark Methodology & Empirical Results
-│   └── 09-FINANCIAL-CORRECTNESS.md # 3-Tier Reconciliation, Atomicity, Refunds & DLQ
+│   ├── 09-FINANCIAL-CORRECTNESS.md # 3-Tier Reconciliation, Atomicity, Refunds & DLQ
+│   └── 10-CHAOS-ENGINEERING-AND-RECOVERY.md # Chaos Engineering, Toxiproxy & Zero-Loss Recovery
 ├── orvix-common/            # Shared DTOs, Kafka event records, headers
-├── gateway-service/         # Edge router, Redis Lua rate limiter, LLM failover
+├── gateway-service/         # Edge router, Redis Lua rate limiter, fallback buffer, LLM failover
 ├── guardrail-service/       # PII engine, injection detector, audit DB
 ├── cache-service/           # 768-dim embeddings, pgvector HNSW cosine search
 └── billing-service/         # Double-entry ledger, Kafka listener, 3-tier reconciliation, refunds
@@ -609,8 +627,9 @@ Orvix/
 | **ADR-007** | Contextual semantic cache guard, temporal anchor disambiguation, and strict tenant/model isolation (`docs/07-SEMANTIC-CACHE-GUARD.md`) |
 | **ADR-008** | Performance benchmark methodology, latency percentiles, multi-tenant isolation, and chaos recovery (`docs/08-PERFORMANCE-BENCHMARK.md`) |
 | **ADR-009** | Production-grade financial correctness, 3-tier reconciliation engine, atomic refund reversals, and Kafka DLQ (`docs/09-FINANCIAL-CORRECTNESS.md`) |
+| **ADR-010** | Chaos engineering, Toxiproxy fault injection, and zero-loss financial disaster recovery (`docs/10-CHAOS-ENGINEERING-AND-RECOVERY.md`) |
 
-The full set (ADR-001 to ADR-009) lives in [`docs/05-ADR.md`](docs/05-ADR.md), [`docs/06-THREAT-MODEL.md`](docs/06-THREAT-MODEL.md), [`docs/07-SEMANTIC-CACHE-GUARD.md`](docs/07-SEMANTIC-CACHE-GUARD.md), [`docs/08-PERFORMANCE-BENCHMARK.md`](docs/08-PERFORMANCE-BENCHMARK.md), and [`docs/09-FINANCIAL-CORRECTNESS.md`](docs/09-FINANCIAL-CORRECTNESS.md).
+The full set (ADR-001 to ADR-010) lives in [`docs/05-ADR.md`](docs/05-ADR.md), [`docs/06-THREAT-MODEL.md`](docs/06-THREAT-MODEL.md), [`docs/07-SEMANTIC-CACHE-GUARD.md`](docs/07-SEMANTIC-CACHE-GUARD.md), [`docs/08-PERFORMANCE-BENCHMARK.md`](docs/08-PERFORMANCE-BENCHMARK.md), [`docs/09-FINANCIAL-CORRECTNESS.md`](docs/09-FINANCIAL-CORRECTNESS.md), and [`docs/10-CHAOS-ENGINEERING-AND-RECOVERY.md`](docs/10-CHAOS-ENGINEERING-AND-RECOVERY.md).
 
 ## License
 

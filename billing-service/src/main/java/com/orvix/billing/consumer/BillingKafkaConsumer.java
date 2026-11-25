@@ -34,6 +34,12 @@ public class BillingKafkaConsumer {
                 ack.acknowledge();
             }
         } catch (Exception ex) {
+            if (isTransientDatabaseError(ex)) {
+                log.warn("Transient database connectivity failure for event: id={}. Pausing offset commit to allow recovery: {}",
+                        event.event_id(), ex.getMessage());
+                throw new RuntimeException("Transient DB failure, backing off for recovery", ex);
+            }
+
             log.error("Permanent failure processing UsageRecordedEvent: id={}. Routing to DLQ topic '{}'",
                     event.event_id(), TOPIC_USAGE_DLQ, ex);
             try {
@@ -52,5 +58,28 @@ public class BillingKafkaConsumer {
                 ack.acknowledge(); // Acknowledge poison pill to prevent head-of-line partition blocking
             }
         }
+    }
+
+    public static boolean isTransientDatabaseError(Throwable t) {
+        int depth = 0;
+        while (t != null && depth < 10) {
+            String msg = t.getMessage() != null ? t.getMessage().toLowerCase() : "";
+            String cls = t.getClass().getName().toLowerCase();
+            if (cls.contains("cannotcreatetransaction") ||
+                    cls.contains("transientdataaccess") ||
+                    cls.contains("jdbcconnection") ||
+                    cls.contains("connectexception") ||
+                    cls.contains("socketexception") ||
+                    msg.contains("connection refused") ||
+                    msg.contains("the connection attempt failed") ||
+                    msg.contains("terminating connection") ||
+                    msg.contains("could not open connection") ||
+                    msg.contains("database system is shutting down")) {
+                return true;
+            }
+            t = t.getCause();
+            depth++;
+        }
+        return false;
     }
 }
