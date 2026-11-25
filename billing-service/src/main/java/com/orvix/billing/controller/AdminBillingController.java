@@ -1,6 +1,7 @@
 package com.orvix.billing.controller;
 
 import com.orvix.billing.service.DoubleEntryLedgerService;
+import com.orvix.billing.service.ReconciliationService;
 import com.orvix.billing.service.TenantAdminService;
 import com.orvix.common.contract.dto.*;
 import jakarta.validation.Valid;
@@ -17,6 +18,7 @@ public class AdminBillingController {
 
     private final TenantAdminService adminService;
     private final DoubleEntryLedgerService ledgerService;
+    private final ReconciliationService reconciliationService;
 
     @PostMapping("/tenants")
     public ResponseEntity<CreateTenantResponse> createTenant(
@@ -45,5 +47,28 @@ public class AdminBillingController {
     ) {
         LedgerPageResponse response = adminService.getLedger(tenantId, page, size);
         return ResponseEntity.ok(response);
+    }
+
+    @PostMapping("/tenants/{tenantId}/refunds")
+    public ResponseEntity<RefundResponse> processRefund(
+            @PathVariable("tenantId") String tenantId,
+            @Valid @RequestBody RefundRequest request
+    ) {
+        RefundResponse response = ledgerService.processRefund(
+                tenantId, request.referenceTransactionId(), request.amountMicros(), request.reason()
+        );
+        return ResponseEntity.ok(response);
+    }
+
+    @PostMapping("/reconciliation/run")
+    public ResponseEntity<ReconciliationReport> runReconciliation() {
+        ReconciliationReport report = reconciliationService.runAudit();
+        return ResponseEntity.ok(report);
+    }
+
+    @GetMapping("/reconciliation/report")
+    public ResponseEntity<ReconciliationReport> getReconciliationReport() {
+        ReconciliationReport report = reconciliationService.getLastReport();
+        return ResponseEntity.ok(report);
     }
 }

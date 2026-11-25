@@ -1,10 +1,12 @@
 package com.orvix.billing.consumer;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.orvix.billing.service.DoubleEntryLedgerService;
 import com.orvix.common.contract.event.UsageRecordedEvent;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.kafka.annotation.KafkaListener;
+import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.kafka.support.Acknowledgment;
 import org.springframework.stereotype.Component;
 
@@ -13,7 +15,11 @@ import org.springframework.stereotype.Component;
 @Slf4j
 public class BillingKafkaConsumer {
 
+    public static final String TOPIC_USAGE_DLQ = "orvix.usage.dlq";
+
     private final DoubleEntryLedgerService ledgerService;
+    private final KafkaTemplate<String, Object> kafkaTemplate;
+    private final ObjectMapper objectMapper;
 
     @KafkaListener(
             topics = "orvix.usage.recorded",
@@ -28,8 +34,23 @@ public class BillingKafkaConsumer {
                 ack.acknowledge();
             }
         } catch (Exception ex) {
-            log.error("Failed to process UsageRecordedEvent: id={}", event.event_id(), ex);
-            throw ex; // Triggers Spring Kafka retry and DLQ routing
+            log.error("Permanent failure processing UsageRecordedEvent: id={}. Routing to DLQ topic '{}'",
+                    event.event_id(), TOPIC_USAGE_DLQ, ex);
+            try {
+                String payload;
+                try {
+                    payload = (objectMapper != null) ? objectMapper.writeValueAsString(event) : event.toString();
+                } catch (Exception serEx) {
+                    payload = event.toString();
+                }
+                kafkaTemplate.send(TOPIC_USAGE_DLQ, event.tenant_id(), payload);
+                log.info("Successfully routed unprocessable event to DLQ: id={}", event.event_id());
+            } catch (Exception dlqEx) {
+                log.error("Critical: Failed to publish event to DLQ: id={}", event.event_id(), dlqEx);
+            }
+            if (ack != null) {
+                ack.acknowledge(); // Acknowledge poison pill to prevent head-of-line partition blocking
+            }
         }
     }
 }

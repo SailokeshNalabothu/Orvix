@@ -44,7 +44,7 @@
     <td align="center" width="20%"><h2>0 tokens</h2><sub>billed on a<br/>semantic cache hit</sub></td>
     <td align="center" width="20%"><h2>&lt; 200 ms</h2><sub>circuit-breaker<br/>failover to fallback</sub></td>
     <td align="center" width="20%"><h2>1,880 / 1,880</h2><sub>k6 checks passed,<br/>0% error rate</sub></td>
-    <td align="center" width="20%"><h2>2,098 rows</h2><sub>ledger verified:<br/>debits equal credits</sub></td>
+    <td align="center" width="20%"><h2>2,100 rows</h2><sub>ledger verified:<br/>18/18 tenants balanced</sub></td>
   </tr>
 </table>
 
@@ -151,14 +151,17 @@ flowchart TD
 | **Strict tenant & model isolation** | Cache lookups and storage are strictly partitioned by `tenant_id` and `model` namespace, preventing cross-tenant leakage and model contamination |
 | **Zero-token cache hits** | Verified paraphrases (*"What is CAP theorem?"* and *"Explain CAP theorem in distributed systems"*) resolve in < 20ms with **0 LLM tokens billed** |
 
-### 5. Asynchronous double-entry FinOps engine (ADR-002 and ADR-003)
+### 5. Production-grade FinOps billing, 3-tier reconciliation & atomic refunds (ADR-002, ADR-003, ADR-009)
 
 | Feature | Detail |
 | :--- | :--- |
-| **64-bit micro-dollar precision** | All currency is stored as integer micro-dollars (1 USD = 1,000,000 µ$), which removes floating-point rounding drift |
-| **Strict double-entry invariant** | Every usage event writes balanced ledger rows, debiting `TENANT_WALLET` and crediting `PLATFORM_REVENUE`, so `SUM(DEBIT) == SUM(CREDIT)` always holds |
-| **Idempotent Kafka consumer** | Events are deduplicated against `processed_events` through primary-key constraints |
-| **Optimistic concurrency control** | Wallet balances are protected by `@Version` fields and `@Retryable` backoff, which prevents lost updates during concurrent spikes |
+| **64-bit micro-dollar precision** | All currency is stored as integer micro-dollars (1 USD = 1,000,000 µ$), which completely removes floating-point IEEE-754 rounding drift |
+| **Strict double-entry invariant** | Every billing and top-up event writes balanced double-entry rows (`SUM(DEBIT) == SUM(CREDIT)`), debiting `TENANT_WALLET` and crediting `PLATFORM_REVENUE` |
+| **3-Tier mathematical reconciliation** | Automated audit engine (`POST /admin/v1/reconciliation/run`) verifies Tier 1: global ledger invariance ($\Delta = 0$), Tier 2: per-tenant wallet balance vs. ledger integral, and Tier 3: zero orphaned/unbalanced transactions |
+| **Atomic dispute & SLA refunds** | Production refund state machine (`POST /admin/v1/tenants/{tenantId}/refunds`) performs double-entry reversal (`DEBIT PLATFORM_REVENUE`, `CREDIT TENANT_WALLET`) and automatically clears Redis quota block flags |
+| **Idempotent Kafka consumer** | Events are deduplicated against `processed_events` within the same atomic transaction, guaranteeing exactly-once billing semantics |
+| **Dead-Letter Queue (DLQ) isolation** | Corrupted or poison-pill payloads are safely routed to Kafka topic `orvix.usage.dlq` with offset acknowledgment, eliminating head-of-line partition blocking |
+| **Optimistic concurrency control** | Wallet balances are protected by JPA `@Version` and `@Retryable` backoff, preventing lost updates during concurrent spikes |
 
 ### 6. Automated upstream failover (Resilience4j)
 
@@ -453,6 +456,73 @@ Every transaction has a matching debit and credit, so the ledger always balances
 
 </details>
 
+<details>
+<summary><b>7. Run 3-tier financial reconciliation audit (ADR-009)</b></summary>
+
+<br/>
+
+```bash
+curl -X POST http://localhost:8083/admin/v1/reconciliation/run
+```
+
+**Audit response**
+
+```json
+{
+  "auditTimestamp": "2026-11-25T11:08:30.693930100Z",
+  "totalLedgerRows": 2100,
+  "sumDebitMicros": 1135513593,
+  "sumCreditMicros": 1135513593,
+  "ledgerDeltaMicros": 0,
+  "ledgerBalanced": true,
+  "tenantsAudited": 18,
+  "tenantsBalanced": 18,
+  "tenantsWithDiscrepancy": 0,
+  "discrepancies": [],
+  "orphanedTransactionsCount": 0,
+  "systemHealthy": true
+}
+```
+
+> The mathematical audit engine verifies:
+> 1. **Tier 1 (Global):** $\sum \text{DEBIT} == \sum \text{CREDIT} == 1,135,513,593\ \mu\$$ ($\Delta = 0$).
+> 2. **Tier 2 (Per-Tenant):** Every tenant wallet balance matches the integral of its ledger entries.
+> 3. **Tier 3 (Transaction):** 0 orphaned or unbalanced transactions.
+
+</details>
+
+<details>
+<summary><b>8. Execute atomic SLA refund & quota unblocking (ADR-009)</b></summary>
+
+<br/>
+
+```bash
+curl -X POST http://localhost:8083/admin/v1/tenants/ten_156c4067ad834232/refunds \
+  -H "Content-Type: application/json" \
+  -d '{
+    "referenceTransactionId": "tx_sla_timeout_01",
+    "amountMicros": 500000,
+    "reason": "SLA Breach Compensation"
+  }'
+```
+
+**Response**
+
+```json
+{
+  "tenantId": "ten_156c4067ad834232",
+  "refundTransactionId": "ref_9a4e7766-04c6-4283-8008-41a9a86c263b",
+  "refundedAmountMicros": 500000,
+  "previousBalanceMicros": 14999877,
+  "newBalanceMicros": 15499877,
+  "createdAt": "2026-11-25T11:08:28.922152Z"
+}
+```
+
+> The refund creates an atomic reversal entry (`DEBIT PLATFORM_REVENUE`, `CREDIT TENANT_WALLET`), restores tenant credits from \$14.99 to \$15.49, and automatically clears the Redis quota block key (`orvix:quota:exhausted:{tenantId}`) if the wallet was previously exhausted.
+
+</details>
+
 <a name="benchmarks"></a>
 
 ## Benchmarks and verification
@@ -463,7 +533,7 @@ Every transaction has a matching debit and credit, so the ledger always balances
 powershell -ExecutionPolicy Bypass -File .\smoke_test.ps1
 ```
 
-The script verifies the tenant lifecycle, clean completions, semantic cache hits, PII sanitization, prompt-injection defenses, Kafka ledger balance and the real-time `HTTP 402` quota cutoff.
+The script verifies the tenant lifecycle, clean completions, semantic cache hits, PII sanitization, prompt-injection defenses, Kafka ledger balance, 3-tier reconciliation audit, and the real-time `HTTP 402` quota cutoff.
 
 ### Independent performance benchmark & chaos testing (ADR-008)
 
@@ -489,9 +559,11 @@ k6 run benchmark/k6-load-test.js
 | **Multi-tenant isolation** | 5 concurrent parallel tenants evaluated with $< 10\%$ latency variance | Strict isolation | **PASS** |
 | **Resilience4j failover** | **100.00%** fallback success (25 / 25) during simulated 503 outage | Zero dropouts | **PASS** |
 | **Failover latency** | **$p_{50} = 198.32\text{ ms}$** ($< 200\text{ ms}$) | $< 200\text{ ms}$ | **PASS** |
-| **Double-entry ledger invariant** | `SUM(DEBIT) == 1,135,013,593 == SUM(CREDIT) == 1,135,013,593` across 2,098 rows ($\Delta = 0$) | Balanced by construction | **PASS** |
+| **Double-entry ledger invariant** | `SUM(DEBIT) == 1,135,513,593 == SUM(CREDIT) == 1,135,513,593` across 2,100 rows ($\Delta = 0$) | Balanced by construction | **PASS** |
+| **3-Tier reconciliation audit** | **18 / 18 active tenants balanced ($100\%$)**, 0 discrepancies, 0 orphaned txns | Strict financial health | **PASS** |
+| **Kafka DLQ poison-pill isolation** | Unprocessable events routed to `orvix.usage.dlq` without blocking consumer group | Zero partition block | **PASS** |
 
-The complete methodology, environment profile, and latency distributions are documented in [`docs/08-PERFORMANCE-BENCHMARK.md`](docs/08-PERFORMANCE-BENCHMARK.md).
+The complete methodology, environment profile, and latency distributions are documented in [`docs/08-PERFORMANCE-BENCHMARK.md`](docs/08-PERFORMANCE-BENCHMARK.md) and [`docs/09-FINANCIAL-CORRECTNESS.md`](docs/09-FINANCIAL-CORRECTNESS.md).
 
 <a name="repository-structure"></a>
 
@@ -517,12 +589,13 @@ Orvix/
 │   ├── 05-ADR.md            # Architecture Decision Records (ADR 001 to 005)
 │   ├── 06-THREAT-MODEL.md   # OWASP LLM01 Threat Model, De-obfuscation & Empirical Benchmark
 │   ├── 07-SEMANTIC-CACHE-GUARD.md # Contextual Semantic Cache Guard & Temporal Disambiguation
-│   └── 08-PERFORMANCE-BENCHMARK.md # Performance Benchmark Methodology & Empirical Results
+│   ├── 08-PERFORMANCE-BENCHMARK.md # Performance Benchmark Methodology & Empirical Results
+│   └── 09-FINANCIAL-CORRECTNESS.md # 3-Tier Reconciliation, Atomicity, Refunds & DLQ
 ├── orvix-common/            # Shared DTOs, Kafka event records, headers
 ├── gateway-service/         # Edge router, Redis Lua rate limiter, LLM failover
 ├── guardrail-service/       # PII engine, injection detector, audit DB
 ├── cache-service/           # 768-dim embeddings, pgvector HNSW cosine search
-└── billing-service/         # Double-entry ledger, Kafka listener, credit admin
+└── billing-service/         # Double-entry ledger, Kafka listener, 3-tier reconciliation, refunds
 ```
 
 ## Architecture decision records
@@ -535,8 +608,9 @@ Orvix/
 | **ADR-006** | Multi-stage adversarial defense pipeline, de-obfuscation, and empirical benchmark (`docs/06-THREAT-MODEL.md`) |
 | **ADR-007** | Contextual semantic cache guard, temporal anchor disambiguation, and strict tenant/model isolation (`docs/07-SEMANTIC-CACHE-GUARD.md`) |
 | **ADR-008** | Performance benchmark methodology, latency percentiles, multi-tenant isolation, and chaos recovery (`docs/08-PERFORMANCE-BENCHMARK.md`) |
+| **ADR-009** | Production-grade financial correctness, 3-tier reconciliation engine, atomic refund reversals, and Kafka DLQ (`docs/09-FINANCIAL-CORRECTNESS.md`) |
 
-The full set (ADR-001 to ADR-008) lives in [`docs/05-ADR.md`](docs/05-ADR.md), [`docs/06-THREAT-MODEL.md`](docs/06-THREAT-MODEL.md), [`docs/07-SEMANTIC-CACHE-GUARD.md`](docs/07-SEMANTIC-CACHE-GUARD.md), and [`docs/08-PERFORMANCE-BENCHMARK.md`](docs/08-PERFORMANCE-BENCHMARK.md).
+The full set (ADR-001 to ADR-009) lives in [`docs/05-ADR.md`](docs/05-ADR.md), [`docs/06-THREAT-MODEL.md`](docs/06-THREAT-MODEL.md), [`docs/07-SEMANTIC-CACHE-GUARD.md`](docs/07-SEMANTIC-CACHE-GUARD.md), [`docs/08-PERFORMANCE-BENCHMARK.md`](docs/08-PERFORMANCE-BENCHMARK.md), and [`docs/09-FINANCIAL-CORRECTNESS.md`](docs/09-FINANCIAL-CORRECTNESS.md).
 
 ## License
 

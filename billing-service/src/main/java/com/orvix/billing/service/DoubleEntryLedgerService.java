@@ -5,6 +5,7 @@ import com.orvix.billing.repository.LedgerEntryRepository;
 import com.orvix.billing.repository.ProcessedEventRepository;
 import com.orvix.billing.repository.TenantWalletRepository;
 import com.orvix.common.contract.dto.CreditWalletResponse;
+import com.orvix.common.contract.dto.RefundResponse;
 import com.orvix.common.contract.event.QuotaExhaustedEvent;
 import com.orvix.common.contract.event.UsageRecordedEvent;
 import lombok.RequiredArgsConstructor;
@@ -185,6 +186,86 @@ public class DoubleEntryLedgerService {
                 amountMicros,
                 newBalance,
                 txId,
+                now
+        );
+    }
+
+    /**
+     * Atomically processes a refund for a prior transaction:
+     * 1. Validates positive refund amount and tenant wallet existence.
+     * 2. Writes double-entry reversal entries:
+     *    - DEBIT entry to PLATFORM_REVENUE (reversing collected revenue)
+     *    - CREDIT entry to TENANT_WALLET (restoring funds to customer)
+     * 3. Atomically increases materialized wallet balance with @Version optimistic locking.
+     * 4. Unblocks Redis quota block flag if wallet balance is restored above zero.
+     */
+    @Retryable(
+            retryFor = {OptimisticLockingFailureException.class},
+            maxAttempts = 5,
+            backoff = @Backoff(delay = 20, random = true)
+    )
+    @Transactional
+    public RefundResponse processRefund(String tenantId, String referenceTransactionId, long amountMicros, String reason) {
+        if (amountMicros <= 0) {
+            throw new IllegalArgumentException("Refund amount must be greater than zero");
+        }
+
+        TenantWallet wallet = walletRepository.findById(tenantId)
+                .orElseThrow(() -> new IllegalArgumentException("Wallet not found for tenant: " + tenantId));
+
+        long previousBalance = wallet.getBalanceMicros();
+        long newBalance = previousBalance + amountMicros;
+        String refundTxId = "ref_" + UUID.randomUUID();
+        Instant now = Instant.now();
+
+        // Double-entry ledger reversal rows
+        LedgerEntry revenueDebit = LedgerEntry.builder()
+                .transactionId(refundTxId)
+                .tenantId(tenantId)
+                .accountType(AccountType.PLATFORM_REVENUE)
+                .entryType(EntryType.DEBIT)
+                .amountMicros(amountMicros)
+                .referenceEventId(referenceTransactionId != null ? referenceTransactionId : "REFUND")
+                .createdAt(now)
+                .build();
+
+        LedgerEntry walletCredit = LedgerEntry.builder()
+                .transactionId(refundTxId)
+                .tenantId(tenantId)
+                .accountType(AccountType.TENANT_WALLET)
+                .entryType(EntryType.CREDIT)
+                .amountMicros(amountMicros)
+                .referenceEventId(referenceTransactionId != null ? referenceTransactionId : "REFUND")
+                .createdAt(now)
+                .build();
+
+        ledgerEntryRepository.save(revenueDebit);
+        ledgerEntryRepository.save(walletCredit);
+
+        wallet.setBalanceMicros(newBalance);
+        wallet.setUpdatedAt(now);
+        walletRepository.save(wallet);
+
+        // Clear Redis quota block flag if wallet is restored above zero
+        if (newBalance > 0 && redisTemplate != null) {
+            try {
+                redisTemplate.delete("quota:blocked:" + tenantId);
+                log.info("Cleared Redis quota block flag following refund for tenant: {}", tenantId);
+            } catch (Exception ex) {
+                log.warn("Failed to delete Redis quota block key: {}", ex.getMessage());
+            }
+        }
+
+        log.info("Processed refund of {} micro-dollars for tenant: {} (ref: {}). Previous: {}, New: {} (tx: {})",
+                amountMicros, tenantId, referenceTransactionId, previousBalance, newBalance, refundTxId);
+
+        return new RefundResponse(
+                tenantId,
+                refundTxId,
+                referenceTransactionId,
+                amountMicros,
+                previousBalance,
+                newBalance,
                 now
         );
     }

@@ -166,4 +166,51 @@ class DoubleEntryLedgerServiceTest {
         assertEquals(5000L, credit.getAmountMicros());
         assertEquals(5000L, debit.getAmountMicros());
     }
+
+    @Test
+    void shouldProcessRefundWithReversedLedgerAndRestoredWallet() {
+        TenantWallet wallet = TenantWallet.builder()
+                .tenantId("ten-1")
+                .balanceMicros(0L) // Quota blocked wallet
+                .version(2L)
+                .updatedAt(Instant.now())
+                .build();
+        when(walletRepository.findById("ten-1")).thenReturn(Optional.of(wallet));
+
+        com.orvix.common.contract.dto.RefundResponse response = ledgerService.processRefund(
+                "ten-1", "tx_orig_123", 1500L, "SERVICE_CREDIT_DISPUTE"
+        );
+
+        assertEquals(0L, response.previousBalanceMicros());
+        assertEquals(1500L, response.refundedAmountMicros());
+        assertEquals(1500L, response.newBalanceMicros());
+
+        // Verify balanced ledger entries: DEBIT platform revenue, CREDIT tenant wallet
+        ArgumentCaptor<LedgerEntry> captor = ArgumentCaptor.forClass(LedgerEntry.class);
+        verify(ledgerEntryRepository, times(2)).save(captor.capture());
+        List<LedgerEntry> entries = captor.getAllValues();
+
+        LedgerEntry debitRev = entries.stream().filter(e -> e.getEntryType() == EntryType.DEBIT).findFirst().orElseThrow();
+        LedgerEntry creditWallet = entries.stream().filter(e -> e.getEntryType() == EntryType.CREDIT).findFirst().orElseThrow();
+
+        assertEquals(AccountType.PLATFORM_REVENUE, debitRev.getAccountType());
+        assertEquals(AccountType.TENANT_WALLET, creditWallet.getAccountType());
+        assertEquals(1500L, debitRev.getAmountMicros());
+        assertEquals(1500L, creditWallet.getAmountMicros());
+
+        // Verify wallet updated
+        assertEquals(1500L, wallet.getBalanceMicros());
+        verify(walletRepository).save(wallet);
+
+        // Verify Redis quota block flag cleared because balance > 0
+        verify(redisTemplate).delete("quota:blocked:ten-1");
+    }
+
+    @Test
+    void shouldRejectInvalidRefundAmount() {
+        assertThrows(IllegalArgumentException.class, () ->
+                ledgerService.processRefund("ten-1", "tx_1", -100L, "INVALID"));
+        assertThrows(IllegalArgumentException.class, () ->
+                ledgerService.processRefund("ten-1", "tx_1", 0L, "INVALID"));
+    }
 }

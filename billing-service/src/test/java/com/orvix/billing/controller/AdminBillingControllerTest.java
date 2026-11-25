@@ -2,6 +2,7 @@ package com.orvix.billing.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.orvix.billing.service.DoubleEntryLedgerService;
+import com.orvix.billing.service.ReconciliationService;
 import com.orvix.billing.service.TenantAdminService;
 import com.orvix.common.contract.dto.*;
 import org.junit.jupiter.api.Test;
@@ -34,6 +35,9 @@ class AdminBillingControllerTest {
 
     @MockBean
     private DoubleEntryLedgerService ledgerService;
+
+    @MockBean
+    private ReconciliationService reconciliationService;
 
     @Test
     void shouldCreateTenantSuccessfully() throws Exception {
@@ -86,5 +90,40 @@ class AdminBillingControllerTest {
                 .andExpect(jsonPath("$.tenantId").value("ten_12345"))
                 .andExpect(jsonPath("$.currentBalanceMicros").value(5000000L))
                 .andExpect(jsonPath("$.entries[0].amountMicros").value(5000000L));
+    }
+
+    @Test
+    void shouldProcessRefundSuccessfully() throws Exception {
+        RefundRequest request = new RefundRequest("tx_orig_1", 50000L, "QUALITY_ISSUE");
+        RefundResponse response = new RefundResponse(
+                "ten_12345", "ref_tx_99", "tx_orig_1", 50000L, 1000000L, 1050000L, Instant.now()
+        );
+        when(ledgerService.processRefund(eq("ten_12345"), eq("tx_orig_1"), eq(50000L), eq("QUALITY_ISSUE")))
+                .thenReturn(response);
+
+        mockMvc.perform(post("/admin/v1/tenants/ten_12345/refunds")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.tenantId").value("ten_12345"))
+                .andExpect(jsonPath("$.refundTransactionId").value("ref_tx_99"))
+                .andExpect(jsonPath("$.refundedAmountMicros").value(50000L))
+                .andExpect(jsonPath("$.newBalanceMicros").value(1050000L));
+    }
+
+    @Test
+    void shouldRunReconciliationSuccessfully() throws Exception {
+        ReconciliationReport report = new ReconciliationReport(
+                Instant.now(), 500L, 2000000L, 2000000L, 0L, true,
+                10, 10, 0, List.of(), 0, true
+        );
+        when(reconciliationService.runAudit()).thenReturn(report);
+
+        mockMvc.perform(post("/admin/v1/reconciliation/run"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.systemHealthy").value(true))
+                .andExpect(jsonPath("$.ledgerBalanced").value(true))
+                .andExpect(jsonPath("$.ledgerDeltaMicros").value(0L))
+                .andExpect(jsonPath("$.tenantsAudited").value(10));
     }
 }
