@@ -8,6 +8,9 @@
 
 <br/>
 
+<a href="https://github.com/SailokeshNalabothu/Orvix/actions/workflows/ci.yml">
+  <img src="https://img.shields.io/github/actions/workflow/status/SailokeshNalabothu/Orvix/ci.yml?branch=main&style=for-the-badge&logo=githubactions&logoColor=white&label=CI" alt="CI Status"/>
+</a>
 <img src="https://img.shields.io/badge/Java-21-ED8B00?style=for-the-badge&logo=openjdk&logoColor=white" alt="Java 21"/>
 <img src="https://img.shields.io/badge/Spring_Boot-3.3.5-6DB33F?style=for-the-badge&logo=springboot&logoColor=white" alt="Spring Boot 3.3.5"/>
 <img src="https://img.shields.io/badge/Kafka-3.7_KRaft-231F20?style=for-the-badge&logo=apachekafka&logoColor=white" alt="Apache Kafka 3.7 KRaft"/>
