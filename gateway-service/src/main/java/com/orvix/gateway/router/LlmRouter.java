@@ -17,6 +17,12 @@ public class LlmRouter {
     public static final String PROVIDER_GEMINI_PRIMARY = "gemini-primary";
     public static final String PROVIDER_OPENAI_FALLBACK = "openai-fallback";
 
+    public static final String FAST_TIER = "FAST_TIER";
+    public static final String REASONING_TIER = "REASONING_TIER";
+    public static final double COMPLEXITY_THRESHOLD = 0.40;
+    public static final String MODEL_FAST = "gemini-1.5-flash";
+    public static final String MODEL_REASONING = "gemini-1.5-pro";
+
     // High-cognitive reasoning indicators (System Design, Algorithms, Code, Formal Logic)
     private static final Set<String> COMPLEXITY_KEYWORDS = new HashSet<>(Arrays.asList(
             "algorithm", "concurrent", "concurrency", "distributed", "consensus", "raft", "paxos",

@@ -24,9 +24,19 @@ public class SemanticCacheService {
 
     private final SemanticCacheRepository cacheRepository;
     private final EmbeddingService embeddingService;
+    private final ContextualMatchVerifier contextualVerifier;
+    private final CacheEligibilityEvaluator eligibilityEvaluator;
 
     @Transactional(readOnly = true)
     public CacheLookupResponse lookup(CacheLookupRequest request) {
+        // 0. Cache Eligibility Rules Check
+        var eligibility = eligibilityEvaluator.evaluate(request.prompt());
+        if (!eligibility.isEligible()) {
+            log.debug("Cache lookup bypassed: prompt ineligible [reason={}] for tenant: {}",
+                    eligibility.reason(), request.tenantId());
+            return CacheLookupResponse.ineligible(eligibility.reason());
+        }
+
         Instant now = Instant.now();
         String promptHash = PromptHasher.sha256Hex(request.prompt());
 
@@ -49,8 +59,17 @@ public class SemanticCacheService {
         );
 
         if (nearestMatch.isPresent()) {
-            log.info("Semantic cache hit (>= 0.94) for tenant: {}, model: {}", request.tenantId(), request.model());
-            return CacheLookupResponse.hit(nearestMatch.get().getResponseText(), 0.95);
+            SemanticCacheEntry candidate = nearestMatch.get();
+            // 3. Post-Vector Contextual & Temporal Equivalence Verification
+            var contextCheck = contextualVerifier.verify(request.prompt(), candidate.getPromptText());
+            if (contextCheck.matched()) {
+                log.info("Semantic cache verified hit (>= 0.94) for tenant: {}, model: {}",
+                        request.tenantId(), request.model());
+                return CacheLookupResponse.hit(candidate.getResponseText(), 0.95);
+            } else {
+                log.warn("Semantic vector match rejected by ContextualVerifier [reason={}] for tenant: {}, query='{}', cached='{}'",
+                        contextCheck.reason(), request.tenantId(), request.prompt(), candidate.getPromptText());
+            }
         }
 
         log.debug("Semantic cache miss for tenant: {}, model: {}", request.tenantId(), request.model());
@@ -59,6 +78,14 @@ public class SemanticCacheService {
 
     @Transactional
     public CacheStoreResponse store(CacheStoreRequest request) {
+        // 0. Eligibility Check: Do not cache ineligible / dynamic / stateful prompts
+        var eligibility = eligibilityEvaluator.evaluate(request.prompt());
+        if (!eligibility.isEligible()) {
+            log.debug("Cache store skipped: prompt ineligible [reason={}] for tenant: {}",
+                    eligibility.reason(), request.tenantId());
+            return new CacheStoreResponse(false, -1L);
+        }
+
         Instant now = Instant.now();
         Instant expiresAt = now.plusSeconds(request.getEffectiveTtlSeconds());
         String promptHash = PromptHasher.sha256Hex(request.prompt());
@@ -78,8 +105,8 @@ public class SemanticCacheService {
                 .build();
 
         SemanticCacheEntry saved = cacheRepository.save(entry);
-        log.info("Stored semantic cache entry ID: {} for tenant: {}, expiresAt: {}",
-                saved.getId(), saved.getTenantId(), saved.getExpiresAt());
+        log.info("Stored semantic cache entry ID: {} for tenant: {}, model: {}, expiresAt: {}",
+                saved.getId(), saved.getTenantId(), saved.getModel(), saved.getExpiresAt());
 
         return new CacheStoreResponse(true, saved.getId());
     }

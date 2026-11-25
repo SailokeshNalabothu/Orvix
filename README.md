@@ -140,13 +140,16 @@ flowchart TD
 | **Dynamic model cascading** | Prompts with $C < 0.35$ route to `FAST_TIER` (`gemini-1.5-flash`), slashing latency to sub-100ms and cost by 68%. Hard analytical queries ($C \ge 0.35$) dynamically cascade to `REASONING_TIER` (`gemini-1.5-pro`) |
 | **Telemetry & headers** | Injects `X-Prompt-Complexity`, `X-Complexity-Tier`, and `X-Routed-Model` headers on every response for full visibility |
 
-### 4. HNSW semantic caching with `pgvector` (ADR-004)
+### 4. Contextual semantic caching & disambiguation (ADR-004 and ADR-007)
 
 | Feature | Detail |
 | :--- | :--- |
-| **Dense embeddings** | Prompts become 768-dimensional normalized unit vectors |
-| **Cosine distance search** | Approximate nearest-neighbor lookup through an HNSW index, using `<=>` distance of 0.06 or less (cosine similarity of 0.94 or more) |
-| **Zero-token cache hits** | *"What is CAP theorem?"* and *"Explain CAP theorem in distributed systems"* resolve to the same cached answer, returned with `X-Cache-Status: HIT` and **0 LLM tokens billed** |
+| **Dense subspace embeddings** | Prompts become 768-dimensional normalized unit vectors |
+| **HNSW cosine distance search** | Approximate nearest-neighbor lookup through an HNSW index, using `<=>` distance of 0.06 or less (cosine similarity $\ge 0.94$) |
+| **Contextual & temporal disambiguation** | Evaluates candidate matches with a post-vector contextual verifier: rejects false hits caused by temporal drift (*"tax rate in India"* vs. *"tax rate in India in 2020"*), polarity inversions (*"enable"* vs. *"disable"*), tech stacks (*"Python"* vs. *"Java"*), and numeric counts |
+| **Cache eligibility engine** | Automatically bypasses caching for real-time dynamic queries (weather, time, stock prices), non-deterministic requests (random UUIDs), and session-specific states |
+| **Strict tenant & model isolation** | Cache lookups and storage are strictly partitioned by `tenant_id` and `model` namespace, preventing cross-tenant leakage and model contamination |
+| **Zero-token cache hits** | Verified paraphrases (*"What is CAP theorem?"* and *"Explain CAP theorem in distributed systems"*) resolve in < 20ms with **0 LLM tokens billed** |
 
 ### 5. Asynchronous double-entry FinOps engine (ADR-002 and ADR-003)
 
@@ -492,7 +495,8 @@ Orvix/
 │   ├── 03-CONTRACTS.md      # OpenAPI and Kafka event schemas
 │   ├── 04-DB-SCHEMA.md      # Relational and pgvector schemas
 │   ├── 05-ADR.md            # Architecture Decision Records (ADR 001 to 005)
-│   └── 06-THREAT-MODEL.md   # OWASP LLM01 Threat Model, De-obfuscation & Empirical Benchmark
+│   ├── 06-THREAT-MODEL.md   # OWASP LLM01 Threat Model, De-obfuscation & Empirical Benchmark
+│   └── 07-SEMANTIC-CACHE-GUARD.md # Contextual Semantic Cache Guard & Temporal Disambiguation
 ├── orvix-common/            # Shared DTOs, Kafka event records, headers
 ├── gateway-service/         # Edge router, Redis Lua rate limiter, LLM failover
 ├── guardrail-service/       # PII engine, injection detector, audit DB
@@ -507,8 +511,10 @@ Orvix/
 | **ADR-001** | Atomic Redis Lua token bucket for multi-tenant edge rate limiting |
 | **ADR-002 and ADR-003** | Integer micro-dollar double-entry ledger with an idempotent, optimistically locked consumer |
 | **ADR-004** | HNSW cosine-distance semantic cache on `pgvector` |
+| **ADR-006** | Multi-stage adversarial defense pipeline, de-obfuscation, and empirical benchmark (`docs/06-THREAT-MODEL.md`) |
+| **ADR-007** | Contextual semantic cache guard, temporal anchor disambiguation, and strict tenant/model isolation (`docs/07-SEMANTIC-CACHE-GUARD.md`) |
 
-The full set (ADR-001 to ADR-005) lives in [`docs/05-ADR.md`](docs/05-ADR.md).
+The full set (ADR-001 to ADR-007) lives in [`docs/05-ADR.md`](docs/05-ADR.md), [`docs/06-THREAT-MODEL.md`](docs/06-THREAT-MODEL.md), and [`docs/07-SEMANTIC-CACHE-GUARD.md`](docs/07-SEMANTIC-CACHE-GUARD.md).
 
 ## License
 

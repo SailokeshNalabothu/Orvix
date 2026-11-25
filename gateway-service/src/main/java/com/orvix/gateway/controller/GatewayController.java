@@ -82,19 +82,33 @@ public class GatewayController {
         PromptInspectionResponse guardrailResult = guardrailClient.inspect(traceId, tenant.tenantId(), rawPrompt);
         String promptToUse = guardrailResult.sanitizedPrompt() != null ? guardrailResult.sanitizedPrompt() : rawPrompt;
 
-        // 4. Semantic Caching Layer (Sync HTTP, Fail-Open)
+        // 4. Model Resolution & Semantic Caching Layer (Sync HTTP, Fail-Open)
         boolean cacheEnabled = request.cache_enabled() == null || request.cache_enabled();
         CacheStatus cacheStatus = CacheStatus.MISS;
         String providerUsed;
-        String effectiveModel = request.model();
+        String requestedModel = request.model();
+        String effectiveModel = requestedModel;
         String completionContent;
         int promptTokens;
         int completionTokens;
         long estimatedCost;
 
+        // Resolve effective model namespace for strict model/version cache isolation
+        LlmRouter.ComplexityAnalysis complexity = null;
+        try {
+            complexity = llmRouter.analyzeComplexity(promptToUse);
+        } catch (Exception ignored) {}
+        if (complexity == null) {
+            complexity = new LlmRouter.ComplexityAnalysis(0.0, LlmRouter.FAST_TIER, LlmRouter.MODEL_FAST, "Default fallback");
+        }
+
+        if (requestedModel == null || requestedModel.isBlank() || "auto-cascade".equalsIgnoreCase(requestedModel) || "auto".equalsIgnoreCase(requestedModel)) {
+            effectiveModel = complexity.routedModel();
+        }
+
         CacheLookupResponse cacheLookup = null;
         if (cacheEnabled) {
-            cacheLookup = cacheClient.lookup(tenant.tenantId(), request.model(), promptToUse);
+            cacheLookup = cacheClient.lookup(tenant.tenantId(), effectiveModel, promptToUse);
         }
 
         if (cacheLookup != null && cacheLookup.hit()) {
@@ -104,18 +118,18 @@ public class GatewayController {
             promptTokens = 0;
             completionTokens = 0;
             estimatedCost = 50L; // 50 micro-dollars cache hit fee
-            servletResponse.setHeader("X-Prompt-Complexity", "0.0");
+            servletResponse.setHeader("X-Prompt-Complexity", String.valueOf(complexity.complexityScore()));
             servletResponse.setHeader("X-Complexity-Tier", "CACHE_HIT");
             servletResponse.setHeader("X-Routed-Model", effectiveModel);
         } else {
-            if (cacheLookup != null && "BYPASS".equals(cacheLookup.cacheStatus())) {
+            if (cacheLookup != null && ("BYPASS".equals(cacheLookup.cacheStatus()) || "INELIGIBLE".equals(cacheLookup.cacheStatus()))) {
                 cacheStatus = CacheStatus.BYPASS;
             }
 
             // 5. LLM Provider Dispatch with Adaptive Model Cascading & Resilience4j
-            var llmResult = llmRouter.dispatch(request.model(), promptToUse);
+            var llmResult = llmRouter.dispatch(requestedModel, promptToUse);
             providerUsed = llmResult.provider();
-            effectiveModel = llmResult.routedModel() != null ? llmResult.routedModel() : request.model();
+            effectiveModel = llmResult.routedModel() != null ? llmResult.routedModel() : effectiveModel;
             completionContent = llmResult.content();
             promptTokens = llmResult.promptTokens();
             completionTokens = llmResult.completionTokens();
@@ -125,8 +139,8 @@ public class GatewayController {
             servletResponse.setHeader("X-Complexity-Tier", llmResult.complexityTier());
             servletResponse.setHeader("X-Routed-Model", effectiveModel);
 
-            // Fire-and-forget cache write on cache miss
-            if (cacheEnabled) {
+            // Fire-and-forget cache write on cache miss (only if eligible)
+            if (cacheEnabled && (cacheLookup == null || !"INELIGIBLE".equals(cacheLookup.cacheStatus()))) {
                 cacheClient.storeAsync(tenant.tenantId(), effectiveModel, promptToUse, completionContent);
             }
         }
