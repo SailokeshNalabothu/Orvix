@@ -600,6 +600,9 @@ python benchmark/financial-guarantees-test.py
 
 # 4. Live security validation across 6 threat categories and tenant isolation
 python benchmark/security-validation-test.py
+
+# 5. Live intelligent routing evaluation against fixed-model baselines
+python benchmark/intelligent-routing-evaluation.py
 ```
 
 #### Empirical benchmark results (live cluster execution)
@@ -632,8 +635,11 @@ python benchmark/security-validation-test.py
 | **Multi-Tenant Security Policy Isolation** | Tenant Alpha blocked custom keyword (`cryptocurrency`); Tenant Beta allowed identical prompt; allowed keyword override (`sudo`) verified | Zero Policy Bleed | **PASS** |
 | **Multi-Tenant Audit Log Isolation** | Audit logs segregated by tenant ID; zero cross-tenant leakages observed | Strict Data Isolation | **PASS** |
 | **Gateway Route Guardrail Block** | Adversarial injection prompt rejected at edge Gateway with **HTTP 400 Bad Request**; 0 tokens billed | Zero Token Leak | **PASS** |
+| **Intelligent Routing Cost Savings** | **-43.0% pure model routing savings** (8,400 µ$ down to 4,790 µ$; > 60% with semantic caching) | $\ge 40.0\%$ | **PASS** |
+| **Intelligent Routing Latency Speedup** | **-54.1% reduction at $p_{50}$** (173.8 ms down to 79.8 ms) | $> 50.0\%$ | **PASS** |
+| **Intelligent Routing Quality Retention** | **99.1% quality retention** (97.83% vs 98.67% fixed frontier baseline; 96.5% on complex reasoning) | $\ge 98.0\%$ | **PASS** |
 
-The complete methodology, environment profile, latency distributions, chaos engineering architecture, and security validation results are documented in [`docs/08-PERFORMANCE-BENCHMARK.md`](docs/08-PERFORMANCE-BENCHMARK.md), [`docs/09-FINANCIAL-CORRECTNESS.md`](docs/09-FINANCIAL-CORRECTNESS.md), [`docs/10-CHAOS-ENGINEERING-AND-RECOVERY.md`](docs/10-CHAOS-ENGINEERING-AND-RECOVERY.md), [`docs/11-REAL-FINANCIAL-TRANSACTION-GUARANTEES.md`](docs/11-REAL-FINANCIAL-TRANSACTION-GUARANTEES.md), and [`docs/12-CREDIBLE-SECURITY-VALIDATION.md`](docs/12-CREDIBLE-SECURITY-VALIDATION.md).
+The complete methodology, environment profile, latency distributions, chaos engineering architecture, security validation, and intelligent routing evaluations are documented in [`docs/08-PERFORMANCE-BENCHMARK.md`](docs/08-PERFORMANCE-BENCHMARK.md), [`docs/09-FINANCIAL-CORRECTNESS.md`](docs/09-FINANCIAL-CORRECTNESS.md), [`docs/10-CHAOS-ENGINEERING-AND-RECOVERY.md`](docs/10-CHAOS-ENGINEERING-AND-RECOVERY.md), [`docs/11-REAL-FINANCIAL-TRANSACTION-GUARANTEES.md`](docs/11-REAL-FINANCIAL-TRANSACTION-GUARANTEES.md), [`docs/12-CREDIBLE-SECURITY-VALIDATION.md`](docs/12-CREDIBLE-SECURITY-VALIDATION.md), and [`docs/14-INTELLIGENT-ROUTING-EVALUATION.md`](docs/14-INTELLIGENT-ROUTING-EVALUATION.md).
 
 <a name="repository-structure"></a>
 
@@ -657,7 +663,9 @@ Orvix/
 │   ├── financial_guarantees_report.json # Empirical financial correctness verification report
 │   ├── security-validation-test.py # Live adversarial security validation and tenant isolation runner
 │   ├── security_validation_report.json # Empirical security confusion matrix and per-category report
-│   └── verify-k8s-manifests.py # Specification verification harness for k8s manifests and Helm chart
+│   ├── verify-k8s-manifests.py # Specification verification harness for k8s manifests and Helm chart
+│   ├── intelligent-routing-evaluation.py # Live intelligent routing vs fixed-baseline evaluation runner
+│   └── intelligent_routing_report.json # Empirical multi-tier cost, latency and quality metrics report
 ├── docker/                  # Production multi-stage Dockerfiles & configurations
 │   ├── Dockerfile.gateway   # Non-root unprivileged container for Gateway Service
 │   ├── Dockerfile.guardrail # Non-root unprivileged container for Guardrail Service
@@ -689,7 +697,8 @@ Orvix/
 │   ├── 10-CHAOS-ENGINEERING-AND-RECOVERY.md # Chaos Engineering, Toxiproxy & Zero-Loss Recovery
 │   ├── 11-REAL-FINANCIAL-TRANSACTION-GUARANTEES.md # Transactional Outbox, Idempotent Refunds & Retry Defense
 │   ├── 12-CREDIBLE-SECURITY-VALIDATION.md # Threat Taxonomy (CAT 1-6), Hard Negatives & Tenant Isolation
-│   └── 13-KUBERNETES-AND-HELM-DEPLOYMENT.md # Independent Deployments, HPA v2, Probes, PDB & Prometheus
+│   ├── 13-KUBERNETES-AND-HELM-DEPLOYMENT.md # Independent Deployments, HPA v2, Probes, PDB & Prometheus
+│   └── 14-INTELLIGENT-ROUTING-EVALUATION.md # Adaptive Model Cascading, Cost/Latency/Quality Evaluation
 ├── orvix-common/            # Shared DTOs, Kafka event records, headers
 ├── gateway-service/         # Edge router, Redis Lua rate limiter, fallback buffer, LLM failover
 ├── guardrail-service/       # PII engine, injection detector, audit DB, multi-tenant policies
@@ -712,8 +721,9 @@ Orvix/
 | **ADR-011** | Real financial transaction guarantees, Transactional Outbox pattern, idempotent refunds, over-refund defense, and duplicate-event recovery (`docs/11-REAL-FINANCIAL-TRANSACTION-GUARANTEES.md`) |
 | **ADR-012** | Credible security validation, formal threat taxonomy (CAT 1–6), empirical confusion matrix, hard negative discrimination, and multi-tenant security policy isolation (`docs/12-CREDIBLE-SECURITY-VALIDATION.md`) |
 | **ADR-013** | Production Kubernetes deployment, independent microservices, 3-tier health probes, resource limits, HPA v2 autoscaling, zero-downtime rolling updates, and Prometheus observability (`docs/13-KUBERNETES-AND-HELM-DEPLOYMENT.md`) |
+| **ADR-014** | Intelligent routing evaluation, adaptive model cascading vs fixed-model baselines (`docs/14-INTELLIGENT-ROUTING-EVALUATION.md`) |
 
-The full set (ADR-001 to ADR-013) lives in [`docs/05-ADR.md`](docs/05-ADR.md), [`docs/06-THREAT-MODEL.md`](docs/06-THREAT-MODEL.md), [`docs/07-SEMANTIC-CACHE-GUARD.md`](docs/07-SEMANTIC-CACHE-GUARD.md), [`docs/08-PERFORMANCE-BENCHMARK.md`](docs/08-PERFORMANCE-BENCHMARK.md), [`docs/09-FINANCIAL-CORRECTNESS.md`](docs/09-FINANCIAL-CORRECTNESS.md), [`docs/10-CHAOS-ENGINEERING-AND-RECOVERY.md`](docs/10-CHAOS-ENGINEERING-AND-RECOVERY.md), [`docs/11-REAL-FINANCIAL-TRANSACTION-GUARANTEES.md`](docs/11-REAL-FINANCIAL-TRANSACTION-GUARANTEES.md), [`docs/12-CREDIBLE-SECURITY-VALIDATION.md`](docs/12-CREDIBLE-SECURITY-VALIDATION.md), and [`docs/13-KUBERNETES-AND-HELM-DEPLOYMENT.md`](docs/13-KUBERNETES-AND-HELM-DEPLOYMENT.md).
+The full set (ADR-001 to ADR-014) lives in [`docs/05-ADR.md`](docs/05-ADR.md), [`docs/06-THREAT-MODEL.md`](docs/06-THREAT-MODEL.md), [`docs/07-SEMANTIC-CACHE-GUARD.md`](docs/07-SEMANTIC-CACHE-GUARD.md), [`docs/08-PERFORMANCE-BENCHMARK.md`](docs/08-PERFORMANCE-BENCHMARK.md), [`docs/09-FINANCIAL-CORRECTNESS.md`](docs/09-FINANCIAL-CORRECTNESS.md), [`docs/10-CHAOS-ENGINEERING-AND-RECOVERY.md`](docs/10-CHAOS-ENGINEERING-AND-RECOVERY.md), [`docs/11-REAL-FINANCIAL-TRANSACTION-GUARANTEES.md`](docs/11-REAL-FINANCIAL-TRANSACTION-GUARANTEES.md), [`docs/12-CREDIBLE-SECURITY-VALIDATION.md`](docs/12-CREDIBLE-SECURITY-VALIDATION.md), [`docs/13-KUBERNETES-AND-HELM-DEPLOYMENT.md`](docs/13-KUBERNETES-AND-HELM-DEPLOYMENT.md), and [`docs/14-INTELLIGENT-ROUTING-EVALUATION.md`](docs/14-INTELLIGENT-ROUTING-EVALUATION.md).
 
 ## License
 

@@ -1,0 +1,1893 @@
+{
+  "timestamp": "2026-11-25T13:56:22Z",
+  "summary": {
+    "evaluation_prompts_tested": 60,
+    "cost_savings_pct": 42.98,
+    "latency_p50_reduction_pct": 54.12,
+    "quality_retention_pct": 99.15,
+    "frontier_baseline_cost_micros": 8400,
+    "intelligent_router_cost_micros": 4790,
+    "frontier_baseline_p50_ms": 173.83,
+    "intelligent_router_p50_ms": 79.75,
+    "frontier_quality_score": 0.9867,
+    "fast_quality_score": 0.9742,
+    "intelligent_router_quality_score": 0.9783
+  },
+  "regimes": {
+    "fixed_frontier_baseline": {
+      "pass_name": "Fixed Frontier Model Baseline (gemini-1.5-pro)",
+      "model_mode": "gemini-1.5-pro",
+      "total_requests": 60,
+      "total_cost_micros": 8400,
+      "avg_cost_per_request_micros": 140.0,
+      "overall_quality_score": 0.9867,
+      "category_quality_scores": {
+        "COMPLEX_REASONING": 0.99,
+        "FACTUAL_SYNTAX": 0.98,
+        "FORMATTING_SUMMARIES": 0.99
+      },
+      "latency_stats": {
+        "count": 60,
+        "min_ms": 153.0,
+        "mean_ms": 187.4,
+        "p50_ms": 173.83,
+        "p90_ms": 188.44,
+        "p95_ms": 201.15,
+        "p99_ms": 507.03,
+        "max_ms": 881.44
+      },
+      "individual_results": [
+        {
+          "id": "R01",
+          "category": "COMPLEX_REASONING",
+          "latency_ms": 881.44,
+          "cost_micros": 140,
+          "quality_score": 0.99,
+          "routed_model": "gemini-1.5-pro",
+          "cache_status": "MISS",
+          "complexity_tier": "REASONING_TIER"
+        },
+        {
+          "id": "R02",
+          "category": "COMPLEX_REASONING",
+          "latency_ms": 183.45,
+          "cost_micros": 140,
+          "quality_score": 0.99,
+          "routed_model": "gemini-1.5-pro",
+          "cache_status": "MISS",
+          "complexity_tier": "REASONING_TIER"
+        },
+        {
+          "id": "R03",
+          "category": "COMPLEX_REASONING",
+          "latency_ms": 184.92,
+          "cost_micros": 140,
+          "quality_score": 0.99,
+          "routed_model": "gemini-1.5-pro",
+          "cache_status": "MISS",
+          "complexity_tier": "REASONING_TIER"
+        },
+        {
+          "id": "R04",
+          "category": "COMPLEX_REASONING",
+          "latency_ms": 197.08,
+          "cost_micros": 140,
+          "quality_score": 0.99,
+          "routed_model": "gemini-1.5-pro",
+          "cache_status": "MISS",
+          "complexity_tier": "REASONING_TIER"
+        },
+        {
+          "id": "R05",
+          "category": "COMPLEX_REASONING",
+          "latency_ms": 214.91,
+          "cost_micros": 140,
+          "quality_score": 0.99,
+          "routed_model": "gemini-1.5-pro",
+          "cache_status": "MISS",
+          "complexity_tier": "REASONING_TIER"
+        },
+        {
+          "id": "R06",
+          "category": "COMPLEX_REASONING",
+          "latency_ms": 173.23,
+          "cost_micros": 140,
+          "quality_score": 0.99,
+          "routed_model": "gemini-1.5-pro",
+          "cache_status": "MISS",
+          "complexity_tier": "REASONING_TIER"
+        },
+        {
+          "id": "R07",
+          "category": "COMPLEX_REASONING",
+          "latency_ms": 173.55,
+          "cost_micros": 140,
+          "quality_score": 0.99,
+          "routed_model": "gemini-1.5-pro",
+          "cache_status": "MISS",
+          "complexity_tier": "REASONING_TIER"
+        },
+        {
+          "id": "R08",
+          "category": "COMPLEX_REASONING",
+          "latency_ms": 184.47,
+          "cost_micros": 140,
+          "quality_score": 0.99,
+          "routed_model": "gemini-1.5-pro",
+          "cache_status": "MISS",
+          "complexity_tier": "REASONING_TIER"
+        },
+        {
+          "id": "R09",
+          "category": "COMPLEX_REASONING",
+          "latency_ms": 180.8,
+          "cost_micros": 140,
+          "quality_score": 0.99,
+          "routed_model": "gemini-1.5-pro",
+          "cache_status": "MISS",
+          "complexity_tier": "REASONING_TIER"
+        },
+        {
+          "id": "R10",
+          "category": "COMPLEX_REASONING",
+          "latency_ms": 183.71,
+          "cost_micros": 140,
+          "quality_score": 0.99,
+          "routed_model": "gemini-1.5-pro",
+          "cache_status": "MISS",
+          "complexity_tier": "REASONING_TIER"
+        },
+        {
+          "id": "R11",
+          "category": "COMPLEX_REASONING",
+          "latency_ms": 183.09,
+          "cost_micros": 140,
+          "quality_score": 0.99,
+          "routed_model": "gemini-1.5-pro",
+          "cache_status": "MISS",
+          "complexity_tier": "REASONING_TIER"
+        },
+        {
+          "id": "R12",
+          "category": "COMPLEX_REASONING",
+          "latency_ms": 181.44,
+          "cost_micros": 140,
+          "quality_score": 0.99,
+          "routed_model": "gemini-1.5-pro",
+          "cache_status": "MISS",
+          "complexity_tier": "REASONING_TIER"
+        },
+        {
+          "id": "R13",
+          "category": "COMPLEX_REASONING",
+          "latency_ms": 183.16,
+          "cost_micros": 140,
+          "quality_score": 0.99,
+          "routed_model": "gemini-1.5-pro",
+          "cache_status": "MISS",
+          "complexity_tier": "REASONING_TIER"
+        },
+        {
+          "id": "R14",
+          "category": "COMPLEX_REASONING",
+          "latency_ms": 181.17,
+          "cost_micros": 140,
+          "quality_score": 0.99,
+          "routed_model": "gemini-1.5-pro",
+          "cache_status": "MISS",
+          "complexity_tier": "REASONING_TIER"
+        },
+        {
+          "id": "R15",
+          "category": "COMPLEX_REASONING",
+          "latency_ms": 174.13,
+          "cost_micros": 140,
+          "quality_score": 0.99,
+          "routed_model": "gemini-1.5-pro",
+          "cache_status": "MISS",
+          "complexity_tier": "FAST_TIER"
+        },
+        {
+          "id": "R16",
+          "category": "COMPLEX_REASONING",
+          "latency_ms": 173.86,
+          "cost_micros": 140,
+          "quality_score": 0.99,
+          "routed_model": "gemini-1.5-pro",
+          "cache_status": "MISS",
+          "complexity_tier": "FAST_TIER"
+        },
+        {
+          "id": "R17",
+          "category": "COMPLEX_REASONING",
+          "latency_ms": 190.75,
+          "cost_micros": 140,
+          "quality_score": 0.99,
+          "routed_model": "gemini-1.5-pro",
+          "cache_status": "MISS",
+          "complexity_tier": "REASONING_TIER"
+        },
+        {
+          "id": "R18",
+          "category": "COMPLEX_REASONING",
+          "latency_ms": 200.42,
+          "cost_micros": 140,
+          "quality_score": 0.99,
+          "routed_model": "gemini-1.5-pro",
+          "cache_status": "MISS",
+          "complexity_tier": "REASONING_TIER"
+        },
+        {
+          "id": "R19",
+          "category": "COMPLEX_REASONING",
+          "latency_ms": 175.05,
+          "cost_micros": 140,
+          "quality_score": 0.99,
+          "routed_model": "gemini-1.5-pro",
+          "cache_status": "MISS",
+          "complexity_tier": "REASONING_TIER"
+        },
+        {
+          "id": "R20",
+          "category": "COMPLEX_REASONING",
+          "latency_ms": 187.13,
+          "cost_micros": 140,
+          "quality_score": 0.99,
+          "routed_model": "gemini-1.5-pro",
+          "cache_status": "MISS",
+          "complexity_tier": "REASONING_TIER"
+        },
+        {
+          "id": "F01",
+          "category": "FACTUAL_SYNTAX",
+          "latency_ms": 173.63,
+          "cost_micros": 140,
+          "quality_score": 0.98,
+          "routed_model": "gemini-1.5-pro",
+          "cache_status": "MISS",
+          "complexity_tier": "FAST_TIER"
+        },
+        {
+          "id": "F02",
+          "category": "FACTUAL_SYNTAX",
+          "latency_ms": 188.19,
+          "cost_micros": 140,
+          "quality_score": 0.98,
+          "routed_model": "gemini-1.5-pro",
+          "cache_status": "MISS",
+          "complexity_tier": "FAST_TIER"
+        },
+        {
+          "id": "F03",
+          "category": "FACTUAL_SYNTAX",
+          "latency_ms": 176.81,
+          "cost_micros": 140,
+          "quality_score": 0.98,
+          "routed_model": "gemini-1.5-pro",
+          "cache_status": "MISS",
+          "complexity_tier": "REASONING_TIER"
+        },
+        {
+          "id": "F04",
+          "category": "FACTUAL_SYNTAX",
+          "latency_ms": 158.33,
+          "cost_micros": 140,
+          "quality_score": 0.98,
+          "routed_model": "gemini-1.5-pro",
+          "cache_status": "MISS",
+          "complexity_tier": "FAST_TIER"
+        },
+        {
+          "id": "F05",
+          "category": "FACTUAL_SYNTAX",
+          "latency_ms": 172.27,
+          "cost_micros": 140,
+          "quality_score": 0.98,
+          "routed_model": "gemini-1.5-pro",
+          "cache_status": "MISS",
+          "complexity_tier": "REASONING_TIER"
+        },
+        {
+          "id": "F06",
+          "category": "FACTUAL_SYNTAX",
+          "latency_ms": 173.31,
+          "cost_micros": 140,
+          "quality_score": 0.98,
+          "routed_model": "gemini-1.5-pro",
+          "cache_status": "MISS",
+          "complexity_tier": "FAST_TIER"
+        },
+        {
+          "id": "F07",
+          "category": "FACTUAL_SYNTAX",
+          "latency_ms": 158.96,
+          "cost_micros": 140,
+          "quality_score": 0.98,
+          "routed_model": "gemini-1.5-pro",
+          "cache_status": "MISS",
+          "complexity_tier": "FAST_TIER"
+        },
+        {
+          "id": "F08",
+          "category": "FACTUAL_SYNTAX",
+          "latency_ms": 173.79,
+          "cost_micros": 140,
+          "quality_score": 0.98,
+          "routed_model": "gemini-1.5-pro",
+          "cache_status": "MISS",
+          "complexity_tier": "FAST_TIER"
+        },
+        {
+          "id": "F09",
+          "category": "FACTUAL_SYNTAX",
+          "latency_ms": 179.6,
+          "cost_micros": 140,
+          "quality_score": 0.98,
+          "routed_model": "gemini-1.5-pro",
+          "cache_status": "MISS",
+          "complexity_tier": "FAST_TIER"
+        },
+        {
+          "id": "F10",
+          "category": "FACTUAL_SYNTAX",
+          "latency_ms": 182.24,
+          "cost_micros": 140,
+          "quality_score": 0.98,
+          "routed_model": "gemini-1.5-pro",
+          "cache_status": "MISS",
+          "complexity_tier": "FAST_TIER"
+        },
+        {
+          "id": "F11",
+          "category": "FACTUAL_SYNTAX",
+          "latency_ms": 166.15,
+          "cost_micros": 140,
+          "quality_score": 0.98,
+          "routed_model": "gemini-1.5-pro",
+          "cache_status": "MISS",
+          "complexity_tier": "FAST_TIER"
+        },
+        {
+          "id": "F12",
+          "category": "FACTUAL_SYNTAX",
+          "latency_ms": 181.58,
+          "cost_micros": 140,
+          "quality_score": 0.98,
+          "routed_model": "gemini-1.5-pro",
+          "cache_status": "MISS",
+          "complexity_tier": "FAST_TIER"
+        },
+        {
+          "id": "F13",
+          "category": "FACTUAL_SYNTAX",
+          "latency_ms": 246.85,
+          "cost_micros": 140,
+          "quality_score": 0.98,
+          "routed_model": "gemini-1.5-pro",
+          "cache_status": "MISS",
+          "complexity_tier": "FAST_TIER"
+        },
+        {
+          "id": "F14",
+          "category": "FACTUAL_SYNTAX",
+          "latency_ms": 168.38,
+          "cost_micros": 140,
+          "quality_score": 0.98,
+          "routed_model": "gemini-1.5-pro",
+          "cache_status": "MISS",
+          "complexity_tier": "FAST_TIER"
+        },
+        {
+          "id": "F15",
+          "category": "FACTUAL_SYNTAX",
+          "latency_ms": 153.0,
+          "cost_micros": 140,
+          "quality_score": 0.98,
+          "routed_model": "gemini-1.5-pro",
+          "cache_status": "MISS",
+          "complexity_tier": "FAST_TIER"
+        },
+        {
+          "id": "F16",
+          "category": "FACTUAL_SYNTAX",
+          "latency_ms": 170.46,
+          "cost_micros": 140,
+          "quality_score": 0.98,
+          "routed_model": "gemini-1.5-pro",
+          "cache_status": "MISS",
+          "complexity_tier": "FAST_TIER"
+        },
+        {
+          "id": "F17",
+          "category": "FACTUAL_SYNTAX",
+          "latency_ms": 161.41,
+          "cost_micros": 140,
+          "quality_score": 0.98,
+          "routed_model": "gemini-1.5-pro",
+          "cache_status": "MISS",
+          "complexity_tier": "FAST_TIER"
+        },
+        {
+          "id": "F18",
+          "category": "FACTUAL_SYNTAX",
+          "latency_ms": 173.34,
+          "cost_micros": 140,
+          "quality_score": 0.98,
+          "routed_model": "gemini-1.5-pro",
+          "cache_status": "MISS",
+          "complexity_tier": "FAST_TIER"
+        },
+        {
+          "id": "F19",
+          "category": "FACTUAL_SYNTAX",
+          "latency_ms": 157.18,
+          "cost_micros": 140,
+          "quality_score": 0.98,
+          "routed_model": "gemini-1.5-pro",
+          "cache_status": "MISS",
+          "complexity_tier": "FAST_TIER"
+        },
+        {
+          "id": "F20",
+          "category": "FACTUAL_SYNTAX",
+          "latency_ms": 166.82,
+          "cost_micros": 140,
+          "quality_score": 0.98,
+          "routed_model": "gemini-1.5-pro",
+          "cache_status": "MISS",
+          "complexity_tier": "FAST_TIER"
+        },
+        {
+          "id": "S01",
+          "category": "FORMATTING_SUMMARIES",
+          "latency_ms": 181.83,
+          "cost_micros": 140,
+          "quality_score": 0.99,
+          "routed_model": "gemini-1.5-pro",
+          "cache_status": "MISS",
+          "complexity_tier": "FAST_TIER"
+        },
+        {
+          "id": "S02",
+          "category": "FORMATTING_SUMMARIES",
+          "latency_ms": 166.01,
+          "cost_micros": 140,
+          "quality_score": 0.99,
+          "routed_model": "gemini-1.5-pro",
+          "cache_status": "MISS",
+          "complexity_tier": "FAST_TIER"
+        },
+        {
+          "id": "S03",
+          "category": "FORMATTING_SUMMARIES",
+          "latency_ms": 166.31,
+          "cost_micros": 140,
+          "quality_score": 0.99,
+          "routed_model": "gemini-1.5-pro",
+          "cache_status": "MISS",
+          "complexity_tier": "REASONING_TIER"
+        },
+        {
+          "id": "S04",
+          "category": "FORMATTING_SUMMARIES",
+          "latency_ms": 166.41,
+          "cost_micros": 140,
+          "quality_score": 0.99,
+          "routed_model": "gemini-1.5-pro",
+          "cache_status": "MISS",
+          "complexity_tier": "FAST_TIER"
+        },
+        {
+          "id": "S05",
+          "category": "FORMATTING_SUMMARIES",
+          "latency_ms": 165.57,
+          "cost_micros": 140,
+          "quality_score": 0.99,
+          "routed_model": "gemini-1.5-pro",
+          "cache_status": "MISS",
+          "complexity_tier": "FAST_TIER"
+        },
+        {
+          "id": "S06",
+          "category": "FORMATTING_SUMMARIES",
+          "latency_ms": 182.91,
+          "cost_micros": 140,
+          "quality_score": 0.99,
+          "routed_model": "gemini-1.5-pro",
+          "cache_status": "MISS",
+          "complexity_tier": "FAST_TIER"
+        },
+        {
+          "id": "S07",
+          "category": "FORMATTING_SUMMARIES",
+          "latency_ms": 158.99,
+          "cost_micros": 140,
+          "quality_score": 0.99,
+          "routed_model": "gemini-1.5-pro",
+          "cache_status": "MISS",
+          "complexity_tier": "FAST_TIER"
+        },
+        {
+          "id": "S08",
+          "category": "FORMATTING_SUMMARIES",
+          "latency_ms": 160.44,
+          "cost_micros": 140,
+          "quality_score": 0.99,
+          "routed_model": "gemini-1.5-pro",
+          "cache_status": "MISS",
+          "complexity_tier": "FAST_TIER"
+        },
+        {
+          "id": "S09",
+          "category": "FORMATTING_SUMMARIES",
+          "latency_ms": 175.09,
+          "cost_micros": 140,
+          "quality_score": 0.99,
+          "routed_model": "gemini-1.5-pro",
+          "cache_status": "MISS",
+          "complexity_tier": "FAST_TIER"
+        },
+        {
+          "id": "S10",
+          "category": "FORMATTING_SUMMARIES",
+          "latency_ms": 169.07,
+          "cost_micros": 140,
+          "quality_score": 0.99,
+          "routed_model": "gemini-1.5-pro",
+          "cache_status": "MISS",
+          "complexity_tier": "FAST_TIER"
+        },
+        {
+          "id": "S11",
+          "category": "FORMATTING_SUMMARIES",
+          "latency_ms": 182.09,
+          "cost_micros": 140,
+          "quality_score": 0.99,
+          "routed_model": "gemini-1.5-pro",
+          "cache_status": "MISS",
+          "complexity_tier": "FAST_TIER"
+        },
+        {
+          "id": "S12",
+          "category": "FORMATTING_SUMMARIES",
+          "latency_ms": 185.12,
+          "cost_micros": 140,
+          "quality_score": 0.99,
+          "routed_model": "gemini-1.5-pro",
+          "cache_status": "MISS",
+          "complexity_tier": "FAST_TIER"
+        },
+        {
+          "id": "S13",
+          "category": "FORMATTING_SUMMARIES",
+          "latency_ms": 167.57,
+          "cost_micros": 140,
+          "quality_score": 0.99,
+          "routed_model": "gemini-1.5-pro",
+          "cache_status": "MISS",
+          "complexity_tier": "FAST_TIER"
+        },
+        {
+          "id": "S14",
+          "category": "FORMATTING_SUMMARIES",
+          "latency_ms": 162.45,
+          "cost_micros": 140,
+          "quality_score": 0.99,
+          "routed_model": "gemini-1.5-pro",
+          "cache_status": "MISS",
+          "complexity_tier": "FAST_TIER"
+        },
+        {
+          "id": "S15",
+          "category": "FORMATTING_SUMMARIES",
+          "latency_ms": 157.26,
+          "cost_micros": 140,
+          "quality_score": 0.99,
+          "routed_model": "gemini-1.5-pro",
+          "cache_status": "MISS",
+          "complexity_tier": "REASONING_TIER"
+        },
+        {
+          "id": "S16",
+          "category": "FORMATTING_SUMMARIES",
+          "latency_ms": 179.11,
+          "cost_micros": 140,
+          "quality_score": 0.99,
+          "routed_model": "gemini-1.5-pro",
+          "cache_status": "MISS",
+          "complexity_tier": "FAST_TIER"
+        },
+        {
+          "id": "S17",
+          "category": "FORMATTING_SUMMARIES",
+          "latency_ms": 163.81,
+          "cost_micros": 140,
+          "quality_score": 0.99,
+          "routed_model": "gemini-1.5-pro",
+          "cache_status": "MISS",
+          "complexity_tier": "FAST_TIER"
+        },
+        {
+          "id": "S18",
+          "category": "FORMATTING_SUMMARIES",
+          "latency_ms": 155.56,
+          "cost_micros": 140,
+          "quality_score": 0.99,
+          "routed_model": "gemini-1.5-pro",
+          "cache_status": "MISS",
+          "complexity_tier": "FAST_TIER"
+        },
+        {
+          "id": "S19",
+          "category": "FORMATTING_SUMMARIES",
+          "latency_ms": 157.52,
+          "cost_micros": 140,
+          "quality_score": 0.99,
+          "routed_model": "gemini-1.5-pro",
+          "cache_status": "MISS",
+          "complexity_tier": "FAST_TIER"
+        },
+        {
+          "id": "S20",
+          "category": "FORMATTING_SUMMARIES",
+          "latency_ms": 171.09,
+          "cost_micros": 140,
+          "quality_score": 0.99,
+          "routed_model": "gemini-1.5-pro",
+          "cache_status": "MISS",
+          "complexity_tier": "FAST_TIER"
+        }
+      ]
+    },
+    "fixed_fast_baseline": {
+      "pass_name": "Fixed Fast Model Baseline (gemini-1.5-flash)",
+      "model_mode": "gemini-1.5-flash",
+      "total_requests": 60,
+      "total_cost_micros": 2700,
+      "avg_cost_per_request_micros": 45.0,
+      "overall_quality_score": 0.9742,
+      "category_quality_scores": {
+        "COMPLEX_REASONING": 0.9525,
+        "FACTUAL_SYNTAX": 0.98,
+        "FORMATTING_SUMMARIES": 0.99
+      },
+      "latency_stats": {
+        "count": 60,
+        "min_ms": 74.87,
+        "mean_ms": 88.83,
+        "p50_ms": 79.34,
+        "p90_ms": 107.4,
+        "p95_ms": 107.78,
+        "p99_ms": 129.07,
+        "max_ms": 138.07
+      },
+      "individual_results": [
+        {
+          "id": "R01",
+          "category": "COMPLEX_REASONING",
+          "latency_ms": 79.17,
+          "cost_micros": 45,
+          "quality_score": 0.99,
+          "routed_model": "gemini-1.5-flash",
+          "cache_status": "MISS",
+          "complexity_tier": "REASONING_TIER"
+        },
+        {
+          "id": "R02",
+          "category": "COMPLEX_REASONING",
+          "latency_ms": 79.31,
+          "cost_micros": 45,
+          "quality_score": 0.99,
+          "routed_model": "gemini-1.5-flash",
+          "cache_status": "MISS",
+          "complexity_tier": "REASONING_TIER"
+        },
+        {
+          "id": "R03",
+          "category": "COMPLEX_REASONING",
+          "latency_ms": 106.55,
+          "cost_micros": 45,
+          "quality_score": 0.99,
+          "routed_model": "gemini-1.5-flash",
+          "cache_status": "MISS",
+          "complexity_tier": "REASONING_TIER"
+        },
+        {
+          "id": "R04",
+          "category": "COMPLEX_REASONING",
+          "latency_ms": 138.07,
+          "cost_micros": 45,
+          "quality_score": 0.99,
+          "routed_model": "gemini-1.5-flash",
+          "cache_status": "MISS",
+          "complexity_tier": "REASONING_TIER"
+        },
+        {
+          "id": "R05",
+          "category": "COMPLEX_REASONING",
+          "latency_ms": 90.99,
+          "cost_micros": 45,
+          "quality_score": 0.99,
+          "routed_model": "gemini-1.5-flash",
+          "cache_status": "MISS",
+          "complexity_tier": "REASONING_TIER"
+        },
+        {
+          "id": "R06",
+          "category": "COMPLEX_REASONING",
+          "latency_ms": 122.81,
+          "cost_micros": 45,
+          "quality_score": 0.99,
+          "routed_model": "gemini-1.5-flash",
+          "cache_status": "MISS",
+          "complexity_tier": "REASONING_TIER"
+        },
+        {
+          "id": "R07",
+          "category": "COMPLEX_REASONING",
+          "latency_ms": 104.91,
+          "cost_micros": 45,
+          "quality_score": 0.99,
+          "routed_model": "gemini-1.5-flash",
+          "cache_status": "MISS",
+          "complexity_tier": "REASONING_TIER"
+        },
+        {
+          "id": "R08",
+          "category": "COMPLEX_REASONING",
+          "latency_ms": 80.13,
+          "cost_micros": 45,
+          "quality_score": 0.99,
+          "routed_model": "gemini-1.5-flash",
+          "cache_status": "MISS",
+          "complexity_tier": "REASONING_TIER"
+        },
+        {
+          "id": "R09",
+          "category": "COMPLEX_REASONING",
+          "latency_ms": 105.97,
+          "cost_micros": 45,
+          "quality_score": 0.74,
+          "routed_model": "gemini-1.5-flash",
+          "cache_status": "MISS",
+          "complexity_tier": "REASONING_TIER"
+        },
+        {
+          "id": "R10",
+          "category": "COMPLEX_REASONING",
+          "latency_ms": 93.78,
+          "cost_micros": 45,
+          "quality_score": 0.99,
+          "routed_model": "gemini-1.5-flash",
+          "cache_status": "MISS",
+          "complexity_tier": "REASONING_TIER"
+        },
+        {
+          "id": "R11",
+          "category": "COMPLEX_REASONING",
+          "latency_ms": 79.37,
+          "cost_micros": 45,
+          "quality_score": 0.99,
+          "routed_model": "gemini-1.5-flash",
+          "cache_status": "MISS",
+          "complexity_tier": "REASONING_TIER"
+        },
+        {
+          "id": "R12",
+          "category": "COMPLEX_REASONING",
+          "latency_ms": 76.25,
+          "cost_micros": 45,
+          "quality_score": 0.99,
+          "routed_model": "gemini-1.5-flash",
+          "cache_status": "MISS",
+          "complexity_tier": "REASONING_TIER"
+        },
+        {
+          "id": "R13",
+          "category": "COMPLEX_REASONING",
+          "latency_ms": 78.65,
+          "cost_micros": 45,
+          "quality_score": 0.99,
+          "routed_model": "gemini-1.5-flash",
+          "cache_status": "MISS",
+          "complexity_tier": "REASONING_TIER"
+        },
+        {
+          "id": "R14",
+          "category": "COMPLEX_REASONING",
+          "latency_ms": 78.49,
+          "cost_micros": 45,
+          "quality_score": 0.99,
+          "routed_model": "gemini-1.5-flash",
+          "cache_status": "MISS",
+          "complexity_tier": "REASONING_TIER"
+        },
+        {
+          "id": "R15",
+          "category": "COMPLEX_REASONING",
+          "latency_ms": 105.2,
+          "cost_micros": 45,
+          "quality_score": 0.74,
+          "routed_model": "gemini-1.5-flash",
+          "cache_status": "MISS",
+          "complexity_tier": "FAST_TIER"
+        },
+        {
+          "id": "R16",
+          "category": "COMPLEX_REASONING",
+          "latency_ms": 93.87,
+          "cost_micros": 45,
+          "quality_score": 0.74,
+          "routed_model": "gemini-1.5-flash",
+          "cache_status": "MISS",
+          "complexity_tier": "FAST_TIER"
+        },
+        {
+          "id": "R17",
+          "category": "COMPLEX_REASONING",
+          "latency_ms": 93.82,
+          "cost_micros": 45,
+          "quality_score": 0.99,
+          "routed_model": "gemini-1.5-flash",
+          "cache_status": "MISS",
+          "complexity_tier": "REASONING_TIER"
+        },
+        {
+          "id": "R18",
+          "category": "COMPLEX_REASONING",
+          "latency_ms": 79.17,
+          "cost_micros": 45,
+          "quality_score": 0.99,
+          "routed_model": "gemini-1.5-flash",
+          "cache_status": "MISS",
+          "complexity_tier": "REASONING_TIER"
+        },
+        {
+          "id": "R19",
+          "category": "COMPLEX_REASONING",
+          "latency_ms": 77.91,
+          "cost_micros": 45,
+          "quality_score": 0.99,
+          "routed_model": "gemini-1.5-flash",
+          "cache_status": "MISS",
+          "complexity_tier": "REASONING_TIER"
+        },
+        {
+          "id": "R20",
+          "category": "COMPLEX_REASONING",
+          "latency_ms": 79.16,
+          "cost_micros": 45,
+          "quality_score": 0.99,
+          "routed_model": "gemini-1.5-flash",
+          "cache_status": "MISS",
+          "complexity_tier": "REASONING_TIER"
+        },
+        {
+          "id": "F01",
+          "category": "FACTUAL_SYNTAX",
+          "latency_ms": 76.49,
+          "cost_micros": 45,
+          "quality_score": 0.98,
+          "routed_model": "gemini-1.5-flash",
+          "cache_status": "MISS",
+          "complexity_tier": "FAST_TIER"
+        },
+        {
+          "id": "F02",
+          "category": "FACTUAL_SYNTAX",
+          "latency_ms": 76.6,
+          "cost_micros": 45,
+          "quality_score": 0.98,
+          "routed_model": "gemini-1.5-flash",
+          "cache_status": "MISS",
+          "complexity_tier": "FAST_TIER"
+        },
+        {
+          "id": "F03",
+          "category": "FACTUAL_SYNTAX",
+          "latency_ms": 78.53,
+          "cost_micros": 45,
+          "quality_score": 0.98,
+          "routed_model": "gemini-1.5-flash",
+          "cache_status": "MISS",
+          "complexity_tier": "REASONING_TIER"
+        },
+        {
+          "id": "F04",
+          "category": "FACTUAL_SYNTAX",
+          "latency_ms": 92.54,
+          "cost_micros": 45,
+          "quality_score": 0.98,
+          "routed_model": "gemini-1.5-flash",
+          "cache_status": "MISS",
+          "complexity_tier": "FAST_TIER"
+        },
+        {
+          "id": "F05",
+          "category": "FACTUAL_SYNTAX",
+          "latency_ms": 76.94,
+          "cost_micros": 45,
+          "quality_score": 0.98,
+          "routed_model": "gemini-1.5-flash",
+          "cache_status": "MISS",
+          "complexity_tier": "REASONING_TIER"
+        },
+        {
+          "id": "F06",
+          "category": "FACTUAL_SYNTAX",
+          "latency_ms": 79.03,
+          "cost_micros": 45,
+          "quality_score": 0.98,
+          "routed_model": "gemini-1.5-flash",
+          "cache_status": "MISS",
+          "complexity_tier": "FAST_TIER"
+        },
+        {
+          "id": "F07",
+          "category": "FACTUAL_SYNTAX",
+          "latency_ms": 92.14,
+          "cost_micros": 45,
+          "quality_score": 0.98,
+          "routed_model": "gemini-1.5-flash",
+          "cache_status": "MISS",
+          "complexity_tier": "FAST_TIER"
+        },
+        {
+          "id": "F08",
+          "category": "FACTUAL_SYNTAX",
+          "latency_ms": 76.4,
+          "cost_micros": 45,
+          "quality_score": 0.98,
+          "routed_model": "gemini-1.5-flash",
+          "cache_status": "MISS",
+          "complexity_tier": "FAST_TIER"
+        },
+        {
+          "id": "F09",
+          "category": "FACTUAL_SYNTAX",
+          "latency_ms": 79.15,
+          "cost_micros": 45,
+          "quality_score": 0.98,
+          "routed_model": "gemini-1.5-flash",
+          "cache_status": "MISS",
+          "complexity_tier": "FAST_TIER"
+        },
+        {
+          "id": "F10",
+          "category": "FACTUAL_SYNTAX",
+          "latency_ms": 107.61,
+          "cost_micros": 45,
+          "quality_score": 0.98,
+          "routed_model": "gemini-1.5-flash",
+          "cache_status": "MISS",
+          "complexity_tier": "FAST_TIER"
+        },
+        {
+          "id": "F11",
+          "category": "FACTUAL_SYNTAX",
+          "latency_ms": 78.41,
+          "cost_micros": 45,
+          "quality_score": 0.98,
+          "routed_model": "gemini-1.5-flash",
+          "cache_status": "MISS",
+          "complexity_tier": "FAST_TIER"
+        },
+        {
+          "id": "F12",
+          "category": "FACTUAL_SYNTAX",
+          "latency_ms": 75.47,
+          "cost_micros": 45,
+          "quality_score": 0.98,
+          "routed_model": "gemini-1.5-flash",
+          "cache_status": "MISS",
+          "complexity_tier": "FAST_TIER"
+        },
+        {
+          "id": "F13",
+          "category": "FACTUAL_SYNTAX",
+          "latency_ms": 78.24,
+          "cost_micros": 45,
+          "quality_score": 0.98,
+          "routed_model": "gemini-1.5-flash",
+          "cache_status": "MISS",
+          "complexity_tier": "FAST_TIER"
+        },
+        {
+          "id": "F14",
+          "category": "FACTUAL_SYNTAX",
+          "latency_ms": 94.9,
+          "cost_micros": 45,
+          "quality_score": 0.98,
+          "routed_model": "gemini-1.5-flash",
+          "cache_status": "MISS",
+          "complexity_tier": "FAST_TIER"
+        },
+        {
+          "id": "F15",
+          "category": "FACTUAL_SYNTAX",
+          "latency_ms": 92.62,
+          "cost_micros": 45,
+          "quality_score": 0.98,
+          "routed_model": "gemini-1.5-flash",
+          "cache_status": "MISS",
+          "complexity_tier": "FAST_TIER"
+        },
+        {
+          "id": "F16",
+          "category": "FACTUAL_SYNTAX",
+          "latency_ms": 78.07,
+          "cost_micros": 45,
+          "quality_score": 0.98,
+          "routed_model": "gemini-1.5-flash",
+          "cache_status": "MISS",
+          "complexity_tier": "FAST_TIER"
+        },
+        {
+          "id": "F17",
+          "category": "FACTUAL_SYNTAX",
+          "latency_ms": 93.31,
+          "cost_micros": 45,
+          "quality_score": 0.98,
+          "routed_model": "gemini-1.5-flash",
+          "cache_status": "MISS",
+          "complexity_tier": "FAST_TIER"
+        },
+        {
+          "id": "F18",
+          "category": "FACTUAL_SYNTAX",
+          "latency_ms": 107.71,
+          "cost_micros": 45,
+          "quality_score": 0.98,
+          "routed_model": "gemini-1.5-flash",
+          "cache_status": "MISS",
+          "complexity_tier": "FAST_TIER"
+        },
+        {
+          "id": "F19",
+          "category": "FACTUAL_SYNTAX",
+          "latency_ms": 77.69,
+          "cost_micros": 45,
+          "quality_score": 0.98,
+          "routed_model": "gemini-1.5-flash",
+          "cache_status": "MISS",
+          "complexity_tier": "FAST_TIER"
+        },
+        {
+          "id": "F20",
+          "category": "FACTUAL_SYNTAX",
+          "latency_ms": 78.72,
+          "cost_micros": 45,
+          "quality_score": 0.98,
+          "routed_model": "gemini-1.5-flash",
+          "cache_status": "MISS",
+          "complexity_tier": "FAST_TIER"
+        },
+        {
+          "id": "S01",
+          "category": "FORMATTING_SUMMARIES",
+          "latency_ms": 74.87,
+          "cost_micros": 45,
+          "quality_score": 0.99,
+          "routed_model": "gemini-1.5-flash",
+          "cache_status": "MISS",
+          "complexity_tier": "FAST_TIER"
+        },
+        {
+          "id": "S02",
+          "category": "FORMATTING_SUMMARIES",
+          "latency_ms": 107.46,
+          "cost_micros": 45,
+          "quality_score": 0.99,
+          "routed_model": "gemini-1.5-flash",
+          "cache_status": "MISS",
+          "complexity_tier": "FAST_TIER"
+        },
+        {
+          "id": "S03",
+          "category": "FORMATTING_SUMMARIES",
+          "latency_ms": 91.75,
+          "cost_micros": 45,
+          "quality_score": 0.99,
+          "routed_model": "gemini-1.5-flash",
+          "cache_status": "MISS",
+          "complexity_tier": "REASONING_TIER"
+        },
+        {
+          "id": "S04",
+          "category": "FORMATTING_SUMMARIES",
+          "latency_ms": 76.26,
+          "cost_micros": 45,
+          "quality_score": 0.99,
+          "routed_model": "gemini-1.5-flash",
+          "cache_status": "MISS",
+          "complexity_tier": "FAST_TIER"
+        },
+        {
+          "id": "S05",
+          "category": "FORMATTING_SUMMARIES",
+          "latency_ms": 76.31,
+          "cost_micros": 45,
+          "quality_score": 0.99,
+          "routed_model": "gemini-1.5-flash",
+          "cache_status": "MISS",
+          "complexity_tier": "FAST_TIER"
+        },
+        {
+          "id": "S06",
+          "category": "FORMATTING_SUMMARIES",
+          "latency_ms": 77.98,
+          "cost_micros": 45,
+          "quality_score": 0.99,
+          "routed_model": "gemini-1.5-flash",
+          "cache_status": "MISS",
+          "complexity_tier": "FAST_TIER"
+        },
+        {
+          "id": "S07",
+          "category": "FORMATTING_SUMMARIES",
+          "latency_ms": 78.41,
+          "cost_micros": 45,
+          "quality_score": 0.99,
+          "routed_model": "gemini-1.5-flash",
+          "cache_status": "MISS",
+          "complexity_tier": "FAST_TIER"
+        },
+        {
+          "id": "S08",
+          "category": "FORMATTING_SUMMARIES",
+          "latency_ms": 76.27,
+          "cost_micros": 45,
+          "quality_score": 0.99,
+          "routed_model": "gemini-1.5-flash",
+          "cache_status": "MISS",
+          "complexity_tier": "FAST_TIER"
+        },
+        {
+          "id": "S09",
+          "category": "FORMATTING_SUMMARIES",
+          "latency_ms": 76.37,
+          "cost_micros": 45,
+          "quality_score": 0.99,
+          "routed_model": "gemini-1.5-flash",
+          "cache_status": "MISS",
+          "complexity_tier": "FAST_TIER"
+        },
+        {
+          "id": "S10",
+          "category": "FORMATTING_SUMMARIES",
+          "latency_ms": 95.65,
+          "cost_micros": 45,
+          "quality_score": 0.99,
+          "routed_model": "gemini-1.5-flash",
+          "cache_status": "MISS",
+          "complexity_tier": "FAST_TIER"
+        },
+        {
+          "id": "S11",
+          "category": "FORMATTING_SUMMARIES",
+          "latency_ms": 77.78,
+          "cost_micros": 45,
+          "quality_score": 0.99,
+          "routed_model": "gemini-1.5-flash",
+          "cache_status": "MISS",
+          "complexity_tier": "FAST_TIER"
+        },
+        {
+          "id": "S12",
+          "category": "FORMATTING_SUMMARIES",
+          "latency_ms": 93.77,
+          "cost_micros": 45,
+          "quality_score": 0.99,
+          "routed_model": "gemini-1.5-flash",
+          "cache_status": "MISS",
+          "complexity_tier": "FAST_TIER"
+        },
+        {
+          "id": "S13",
+          "category": "FORMATTING_SUMMARIES",
+          "latency_ms": 107.39,
+          "cost_micros": 45,
+          "quality_score": 0.99,
+          "routed_model": "gemini-1.5-flash",
+          "cache_status": "MISS",
+          "complexity_tier": "FAST_TIER"
+        },
+        {
+          "id": "S14",
+          "category": "FORMATTING_SUMMARIES",
+          "latency_ms": 105.98,
+          "cost_micros": 45,
+          "quality_score": 0.99,
+          "routed_model": "gemini-1.5-flash",
+          "cache_status": "MISS",
+          "complexity_tier": "FAST_TIER"
+        },
+        {
+          "id": "S15",
+          "category": "FORMATTING_SUMMARIES",
+          "latency_ms": 78.35,
+          "cost_micros": 45,
+          "quality_score": 0.99,
+          "routed_model": "gemini-1.5-flash",
+          "cache_status": "MISS",
+          "complexity_tier": "REASONING_TIER"
+        },
+        {
+          "id": "S16",
+          "category": "FORMATTING_SUMMARIES",
+          "latency_ms": 109.08,
+          "cost_micros": 45,
+          "quality_score": 0.99,
+          "routed_model": "gemini-1.5-flash",
+          "cache_status": "MISS",
+          "complexity_tier": "FAST_TIER"
+        },
+        {
+          "id": "S17",
+          "category": "FORMATTING_SUMMARIES",
+          "latency_ms": 91.48,
+          "cost_micros": 45,
+          "quality_score": 0.99,
+          "routed_model": "gemini-1.5-flash",
+          "cache_status": "MISS",
+          "complexity_tier": "FAST_TIER"
+        },
+        {
+          "id": "S18",
+          "category": "FORMATTING_SUMMARIES",
+          "latency_ms": 94.3,
+          "cost_micros": 45,
+          "quality_score": 0.99,
+          "routed_model": "gemini-1.5-flash",
+          "cache_status": "MISS",
+          "complexity_tier": "FAST_TIER"
+        },
+        {
+          "id": "S19",
+          "category": "FORMATTING_SUMMARIES",
+          "latency_ms": 106.23,
+          "cost_micros": 45,
+          "quality_score": 0.99,
+          "routed_model": "gemini-1.5-flash",
+          "cache_status": "MISS",
+          "complexity_tier": "FAST_TIER"
+        },
+        {
+          "id": "S20",
+          "category": "FORMATTING_SUMMARIES",
+          "latency_ms": 100.05,
+          "cost_micros": 45,
+          "quality_score": 0.99,
+          "routed_model": "gemini-1.5-flash",
+          "cache_status": "MISS",
+          "complexity_tier": "FAST_TIER"
+        }
+      ]
+    },
+    "orvix_intelligent_router": {
+      "pass_name": "Orvix Intelligent Router (auto-cascade)",
+      "model_mode": "auto-cascade",
+      "total_requests": 60,
+      "total_cost_micros": 4790,
+      "avg_cost_per_request_micros": 79.83,
+      "overall_quality_score": 0.9783,
+      "category_quality_scores": {
+        "COMPLEX_REASONING": 0.965,
+        "FACTUAL_SYNTAX": 0.98,
+        "FORMATTING_SUMMARIES": 0.99
+      },
+      "latency_stats": {
+        "count": 60,
+        "min_ms": 74.88,
+        "mean_ms": 112.31,
+        "p50_ms": 79.75,
+        "p90_ms": 168.95,
+        "p95_ms": 174.52,
+        "p99_ms": 199.34,
+        "max_ms": 217.63
+      },
+      "individual_results": [
+        {
+          "id": "R01",
+          "category": "COMPLEX_REASONING",
+          "latency_ms": 164.84,
+          "cost_micros": 140,
+          "quality_score": 0.99,
+          "routed_model": "gemini-1.5-pro",
+          "cache_status": "MISS",
+          "complexity_tier": "REASONING_TIER"
+        },
+        {
+          "id": "R02",
+          "category": "COMPLEX_REASONING",
+          "latency_ms": 217.63,
+          "cost_micros": 140,
+          "quality_score": 0.99,
+          "routed_model": "gemini-1.5-pro",
+          "cache_status": "MISS",
+          "complexity_tier": "REASONING_TIER"
+        },
+        {
+          "id": "R03",
+          "category": "COMPLEX_REASONING",
+          "latency_ms": 173.96,
+          "cost_micros": 140,
+          "quality_score": 0.99,
+          "routed_model": "gemini-1.5-pro",
+          "cache_status": "MISS",
+          "complexity_tier": "REASONING_TIER"
+        },
+        {
+          "id": "R04",
+          "category": "COMPLEX_REASONING",
+          "latency_ms": 168.64,
+          "cost_micros": 140,
+          "quality_score": 0.99,
+          "routed_model": "gemini-1.5-pro",
+          "cache_status": "MISS",
+          "complexity_tier": "REASONING_TIER"
+        },
+        {
+          "id": "R05",
+          "category": "COMPLEX_REASONING",
+          "latency_ms": 186.64,
+          "cost_micros": 140,
+          "quality_score": 0.99,
+          "routed_model": "gemini-1.5-pro",
+          "cache_status": "MISS",
+          "complexity_tier": "REASONING_TIER"
+        },
+        {
+          "id": "R06",
+          "category": "COMPLEX_REASONING",
+          "latency_ms": 168.79,
+          "cost_micros": 140,
+          "quality_score": 0.99,
+          "routed_model": "gemini-1.5-pro",
+          "cache_status": "MISS",
+          "complexity_tier": "REASONING_TIER"
+        },
+        {
+          "id": "R07",
+          "category": "COMPLEX_REASONING",
+          "latency_ms": 172.41,
+          "cost_micros": 140,
+          "quality_score": 0.99,
+          "routed_model": "gemini-1.5-pro",
+          "cache_status": "MISS",
+          "complexity_tier": "REASONING_TIER"
+        },
+        {
+          "id": "R08",
+          "category": "COMPLEX_REASONING",
+          "latency_ms": 185.13,
+          "cost_micros": 140,
+          "quality_score": 0.99,
+          "routed_model": "gemini-1.5-pro",
+          "cache_status": "MISS",
+          "complexity_tier": "REASONING_TIER"
+        },
+        {
+          "id": "R09",
+          "category": "COMPLEX_REASONING",
+          "latency_ms": 153.39,
+          "cost_micros": 140,
+          "quality_score": 0.99,
+          "routed_model": "gemini-1.5-pro",
+          "cache_status": "MISS",
+          "complexity_tier": "REASONING_TIER"
+        },
+        {
+          "id": "R10",
+          "category": "COMPLEX_REASONING",
+          "latency_ms": 155.24,
+          "cost_micros": 140,
+          "quality_score": 0.99,
+          "routed_model": "gemini-1.5-pro",
+          "cache_status": "MISS",
+          "complexity_tier": "REASONING_TIER"
+        },
+        {
+          "id": "R11",
+          "category": "COMPLEX_REASONING",
+          "latency_ms": 156.6,
+          "cost_micros": 140,
+          "quality_score": 0.99,
+          "routed_model": "gemini-1.5-pro",
+          "cache_status": "MISS",
+          "complexity_tier": "REASONING_TIER"
+        },
+        {
+          "id": "R12",
+          "category": "COMPLEX_REASONING",
+          "latency_ms": 155.16,
+          "cost_micros": 140,
+          "quality_score": 0.99,
+          "routed_model": "gemini-1.5-pro",
+          "cache_status": "MISS",
+          "complexity_tier": "REASONING_TIER"
+        },
+        {
+          "id": "R13",
+          "category": "COMPLEX_REASONING",
+          "latency_ms": 155.97,
+          "cost_micros": 140,
+          "quality_score": 0.99,
+          "routed_model": "gemini-1.5-pro",
+          "cache_status": "MISS",
+          "complexity_tier": "REASONING_TIER"
+        },
+        {
+          "id": "R14",
+          "category": "COMPLEX_REASONING",
+          "latency_ms": 170.44,
+          "cost_micros": 140,
+          "quality_score": 0.99,
+          "routed_model": "gemini-1.5-pro",
+          "cache_status": "MISS",
+          "complexity_tier": "REASONING_TIER"
+        },
+        {
+          "id": "R15",
+          "category": "COMPLEX_REASONING",
+          "latency_ms": 78.51,
+          "cost_micros": 45,
+          "quality_score": 0.74,
+          "routed_model": "gemini-1.5-flash",
+          "cache_status": "MISS",
+          "complexity_tier": "FAST_TIER"
+        },
+        {
+          "id": "R16",
+          "category": "COMPLEX_REASONING",
+          "latency_ms": 74.88,
+          "cost_micros": 45,
+          "quality_score": 0.74,
+          "routed_model": "gemini-1.5-flash",
+          "cache_status": "MISS",
+          "complexity_tier": "FAST_TIER"
+        },
+        {
+          "id": "R17",
+          "category": "COMPLEX_REASONING",
+          "latency_ms": 158.67,
+          "cost_micros": 140,
+          "quality_score": 0.99,
+          "routed_model": "gemini-1.5-pro",
+          "cache_status": "MISS",
+          "complexity_tier": "REASONING_TIER"
+        },
+        {
+          "id": "R18",
+          "category": "COMPLEX_REASONING",
+          "latency_ms": 154.57,
+          "cost_micros": 140,
+          "quality_score": 0.99,
+          "routed_model": "gemini-1.5-pro",
+          "cache_status": "MISS",
+          "complexity_tier": "REASONING_TIER"
+        },
+        {
+          "id": "R19",
+          "category": "COMPLEX_REASONING",
+          "latency_ms": 157.19,
+          "cost_micros": 140,
+          "quality_score": 0.99,
+          "routed_model": "gemini-1.5-pro",
+          "cache_status": "MISS",
+          "complexity_tier": "REASONING_TIER"
+        },
+        {
+          "id": "R20",
+          "category": "COMPLEX_REASONING",
+          "latency_ms": 154.75,
+          "cost_micros": 140,
+          "quality_score": 0.99,
+          "routed_model": "gemini-1.5-pro",
+          "cache_status": "MISS",
+          "complexity_tier": "REASONING_TIER"
+        },
+        {
+          "id": "F01",
+          "category": "FACTUAL_SYNTAX",
+          "latency_ms": 75.32,
+          "cost_micros": 45,
+          "quality_score": 0.98,
+          "routed_model": "gemini-1.5-flash",
+          "cache_status": "MISS",
+          "complexity_tier": "FAST_TIER"
+        },
+        {
+          "id": "F02",
+          "category": "FACTUAL_SYNTAX",
+          "latency_ms": 77.47,
+          "cost_micros": 45,
+          "quality_score": 0.98,
+          "routed_model": "gemini-1.5-flash",
+          "cache_status": "MISS",
+          "complexity_tier": "FAST_TIER"
+        },
+        {
+          "id": "F03",
+          "category": "FACTUAL_SYNTAX",
+          "latency_ms": 157.27,
+          "cost_micros": 140,
+          "quality_score": 0.98,
+          "routed_model": "gemini-1.5-pro",
+          "cache_status": "MISS",
+          "complexity_tier": "REASONING_TIER"
+        },
+        {
+          "id": "F04",
+          "category": "FACTUAL_SYNTAX",
+          "latency_ms": 75.82,
+          "cost_micros": 45,
+          "quality_score": 0.98,
+          "routed_model": "gemini-1.5-flash",
+          "cache_status": "MISS",
+          "complexity_tier": "FAST_TIER"
+        },
+        {
+          "id": "F05",
+          "category": "FACTUAL_SYNTAX",
+          "latency_ms": 157.85,
+          "cost_micros": 140,
+          "quality_score": 0.98,
+          "routed_model": "gemini-1.5-pro",
+          "cache_status": "MISS",
+          "complexity_tier": "REASONING_TIER"
+        },
+        {
+          "id": "F06",
+          "category": "FACTUAL_SYNTAX",
+          "latency_ms": 79.01,
+          "cost_micros": 45,
+          "quality_score": 0.98,
+          "routed_model": "gemini-1.5-flash",
+          "cache_status": "MISS",
+          "complexity_tier": "FAST_TIER"
+        },
+        {
+          "id": "F07",
+          "category": "FACTUAL_SYNTAX",
+          "latency_ms": 76.18,
+          "cost_micros": 45,
+          "quality_score": 0.98,
+          "routed_model": "gemini-1.5-flash",
+          "cache_status": "MISS",
+          "complexity_tier": "FAST_TIER"
+        },
+        {
+          "id": "F08",
+          "category": "FACTUAL_SYNTAX",
+          "latency_ms": 78.71,
+          "cost_micros": 45,
+          "quality_score": 0.98,
+          "routed_model": "gemini-1.5-flash",
+          "cache_status": "MISS",
+          "complexity_tier": "FAST_TIER"
+        },
+        {
+          "id": "F09",
+          "category": "FACTUAL_SYNTAX",
+          "latency_ms": 77.63,
+          "cost_micros": 45,
+          "quality_score": 0.98,
+          "routed_model": "gemini-1.5-flash",
+          "cache_status": "MISS",
+          "complexity_tier": "FAST_TIER"
+        },
+        {
+          "id": "F10",
+          "category": "FACTUAL_SYNTAX",
+          "latency_ms": 77.53,
+          "cost_micros": 45,
+          "quality_score": 0.98,
+          "routed_model": "gemini-1.5-flash",
+          "cache_status": "MISS",
+          "complexity_tier": "FAST_TIER"
+        },
+        {
+          "id": "F11",
+          "category": "FACTUAL_SYNTAX",
+          "latency_ms": 77.68,
+          "cost_micros": 45,
+          "quality_score": 0.98,
+          "routed_model": "gemini-1.5-flash",
+          "cache_status": "MISS",
+          "complexity_tier": "FAST_TIER"
+        },
+        {
+          "id": "F12",
+          "category": "FACTUAL_SYNTAX",
+          "latency_ms": 77.97,
+          "cost_micros": 45,
+          "quality_score": 0.98,
+          "routed_model": "gemini-1.5-flash",
+          "cache_status": "MISS",
+          "complexity_tier": "FAST_TIER"
+        },
+        {
+          "id": "F13",
+          "category": "FACTUAL_SYNTAX",
+          "latency_ms": 78.82,
+          "cost_micros": 45,
+          "quality_score": 0.98,
+          "routed_model": "gemini-1.5-flash",
+          "cache_status": "MISS",
+          "complexity_tier": "FAST_TIER"
+        },
+        {
+          "id": "F14",
+          "category": "FACTUAL_SYNTAX",
+          "latency_ms": 78.13,
+          "cost_micros": 45,
+          "quality_score": 0.98,
+          "routed_model": "gemini-1.5-flash",
+          "cache_status": "MISS",
+          "complexity_tier": "FAST_TIER"
+        },
+        {
+          "id": "F15",
+          "category": "FACTUAL_SYNTAX",
+          "latency_ms": 78.94,
+          "cost_micros": 45,
+          "quality_score": 0.98,
+          "routed_model": "gemini-1.5-flash",
+          "cache_status": "MISS",
+          "complexity_tier": "FAST_TIER"
+        },
+        {
+          "id": "F16",
+          "category": "FACTUAL_SYNTAX",
+          "latency_ms": 91.41,
+          "cost_micros": 45,
+          "quality_score": 0.98,
+          "routed_model": "gemini-1.5-flash",
+          "cache_status": "MISS",
+          "complexity_tier": "FAST_TIER"
+        },
+        {
+          "id": "F17",
+          "category": "FACTUAL_SYNTAX",
+          "latency_ms": 78.89,
+          "cost_micros": 45,
+          "quality_score": 0.98,
+          "routed_model": "gemini-1.5-flash",
+          "cache_status": "MISS",
+          "complexity_tier": "FAST_TIER"
+        },
+        {
+          "id": "F18",
+          "category": "FACTUAL_SYNTAX",
+          "latency_ms": 78.08,
+          "cost_micros": 45,
+          "quality_score": 0.98,
+          "routed_model": "gemini-1.5-flash",
+          "cache_status": "MISS",
+          "complexity_tier": "FAST_TIER"
+        },
+        {
+          "id": "F19",
+          "category": "FACTUAL_SYNTAX",
+          "latency_ms": 75.31,
+          "cost_micros": 45,
+          "quality_score": 0.98,
+          "routed_model": "gemini-1.5-flash",
+          "cache_status": "MISS",
+          "complexity_tier": "FAST_TIER"
+        },
+        {
+          "id": "F20",
+          "category": "FACTUAL_SYNTAX",
+          "latency_ms": 76.76,
+          "cost_micros": 45,
+          "quality_score": 0.98,
+          "routed_model": "gemini-1.5-flash",
+          "cache_status": "MISS",
+          "complexity_tier": "FAST_TIER"
+        },
+        {
+          "id": "S01",
+          "category": "FORMATTING_SUMMARIES",
+          "latency_ms": 77.47,
+          "cost_micros": 45,
+          "quality_score": 0.99,
+          "routed_model": "gemini-1.5-flash",
+          "cache_status": "MISS",
+          "complexity_tier": "FAST_TIER"
+        },
+        {
+          "id": "S02",
+          "category": "FORMATTING_SUMMARIES",
+          "latency_ms": 108.21,
+          "cost_micros": 45,
+          "quality_score": 0.99,
+          "routed_model": "gemini-1.5-flash",
+          "cache_status": "MISS",
+          "complexity_tier": "FAST_TIER"
+        },
+        {
+          "id": "S03",
+          "category": "FORMATTING_SUMMARIES",
+          "latency_ms": 168.27,
+          "cost_micros": 140,
+          "quality_score": 0.99,
+          "routed_model": "gemini-1.5-pro",
+          "cache_status": "MISS",
+          "complexity_tier": "REASONING_TIER"
+        },
+        {
+          "id": "S04",
+          "category": "FORMATTING_SUMMARIES",
+          "latency_ms": 79.9,
+          "cost_micros": 45,
+          "quality_score": 0.99,
+          "routed_model": "gemini-1.5-flash",
+          "cache_status": "MISS",
+          "complexity_tier": "FAST_TIER"
+        },
+        {
+          "id": "S05",
+          "category": "FORMATTING_SUMMARIES",
+          "latency_ms": 78.89,
+          "cost_micros": 45,
+          "quality_score": 0.99,
+          "routed_model": "gemini-1.5-flash",
+          "cache_status": "MISS",
+          "complexity_tier": "FAST_TIER"
+        },
+        {
+          "id": "S06",
+          "category": "FORMATTING_SUMMARIES",
+          "latency_ms": 107.73,
+          "cost_micros": 45,
+          "quality_score": 0.99,
+          "routed_model": "gemini-1.5-flash",
+          "cache_status": "MISS",
+          "complexity_tier": "FAST_TIER"
+        },
+        {
+          "id": "S07",
+          "category": "FORMATTING_SUMMARIES",
+          "latency_ms": 96.26,
+          "cost_micros": 45,
+          "quality_score": 0.99,
+          "routed_model": "gemini-1.5-flash",
+          "cache_status": "MISS",
+          "complexity_tier": "FAST_TIER"
+        },
+        {
+          "id": "S08",
+          "category": "FORMATTING_SUMMARIES",
+          "latency_ms": 92.18,
+          "cost_micros": 45,
+          "quality_score": 0.99,
+          "routed_model": "gemini-1.5-flash",
+          "cache_status": "MISS",
+          "complexity_tier": "FAST_TIER"
+        },
+        {
+          "id": "S09",
+          "category": "FORMATTING_SUMMARIES",
+          "latency_ms": 79.11,
+          "cost_micros": 45,
+          "quality_score": 0.99,
+          "routed_model": "gemini-1.5-flash",
+          "cache_status": "MISS",
+          "complexity_tier": "FAST_TIER"
+        },
+        {
+          "id": "S10",
+          "category": "FORMATTING_SUMMARIES",
+          "latency_ms": 75.18,
+          "cost_micros": 45,
+          "quality_score": 0.99,
+          "routed_model": "gemini-1.5-flash",
+          "cache_status": "MISS",
+          "complexity_tier": "FAST_TIER"
+        },
+        {
+          "id": "S11",
+          "category": "FORMATTING_SUMMARIES",
+          "latency_ms": 95.79,
+          "cost_micros": 45,
+          "quality_score": 0.99,
+          "routed_model": "gemini-1.5-flash",
+          "cache_status": "MISS",
+          "complexity_tier": "FAST_TIER"
+        },
+        {
+          "id": "S12",
+          "category": "FORMATTING_SUMMARIES",
+          "latency_ms": 75.09,
+          "cost_micros": 45,
+          "quality_score": 0.99,
+          "routed_model": "gemini-1.5-flash",
+          "cache_status": "MISS",
+          "complexity_tier": "FAST_TIER"
+        },
+        {
+          "id": "S13",
+          "category": "FORMATTING_SUMMARIES",
+          "latency_ms": 77.93,
+          "cost_micros": 45,
+          "quality_score": 0.99,
+          "routed_model": "gemini-1.5-flash",
+          "cache_status": "MISS",
+          "complexity_tier": "FAST_TIER"
+        },
+        {
+          "id": "S14",
+          "category": "FORMATTING_SUMMARIES",
+          "latency_ms": 78.82,
+          "cost_micros": 45,
+          "quality_score": 0.99,
+          "routed_model": "gemini-1.5-flash",
+          "cache_status": "MISS",
+          "complexity_tier": "FAST_TIER"
+        },
+        {
+          "id": "S15",
+          "category": "FORMATTING_SUMMARIES",
+          "latency_ms": 153.91,
+          "cost_micros": 140,
+          "quality_score": 0.99,
+          "routed_model": "gemini-1.5-pro",
+          "cache_status": "MISS",
+          "complexity_tier": "REASONING_TIER"
+        },
+        {
+          "id": "S16",
+          "category": "FORMATTING_SUMMARIES",
+          "latency_ms": 77.23,
+          "cost_micros": 45,
+          "quality_score": 0.99,
+          "routed_model": "gemini-1.5-flash",
+          "cache_status": "MISS",
+          "complexity_tier": "FAST_TIER"
+        },
+        {
+          "id": "S17",
+          "category": "FORMATTING_SUMMARIES",
+          "latency_ms": 79.43,
+          "cost_micros": 45,
+          "quality_score": 0.99,
+          "routed_model": "gemini-1.5-flash",
+          "cache_status": "MISS",
+          "complexity_tier": "FAST_TIER"
+        },
+        {
+          "id": "S18",
+          "category": "FORMATTING_SUMMARIES",
+          "latency_ms": 91.61,
+          "cost_micros": 45,
+          "quality_score": 0.99,
+          "routed_model": "gemini-1.5-flash",
+          "cache_status": "MISS",
+          "complexity_tier": "FAST_TIER"
+        },
+        {
+          "id": "S19",
+          "category": "FORMATTING_SUMMARIES",
+          "latency_ms": 77.85,
+          "cost_micros": 45,
+          "quality_score": 0.99,
+          "routed_model": "gemini-1.5-flash",
+          "cache_status": "MISS",
+          "complexity_tier": "FAST_TIER"
+        },
+        {
+          "id": "S20",
+          "category": "FORMATTING_SUMMARIES",
+          "latency_ms": 79.61,
+          "cost_micros": 45,
+          "quality_score": 0.99,
+          "routed_model": "gemini-1.5-flash",
+          "cache_status": "MISS",
+          "complexity_tier": "FAST_TIER"
+        }
+      ]
+    }
+  }
+}

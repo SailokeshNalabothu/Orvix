@@ -23,7 +23,7 @@ def is_port_open(port):
         s.settimeout(1.0)
         return s.connect_ex(("localhost", port)) == 0
 
-def wait_for_health(port, name, timeout=60):
+def wait_for_health(port, name, timeout=100):
     url = f"http://localhost:{port}/actuator/health"
     start = time.time()
     while time.time() - start < timeout:
