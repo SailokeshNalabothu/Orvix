@@ -8,6 +8,7 @@ import com.orvix.common.contract.dto.CreateTenantRequest;
 import com.orvix.common.contract.dto.CreateTenantResponse;
 import com.orvix.common.contract.dto.LedgerEntryDto;
 import com.orvix.common.contract.dto.LedgerPageResponse;
+import com.orvix.common.contract.dto.TenantSummaryDto;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -78,6 +79,44 @@ public class TenantAdminService {
                 tenant.getStatus().name(),
                 initialBalance,
                 now
+        );
+    }
+
+    @Transactional(readOnly = true)
+    public List<TenantSummaryDto> getAllTenants() {
+        return tenantRepository.findAll(Sort.by("createdAt").descending()).stream()
+                .map(tenant -> {
+                    long balance = walletRepository.findById(tenant.getId())
+                            .map(TenantWallet::getBalanceMicros)
+                            .orElse(0L);
+                    return new TenantSummaryDto(
+                            tenant.getId(),
+                            tenant.getName(),
+                            tenant.getStatus().name(),
+                            tenant.getRpmLimit(),
+                            tenant.getTpmLimit(),
+                            balance,
+                            tenant.getCreatedAt()
+                    );
+                })
+                .toList();
+    }
+
+    @Transactional(readOnly = true)
+    public TenantSummaryDto getTenantDetails(String tenantId) {
+        Tenant tenant = tenantRepository.findById(tenantId)
+                .orElseThrow(() -> new IllegalArgumentException("Tenant not found: " + tenantId));
+        long balance = walletRepository.findById(tenantId)
+                .map(TenantWallet::getBalanceMicros)
+                .orElse(0L);
+        return new TenantSummaryDto(
+                tenant.getId(),
+                tenant.getName(),
+                tenant.getStatus().name(),
+                tenant.getRpmLimit(),
+                tenant.getTpmLimit(),
+                balance,
+                tenant.getCreatedAt()
         );
     }
 

@@ -10,6 +10,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+
 @CrossOrigin(origins = "*")
 @RestController
 @RequestMapping("/admin/v1")
@@ -26,6 +28,16 @@ public class AdminBillingController {
     ) {
         CreateTenantResponse response = adminService.createTenant(request);
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
+    }
+
+    @GetMapping("/tenants")
+    public ResponseEntity<List<TenantSummaryDto>> getAllTenants() {
+        return ResponseEntity.ok(adminService.getAllTenants());
+    }
+
+    @GetMapping("/tenants/{tenantId}")
+    public ResponseEntity<TenantSummaryDto> getTenantDetails(@PathVariable("tenantId") String tenantId) {
+        return ResponseEntity.ok(adminService.getTenantDetails(tenantId));
     }
 
     @PostMapping("/tenants/{tenantId}/credits")

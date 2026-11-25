@@ -1,0 +1,201 @@
+{
+  "timestamp": "2026-11-25T14:24:40Z",
+  "checks_passed": 35,
+  "total_checks": 35,
+  "phases": {
+    "OrgManagement": [
+      {
+        "check": "Create organization returns HTTP 201",
+        "status": "PASS",
+        "details": ""
+      },
+      {
+        "check": "Valid tenant ID generated",
+        "status": "PASS",
+        "details": "ID: ten_fd9b313f47bc4164"
+      },
+      {
+        "check": "Raw API key generated with prefix",
+        "status": "PASS",
+        "details": "Key: orv_live_6774eb4..."
+      },
+      {
+        "check": "Initial wallet balance provisioned",
+        "status": "PASS",
+        "details": "50,000,000 \u00b5$ ($50.00)"
+      }
+    ],
+    "KeyManagement": [
+      {
+        "check": "List API keys returns active keys",
+        "status": "PASS",
+        "details": ""
+      },
+      {
+        "check": "Masked key formatting adheres to security standards",
+        "status": "PASS",
+        "details": ""
+      },
+      {
+        "check": "Secondary API key generated",
+        "status": "PASS",
+        "details": ""
+      },
+      {
+        "check": "Key role assigned properly",
+        "status": "PASS",
+        "details": ""
+      },
+      {
+        "check": "API key revoked successfully",
+        "status": "PASS",
+        "details": ""
+      }
+    ],
+    "SpendingLimits": [
+      {
+        "check": "Fetch default spending limit",
+        "status": "PASS",
+        "details": ""
+      },
+      {
+        "check": "Updated monthly limit saved",
+        "status": "PASS",
+        "details": "$75.00"
+      },
+      {
+        "check": "Alert threshold percent set to 85%",
+        "status": "PASS",
+        "details": ""
+      },
+      {
+        "check": "Quota block not triggered when under limit",
+        "status": "PASS",
+        "details": ""
+      }
+    ],
+    "WalletTopup": [
+      {
+        "check": "Credit wallet top-up succeeded",
+        "status": "PASS",
+        "details": "New Balance: 70000000 \u00b5$"
+      }
+    ],
+    "LiveInference": [
+      {
+        "check": "Completion request returns HTTP 200",
+        "status": "PASS",
+        "details": ""
+      },
+      {
+        "check": "Completion content received",
+        "status": "PASS",
+        "details": ""
+      },
+      {
+        "check": "Trace ID header present",
+        "status": "PASS",
+        "details": ""
+      },
+      {
+        "check": "Provider used header present",
+        "status": "PASS",
+        "details": ""
+      },
+      {
+        "check": "Cache status header present",
+        "status": "PASS",
+        "details": ""
+      }
+    ],
+    "Analytics": [
+      {
+        "check": "Overview returns balance details",
+        "status": "PASS",
+        "details": ""
+      },
+      {
+        "check": "Overview returns total request count",
+        "status": "PASS",
+        "details": ""
+      },
+      {
+        "check": "Semantic cache hit rate metric present",
+        "status": "PASS",
+        "details": "Hit Rate: 84.46%"
+      },
+      {
+        "check": "FinOps dollars saved metric present",
+        "status": "PASS",
+        "details": "Saved: $14.82"
+      },
+      {
+        "check": "24-hour time series chart points returned",
+        "status": "PASS",
+        "details": ""
+      }
+    ],
+    "SecurityEvents": [
+      {
+        "check": "Security audit events retrieved",
+        "status": "PASS",
+        "details": ""
+      },
+      {
+        "check": "Adversarial threat categories captured in audit log",
+        "status": "PASS",
+        "details": ""
+      }
+    ],
+    "ProviderHealth": [
+      {
+        "check": "Overall platform health reported",
+        "status": "PASS",
+        "details": ""
+      },
+      {
+        "check": "Google Gemini Primary cluster operational",
+        "status": "PASS",
+        "details": ""
+      },
+      {
+        "check": "Resilience4j Circuit Breaker in CLOSED state",
+        "status": "PASS",
+        "details": ""
+      },
+      {
+        "check": "OpenAI Fallback cluster in ACTIVE STANDBY",
+        "status": "PASS",
+        "details": ""
+      },
+      {
+        "check": "Redis rate-limiter latency < 1.0 ms",
+        "status": "PASS",
+        "details": ""
+      }
+    ],
+    "FinancialReports": [
+      {
+        "check": "CSV ledger export returns CSV header line",
+        "status": "PASS",
+        "details": ""
+      },
+      {
+        "check": "CSV header Content-Disposition present",
+        "status": "PASS",
+        "details": ""
+      },
+      {
+        "check": "Reconciliation audit report balanced invariant",
+        "status": "PASS",
+        "details": ""
+      },
+      {
+        "check": "Reconciliation delta zero invariant",
+        "status": "PASS",
+        "details": ""
+      }
+    ]
+  },
+  "status": "PASSED"
+}

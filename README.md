@@ -603,6 +603,9 @@ python benchmark/security-validation-test.py
 
 # 5. Live intelligent routing evaluation against fixed-model baselines
 python benchmark/intelligent-routing-evaluation.py
+
+# 6. Live developer experience, organization dashboard & API-key verification (ADR-015)
+python benchmark/verify-developer-dashboard.py
 ```
 
 #### Empirical benchmark results (live cluster execution)
@@ -638,8 +641,12 @@ python benchmark/intelligent-routing-evaluation.py
 | **Intelligent Routing Cost Savings** | **-43.0% pure model routing savings** (8,400 µ$ down to 4,790 µ$; > 60% with semantic caching) | $\ge 40.0\%$ | **PASS** |
 | **Intelligent Routing Latency Speedup** | **-54.1% reduction at $p_{50}$** (173.8 ms down to 79.8 ms) | $> 50.0\%$ | **PASS** |
 | **Intelligent Routing Quality Retention** | **99.1% quality retention** (97.83% vs 98.67% fixed frontier baseline; 96.5% on complex reasoning) | $\ge 98.0\%$ | **PASS** |
+| **Organization Self-Service Onboarding** | **100% automated** tenant provisioning, isolated wallet & SHA-256 API key (`orv_live_...`) | Instant DevEx | **PASS** |
+| **API Key Lifecycle & Zero Plaintext Leak** | 1-time secret reveal, masked display, instant role-based revocation | Zero Plaintext Storage | **PASS** |
+| **Monthly AI Spending Limits & Quota** | Configurable monthly budget, 85% threshold alerts, atomic **HTTP 402 Hard Cutoff** via Redis | Zero Float Drift | **PASS** |
+| **Commercial Dashboard Verification** | **100.00% (35 / 35 assertions passed)** across all 9 test phases | 100% Pass Rate | **PASS** |
 
-The complete methodology, environment profile, latency distributions, chaos engineering architecture, security validation, and intelligent routing evaluations are documented in [`docs/08-PERFORMANCE-BENCHMARK.md`](docs/08-PERFORMANCE-BENCHMARK.md), [`docs/09-FINANCIAL-CORRECTNESS.md`](docs/09-FINANCIAL-CORRECTNESS.md), [`docs/10-CHAOS-ENGINEERING-AND-RECOVERY.md`](docs/10-CHAOS-ENGINEERING-AND-RECOVERY.md), [`docs/11-REAL-FINANCIAL-TRANSACTION-GUARANTEES.md`](docs/11-REAL-FINANCIAL-TRANSACTION-GUARANTEES.md), [`docs/12-CREDIBLE-SECURITY-VALIDATION.md`](docs/12-CREDIBLE-SECURITY-VALIDATION.md), and [`docs/14-INTELLIGENT-ROUTING-EVALUATION.md`](docs/14-INTELLIGENT-ROUTING-EVALUATION.md).
+The complete methodology, environment profile, latency distributions, chaos engineering architecture, security validation, intelligent routing, and developer platform evaluations are documented in [`docs/08-PERFORMANCE-BENCHMARK.md`](docs/08-PERFORMANCE-BENCHMARK.md), [`docs/09-FINANCIAL-CORRECTNESS.md`](docs/09-FINANCIAL-CORRECTNESS.md), [`docs/10-CHAOS-ENGINEERING-AND-RECOVERY.md`](docs/10-CHAOS-ENGINEERING-AND-RECOVERY.md), [`docs/11-REAL-FINANCIAL-TRANSACTION-GUARANTEES.md`](docs/11-REAL-FINANCIAL-TRANSACTION-GUARANTEES.md), [`docs/12-CREDIBLE-SECURITY-VALIDATION.md`](docs/12-CREDIBLE-SECURITY-VALIDATION.md), [`docs/14-INTELLIGENT-ROUTING-EVALUATION.md`](docs/14-INTELLIGENT-ROUTING-EVALUATION.md), and [`docs/15-DEVELOPER-EXPERIENCE-DASHBOARD.md`](docs/15-DEVELOPER-EXPERIENCE-DASHBOARD.md).
 
 <a name="repository-structure"></a>
 
@@ -653,6 +660,9 @@ Orvix/
 ├── stop_services.bat        # Windows cluster shutdown
 ├── smoke_test.ps1           # Live end-to-end smoke test
 ├── assets/                  # Animated README graphics
+├── dashboard/               # Production commercial developer platform console
+│   ├── index.html           # Dark-mode enterprise UI (Apple/NVIDIA/Vercel palette)
+│   └── serve.py             # Lightweight standalone preview server
 ├── benchmark/
 │   ├── k6-load-test.js      # Distributed k6 multi-tenant load test
 │   ├── run-comprehensive-benchmark.py # Multi-phase independent benchmark runner
@@ -665,7 +675,9 @@ Orvix/
 │   ├── security_validation_report.json # Empirical security confusion matrix and per-category report
 │   ├── verify-k8s-manifests.py # Specification verification harness for k8s manifests and Helm chart
 │   ├── intelligent-routing-evaluation.py # Live intelligent routing vs fixed-baseline evaluation runner
-│   └── intelligent_routing_report.json # Empirical multi-tier cost, latency and quality metrics report
+│   ├── intelligent_routing_report.json # Empirical multi-tier cost, latency and quality metrics report
+│   ├── verify-developer-dashboard.py # Automated end-to-end developer dashboard verification
+│   └── developer_dashboard_report.json # Empirical DevEx & multi-key verification report
 ├── docker/                  # Production multi-stage Dockerfiles & configurations
 │   ├── Dockerfile.gateway   # Non-root unprivileged container for Gateway Service
 │   ├── Dockerfile.guardrail # Non-root unprivileged container for Guardrail Service
@@ -698,7 +710,8 @@ Orvix/
 │   ├── 11-REAL-FINANCIAL-TRANSACTION-GUARANTEES.md # Transactional Outbox, Idempotent Refunds & Retry Defense
 │   ├── 12-CREDIBLE-SECURITY-VALIDATION.md # Threat Taxonomy (CAT 1-6), Hard Negatives & Tenant Isolation
 │   ├── 13-KUBERNETES-AND-HELM-DEPLOYMENT.md # Independent Deployments, HPA v2, Probes, PDB & Prometheus
-│   └── 14-INTELLIGENT-ROUTING-EVALUATION.md # Adaptive Model Cascading, Cost/Latency/Quality Evaluation
+│   ├── 14-INTELLIGENT-ROUTING-EVALUATION.md # Adaptive Model Cascading, Cost/Latency/Quality Evaluation
+│   └── 15-DEVELOPER-EXPERIENCE-DASHBOARD.md # Commercial DevEx, Budget Quotas, Provider Health
 ├── orvix-common/            # Shared DTOs, Kafka event records, headers
 ├── gateway-service/         # Edge router, Redis Lua rate limiter, fallback buffer, LLM failover
 ├── guardrail-service/       # PII engine, injection detector, audit DB, multi-tenant policies
@@ -722,8 +735,9 @@ Orvix/
 | **ADR-012** | Credible security validation, formal threat taxonomy (CAT 1–6), empirical confusion matrix, hard negative discrimination, and multi-tenant security policy isolation (`docs/12-CREDIBLE-SECURITY-VALIDATION.md`) |
 | **ADR-013** | Production Kubernetes deployment, independent microservices, 3-tier health probes, resource limits, HPA v2 autoscaling, zero-downtime rolling updates, and Prometheus observability (`docs/13-KUBERNETES-AND-HELM-DEPLOYMENT.md`) |
 | **ADR-014** | Intelligent routing evaluation, adaptive model cascading vs fixed-model baselines (`docs/14-INTELLIGENT-ROUTING-EVALUATION.md`) |
+| **ADR-015** | Commercial developer experience, organization dashboard, API-key management, spending limits & provider health (`docs/15-DEVELOPER-EXPERIENCE-DASHBOARD.md`) |
 
-The full set (ADR-001 to ADR-014) lives in [`docs/05-ADR.md`](docs/05-ADR.md), [`docs/06-THREAT-MODEL.md`](docs/06-THREAT-MODEL.md), [`docs/07-SEMANTIC-CACHE-GUARD.md`](docs/07-SEMANTIC-CACHE-GUARD.md), [`docs/08-PERFORMANCE-BENCHMARK.md`](docs/08-PERFORMANCE-BENCHMARK.md), [`docs/09-FINANCIAL-CORRECTNESS.md`](docs/09-FINANCIAL-CORRECTNESS.md), [`docs/10-CHAOS-ENGINEERING-AND-RECOVERY.md`](docs/10-CHAOS-ENGINEERING-AND-RECOVERY.md), [`docs/11-REAL-FINANCIAL-TRANSACTION-GUARANTEES.md`](docs/11-REAL-FINANCIAL-TRANSACTION-GUARANTEES.md), [`docs/12-CREDIBLE-SECURITY-VALIDATION.md`](docs/12-CREDIBLE-SECURITY-VALIDATION.md), [`docs/13-KUBERNETES-AND-HELM-DEPLOYMENT.md`](docs/13-KUBERNETES-AND-HELM-DEPLOYMENT.md), and [`docs/14-INTELLIGENT-ROUTING-EVALUATION.md`](docs/14-INTELLIGENT-ROUTING-EVALUATION.md).
+The full set (ADR-001 to ADR-015) lives in [`docs/05-ADR.md`](docs/05-ADR.md), [`docs/06-THREAT-MODEL.md`](docs/06-THREAT-MODEL.md), [`docs/07-SEMANTIC-CACHE-GUARD.md`](docs/07-SEMANTIC-CACHE-GUARD.md), [`docs/08-PERFORMANCE-BENCHMARK.md`](docs/08-PERFORMANCE-BENCHMARK.md), [`docs/09-FINANCIAL-CORRECTNESS.md`](docs/09-FINANCIAL-CORRECTNESS.md), [`docs/10-CHAOS-ENGINEERING-AND-RECOVERY.md`](docs/10-CHAOS-ENGINEERING-AND-RECOVERY.md), [`docs/11-REAL-FINANCIAL-TRANSACTION-GUARANTEES.md`](docs/11-REAL-FINANCIAL-TRANSACTION-GUARANTEES.md), [`docs/12-CREDIBLE-SECURITY-VALIDATION.md`](docs/12-CREDIBLE-SECURITY-VALIDATION.md), [`docs/13-KUBERNETES-AND-HELM-DEPLOYMENT.md`](docs/13-KUBERNETES-AND-HELM-DEPLOYMENT.md), [`docs/14-INTELLIGENT-ROUTING-EVALUATION.md`](docs/14-INTELLIGENT-ROUTING-EVALUATION.md), and [`docs/15-DEVELOPER-EXPERIENCE-DASHBOARD.md`](docs/15-DEVELOPER-EXPERIENCE-DASHBOARD.md).
 
 ## License
 
